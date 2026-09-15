@@ -32,40 +32,38 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
     final isRevealed = state.isRevealed;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 24),
-              // Prompt
-              Container(
-                padding: const EdgeInsets.all(24.0),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: theme.colorScheme.outlineVariant,
-                  ),
-                ),
-                child: Text(
-                  promptText,
-                  textDirection: isEngToHeb ? TextDirection.ltr : TextDirection.rtl,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontFamily: isEngToHeb ? 'FrankRuhlLibre' : null,
-                    fontWeight: FontWeight.w500,
+              const SizedBox(height: 16),
+              // Prompt Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(28.0),
+                  child: Text(
+                    promptText,
+                    textDirection: isEngToHeb ? TextDirection.ltr : TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontFamily: isEngToHeb ? 'FrankRuhlLibre' : null,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
               Text(
                 isEngToHeb ? 'Select the correct Hebrew translation:' : 'Select the correct English term:',
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -82,12 +80,12 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
 
                 if (isRevealed) {
                   if (isCorrectOption) {
-                    backgroundColor = Colors.green.withValues(alpha: 0.15);
+                    backgroundColor = Colors.green.withOpacity(0.12);
                     borderColor = Colors.green;
                     statusIcon = Icons.check_circle;
                     iconColor = Colors.green;
                   } else if (isSelectedOption && !isCorrectOption) {
-                    backgroundColor = Colors.red.withValues(alpha: 0.15);
+                    backgroundColor = Colors.red.withOpacity(0.12);
                     borderColor = Colors.red;
                     statusIcon = Icons.cancel;
                     iconColor = Colors.red;
@@ -100,12 +98,15 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
                     onPressed: isRevealed ? null : () => onSelectOption(index),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: backgroundColor,
-                      side: BorderSide(color: borderColor, width: isRevealed && (isCorrectOption || isSelectedOption) ? 2 : 1),
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-                      minimumSize: const Size.fromHeight(52),
+                      side: BorderSide(
+                        color: borderColor,
+                        width: isRevealed && (isCorrectOption || isSelectedOption) ? 2 : 1.5,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                      minimumSize: const Size.fromHeight(56),
                       alignment: isEngToHeb ? Alignment.centerRight : Alignment.centerLeft,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                     child: Row(
@@ -118,13 +119,13 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontFamily: !isEngToHeb ? 'FrankRuhlLibre' : null,
                               color: theme.colorScheme.onSurface,
-                              fontWeight: isSelectedOption ? FontWeight.w600 : FontWeight.w400,
+                              fontWeight: isSelectedOption ? FontWeight.w700 : FontWeight.w500,
                             ),
                           ),
                         ),
                         if (statusIcon != null) ...[
-                          const SizedBox(width: 8),
-                          Icon(statusIcon, color: iconColor, size: 20),
+                          const SizedBox(width: 12),
+                          Icon(statusIcon, color: iconColor, size: 22),
                         ],
                       ],
                     ),

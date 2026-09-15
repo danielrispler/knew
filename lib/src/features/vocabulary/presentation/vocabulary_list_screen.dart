@@ -19,6 +19,7 @@ class VocabularyListScreen extends ConsumerStatefulWidget {
 class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  Stage? _selectedStageFilter;
 
   @override
   void dispose() {
@@ -49,10 +50,17 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
   }
 
   List<Entry> _filterEntries(List<Entry> entries) {
-    final normalizedQuery = normalizeForSearch(_searchQuery);
-    if (normalizedQuery.isEmpty) return entries;
+    var result = entries;
 
-    return entries.where((entry) {
+    // Apply Stage Filter if selected
+    if (_selectedStageFilter != null) {
+      result = result.where((e) => e.stage == _selectedStageFilter).toList();
+    }
+
+    final normalizedQuery = normalizeForSearch(_searchQuery);
+    if (normalizedQuery.isEmpty) return result;
+
+    return result.where((entry) {
       if (normalizeForSearch(entry.english).contains(normalizedQuery)) return true;
       if (normalizeForSearch(entry.englishKey).contains(normalizedQuery)) return true;
 
@@ -74,9 +82,37 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'knew',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+        title: Row(
+          children: [
+            const Text(
+              'knew',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 26,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(width: 10),
+            vocabularyAsync.when(
+              data: (entries) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${entries.length} terms',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -98,7 +134,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
             tooltip: 'Settings',
             onPressed: () {
               Navigator.of(context).push(
@@ -108,14 +144,15 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const EntryFormScreen()),
           );
         },
         tooltip: 'Add Entry',
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Add Term', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -127,7 +164,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                   final filtered = _filterEntries(entries);
 
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Search Bar
                       Padding(
                         padding:
                             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -147,11 +186,6 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                     },
                                   )
                                 : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
                           ),
                           onChanged: (val) {
                             setState(() {
@@ -160,6 +194,95 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                           },
                         ),
                       ),
+
+                      // Stage Filter Chips
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                        child: Row(
+                          children: [
+                            FilterChip(
+                              label: const Text('All'),
+                              selected: _selectedStageFilter == null,
+                              onSelected: (_) {
+                                setState(() => _selectedStageFilter = null);
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            FilterChip(
+                              label: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.stageNew,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text('New stage'),
+                                ],
+                              ),
+                              selected: _selectedStageFilter == Stage.newStage,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedStageFilter = selected ? Stage.newStage : null;
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            FilterChip(
+                              label: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.stageFamiliar,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text('Familiar'),
+                                ],
+                              ),
+                              selected: _selectedStageFilter == Stage.familiar,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedStageFilter = selected ? Stage.familiar : null;
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            FilterChip(
+                              label: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.stageLearned,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text('Learned'),
+                                ],
+                              ),
+                              selected: _selectedStageFilter == Stage.learned,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedStageFilter = selected ? Stage.learned : null;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Vocabulary Cards List
                       Expanded(
                         child: filtered.isEmpty
                             ? Center(
@@ -167,7 +290,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      _searchQuery.isNotEmpty
+                                      _searchQuery.isNotEmpty || _selectedStageFilter != null
                                           ? Icons.search_off
                                           : Icons.book_outlined,
                                       size: 64,
@@ -175,7 +298,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      _searchQuery.isNotEmpty
+                                      _searchQuery.isNotEmpty || _selectedStageFilter != null
                                           ? 'No matching entries found.'
                                           : 'No vocabulary entries saved yet.\nTap + to add your first term.',
                                       textAlign: TextAlign.center,
@@ -191,6 +314,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                               )
                             : ListView.builder(
                                 itemCount: filtered.length,
+                                padding: const EdgeInsets.only(bottom: 80),
                                 itemBuilder: (context, index) {
                                   final entry = filtered[index];
                                   final primaryMeaning = entry.meanings.isNotEmpty
@@ -204,9 +328,13 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                     key: Key(entry.id),
                                     direction: DismissDirection.endToStart,
                                     background: Container(
-                                      color: Colors.red,
+                                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.redAccent.withOpacity(0.9),
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
                                       alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                                      padding: const EdgeInsets.symmetric(horizontal: 24),
                                       child: const Icon(Icons.delete, color: Colors.white),
                                     ),
                                     confirmDismiss: (direction) async {
@@ -243,75 +371,94 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                       );
                                     },
                                     child: Card(
-                                      child: ListTile(
-                                        title: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                entry.english,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 18,
-                                                ),
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: _stageColor(entry.stage)
-                                                    .withValues(alpha: 0.15),
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: _stageColor(entry.stage),
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Text(
-                                                _stageLabel(entry.stage),
-                                                style: TextStyle(
-                                                  color: _stageColor(entry.stage),
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        subtitle: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(height: 4),
-                                            if (primaryMeaning != null) ...[
-                                              Text(
-                                                '[${primaryMeaning.partOfSpeech}] ${primaryMeaning.definition}',
-                                                style:
-                                                    Theme.of(context).textTheme.bodySmall,
-                                              ),
-                                              const SizedBox(height: 2),
-                                            ],
-                                            Directionality(
-                                              textDirection: TextDirection.rtl,
-                                              child: Text(
-                                                hebrewSummary,
-                                                textDirection: TextDirection.rtl,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 15,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        trailing: const Icon(Icons.chevron_right),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(18),
                                         onTap: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  WordDetailScreen(initialEntry: entry),
-                                            ),
-                                          );
+                                          showWordDetailBottomSheet(context, entry);
                                         },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      entry.english,
+                                                      style: const TextStyle(
+                                                        fontFamily: 'FrankRuhlLibre',
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 20,
+                                                        letterSpacing: -0.2,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                        horizontal: 10, vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: _stageColor(entry.stage)
+                                                          .withOpacity(0.15),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      border: Border.all(
+                                                        color: _stageColor(entry.stage),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      _stageLabel(entry.stage),
+                                                      style: TextStyle(
+                                                        color: _stageColor(entry.stage),
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              if (primaryMeaning != null) ...[
+                                                Text(
+                                                  '[${primaryMeaning.partOfSpeech}] ${primaryMeaning.definition}',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurfaceVariant,
+                                                      ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                              ],
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Directionality(
+                                                    textDirection: TextDirection.rtl,
+                                                    child: Text(
+                                                      hebrewSummary,
+                                                      textDirection: TextDirection.rtl,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                        fontSize: 16,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Icon(
+                                                    Icons.chevron_right,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .outline,
+                                                    size: 20,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   );
