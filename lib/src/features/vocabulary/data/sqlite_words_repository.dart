@@ -39,15 +39,26 @@ class SQLiteWordsRepository implements WordsRepository {
       throw DuplicateEntryException(term: entry.english, existingId: existing.id);
     }
 
-    final count = await db.update(
-      'words',
-      entry.toDatabaseMap(),
-      where: 'id = ?',
-      whereArgs: [entry.id],
-    );
+    try {
+      final count = await db.update(
+        'words',
+        entry.toDatabaseMap(),
+        where: 'id = ?',
+        whereArgs: [entry.id],
+      );
 
-    if (count == 0) {
-      throw Exception('Entry with ID ${entry.id} not found to update.');
+      if (count == 0) {
+        throw Exception('Entry with ID ${entry.id} not found to update.');
+      }
+    } on DatabaseException catch (e) {
+      if (e.isUniqueConstraintError()) {
+        final current = await getEntryByEnglishKey(entry.englishKey);
+        throw DuplicateEntryException(
+          term: entry.english,
+          existingId: current?.id ?? '',
+        );
+      }
+      rethrow;
     }
   }
 

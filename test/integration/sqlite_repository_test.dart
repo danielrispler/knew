@@ -141,6 +141,78 @@ void main() {
       expect(list.length, 2);
     });
 
+    test('rejects update with conflicting english_key', () async {
+      final entry1 = Entry.create(
+        english: 'first',
+        meanings: [Meaning(partOfSpeech: 'n', definition: '1st', hebrewTranslations: ['ראשון'])],
+      );
+      final entry2 = Entry.create(
+        english: 'second',
+        meanings: [Meaning(partOfSpeech: 'n', definition: '2nd', hebrewTranslations: ['שני'])],
+      );
+
+      await wordsRepository.insertEntry(entry1);
+      await wordsRepository.insertEntry(entry2);
+
+      final updatedEntry2 = entry2.copyWith(english: 'FIRST');
+
+      expect(
+        () async => await wordsRepository.updateEntry(updatedEntry2),
+        throwsA(isA<DuplicateEntryException>()),
+      );
+    });
+
+    test('getDueEntries filters and orders by due_date ascending', () async {
+      final pastEntry = Entry.create(
+        english: 'past',
+        dueDate: '2025-12-31',
+        meanings: [Meaning(partOfSpeech: 'n', definition: 'p', hebrewTranslations: ['עבר'])],
+      );
+      final todayEntry = Entry.create(
+        english: 'today',
+        dueDate: '2026-09-15',
+        meanings: [Meaning(partOfSpeech: 'n', definition: 't', hebrewTranslations: ['היום'])],
+      );
+      final futureEntry = Entry.create(
+        english: 'future',
+        dueDate: '2027-01-01',
+        meanings: [Meaning(partOfSpeech: 'n', definition: 'f', hebrewTranslations: ['עתיד'])],
+      );
+
+      await wordsRepository.insertEntry(pastEntry);
+      await wordsRepository.insertEntry(todayEntry);
+      await wordsRepository.insertEntry(futureEntry);
+
+      final due = await wordsRepository.getDueEntries('2026-09-15');
+      expect(due.length, 2);
+      expect(due.first.english, 'past');
+      expect(due.last.english, 'today');
+    });
+
+    test('verifies transaction rollback on failure', () async {
+      final entry1 = Entry.create(
+        english: 'tx_one',
+        meanings: [Meaning(partOfSpeech: 'n', definition: 'one', hebrewTranslations: ['אחד'])],
+      );
+      final entry2 = Entry.create(
+        english: 'tx_two',
+        meanings: [Meaning(partOfSpeech: 'n', definition: 'two', hebrewTranslations: ['שתיים'])],
+      );
+
+      await wordsRepository.insertEntry(entry1);
+
+      try {
+        await db.transaction((txn) async {
+          await txn.insert('words', entry2.toDatabaseMap());
+          // Intentionally throw inside transaction
+          throw Exception('Simulated transaction failure');
+        });
+      } catch (_) {}
+
+      final afterTxn = await wordsRepository.getEntryById(entry2.id);
+      expect(afterTxn, isNull);
+    });
+
     test('settings repository saves and retrieves values with defaults', () async {
       final defaultSession = await settingsRepository.getSessionSize();
       expect(defaultSession, 20);
