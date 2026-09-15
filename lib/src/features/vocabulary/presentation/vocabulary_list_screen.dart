@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../domain/entry.dart';
+import '../../practice/presentation/flashcard_practice_screen.dart';
 import 'entry_form_screen.dart';
 import 'vocabulary_providers.dart';
 
@@ -73,6 +74,24 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.school_outlined),
+            tooltip: 'Practice',
+            onPressed: () {
+              final entries = vocabularyAsync.value ?? [];
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => FlashcardPracticeScreen(
+                    initialLibrary: entries,
+                    onExit: () {
+                      Navigator.of(context).pop();
+                      ref.read(vocabularyListProvider.notifier).refreshList();
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'Settings',
