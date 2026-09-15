@@ -48,7 +48,7 @@ class _PracticeNotebookCardState extends State<PracticeNotebookCard>
   void didUpdateWidget(PracticeNotebookCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!oldWidget.isRevealed && widget.isRevealed) {
-      final disableAnimations = MediaQuery.of(context).disableAnimations;
+      final disableAnimations = MediaQuery.disableAnimationsOf(context);
       if (disableAnimations) {
         _animController.value = 1.0;
       } else {

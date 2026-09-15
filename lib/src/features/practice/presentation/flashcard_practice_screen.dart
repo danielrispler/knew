@@ -240,48 +240,99 @@ class _FlashcardPracticeScreenState
     switch (question.format) {
       case QuestionFormat.flashcard:
         if (state.isRevealed) {
-          return Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: OutlinedButton(
-                    onPressed: state.isSaving
-                        ? null
-                        : () => controller.gradeCurrent(correct: false),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: theme.colorScheme.outline),
-                      foregroundColor: theme.colorScheme.onSurface,
-                      minimumSize: const Size.fromHeight(52),
+          final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final shouldStack = textScale > 1.25 || constraints.maxWidth < 320;
+              if (shouldStack) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: OutlinedButton(
+                        onPressed: state.isSaving
+                            ? null
+                            : () => controller.gradeCurrent(correct: false),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: theme.colorScheme.outline),
+                          foregroundColor: theme.colorScheme.onSurface,
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        child: const Text(
+                          "Didn't know",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
                     ),
-                    child: const Text(
-                      "Didn't know",
-                      style: TextStyle(fontSize: 16),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: state.isSaving
+                            ? null
+                            : () => controller.gradeCurrent(correct: true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        child: const Text(
+                          'Knew it',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: OutlinedButton(
+                        onPressed: state.isSaving
+                            ? null
+                            : () => controller.gradeCurrent(correct: false),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: theme.colorScheme.outline),
+                          foregroundColor: theme.colorScheme.onSurface,
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        child: const Text(
+                          "Didn't know",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: state.isSaving
-                        ? null
-                        : () => controller.gradeCurrent(correct: true),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      minimumSize: const Size.fromHeight(52),
-                    ),
-                    child: const Text(
-                      'Knew it',
-                      style: TextStyle(fontSize: 16),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: state.isSaving
+                            ? null
+                            : () => controller.gradeCurrent(correct: true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        child: const Text(
+                          'Knew it',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           );
         } else {
           return SizedBox(

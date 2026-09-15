@@ -47,13 +47,9 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant,
+                  ),
                 ),
                 child: Text(
                   promptText,
