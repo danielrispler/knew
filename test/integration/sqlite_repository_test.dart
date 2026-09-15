@@ -335,9 +335,9 @@ void main() {
       await settingsRepository.setTheme('dark');
       expect(await settingsRepository.getTheme(), 'dark');
 
-      expect(await settingsRepository.getModel(), 'gemini-2.5-flash');
-      await settingsRepository.setModel('gemini-1.5-pro');
-      expect(await settingsRepository.getModel(), 'gemini-1.5-pro');
+      expect(await settingsRepository.getModel(), 'gemini-3.8-flash');
+      await settingsRepository.setModel('gemini-3.7-flash');
+      expect(await settingsRepository.getModel(), 'gemini-3.7-flash');
 
       expect(await settingsRepository.getLastSource(), '');
       await settingsRepository.setLastSource('Book');

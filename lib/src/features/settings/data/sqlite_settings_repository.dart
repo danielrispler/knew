@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
+import '../../vocabulary/data/gemini_models.dart';
 import 'settings_repository.dart';
 
 class SQLiteSettingsRepository implements SettingsRepository {
@@ -74,14 +75,14 @@ class SQLiteSettingsRepository implements SettingsRepository {
   @override
   Future<String> getModel() async {
     final raw = await _getValue(keyModel);
-    if (raw == null) return 'gemini-2.5-flash';
+    if (raw == null) return GeminiModels.defaultModel;
     try {
       final decoded = jsonDecode(raw);
       if (decoded is String && decoded.trim().isNotEmpty) {
         return decoded.trim();
       }
     } catch (_) {}
-    return 'gemini-2.5-flash';
+    return GeminiModels.defaultModel;
   }
 
   @override

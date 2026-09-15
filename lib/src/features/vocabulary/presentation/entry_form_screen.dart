@@ -141,7 +141,11 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     final client = ref.read(geminiClientProvider);
 
     try {
-      final result = await client.lookup(input: input, apiKey: apiKey, model: model);
+      final result = await client.lookupWithFallback(
+        input: input,
+        apiKey: apiKey,
+        primaryModel: model,
+      );
 
       if (!mounted) return;
 

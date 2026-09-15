@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../domain/gemini_lookup_result.dart';
+import 'gemini_models.dart';
 import 'gemini_parser.dart';
 
 class GeminiClient {
@@ -257,11 +258,59 @@ class GeminiClient {
     return null;
   }
 
+  Future<GeminiLookupResult> lookupWithFallback({
+    required String input,
+    required String apiKey,
+    required String primaryModel,
+  }) async {
+    final sequence = GeminiModels.getFallbackSequence(primaryModel);
+    GeminiException? lastException;
+
+    for (int i = 0; i < sequence.length; i++) {
+      final currentModel = sequence[i];
+      try {
+        return await lookup(
+          input: input,
+          apiKey: apiKey,
+          model: currentModel,
+        );
+      } on GeminiException catch (e) {
+        lastException = e;
+        final isLastModel = i == sequence.length - 1;
+        if (isLastModel || !_shouldFallback(e.errorType)) {
+          rethrow;
+        }
+      }
+    }
+
+    throw lastException ??
+        const GeminiException(
+          GeminiErrorType.serviceUnavailable,
+          'Gemini is temporarily unavailable. Try again or add the word manually.',
+        );
+  }
+
+  bool _shouldFallback(GeminiErrorType type) {
+    switch (type) {
+      case GeminiErrorType.quotaExhausted:
+      case GeminiErrorType.modelUnavailable:
+      case GeminiErrorType.serviceUnavailable:
+      case GeminiErrorType.timeout:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   Future<bool> testConnection({
     required String apiKey,
     required String model,
   }) async {
-    final result = await lookup(input: 'test', apiKey: apiKey, model: model);
+    final result = await lookupWithFallback(
+      input: 'test',
+      apiKey: apiKey,
+      primaryModel: model,
+    );
     return result is GeminiSuccessResult || result is GeminiInvalidResult;
   }
 }

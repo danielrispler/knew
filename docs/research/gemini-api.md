@@ -2,9 +2,16 @@
 
 Researched 2026-09-15 for [research #3](https://github.com/danielrispler/knew/issues/3), against the [original brief](https://github.com/danielrispler/knew/issues/1). API facts below are documented; the prompt, validation rules, error copy, and fallback policy are proposed application decisions. No live request using the owner's credentials was made.
 
-## Default model and limits
+## Default model, catalog and fallback policy
 
-Use **`gemini-3.5-flash-lite`**, with resource path **`models/gemini-3.5-flash-lite`**. It is a stable model, supports structured output, and has a 1,048,576-token input window and 65,536-token output ceiling. These are context limits, not free-tier quotas. [Model documentation](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)
+Use **`gemini-3.8-flash`** as the default primary model. The app supports automatic sequential fallback across the Gemini Flash model catalog:
+1. `gemini-3.8-flash` (Primary default)
+2. `gemini-3.7-flash`
+3. `gemini-3.6-flash`
+4. `gemini-3.5-flash`
+5. `gemini-3.5-flash-lite` (Baseline Lite model)
+
+When encountering rate limits (429), unavailable models (404), or temporary server errors (500/503), lookups automatically fall back down the sequence to ensure maximum availability. See [gemini-model-fallback.md](../decisions/gemini-model-fallback.md).
 
 Standard text input and output have a free tier. A billing account is unnecessary for an eligible free-tier project; paid-tier keys incur that tier's charges. Free-tier data may be used to improve Google products. [Pricing](https://ai.google.dev/gemini-api/docs/pricing), [billing](https://ai.google.dev/gemini-api/docs/billing)
 
@@ -15,8 +22,6 @@ Standard text input and output have a free tier. A billing account is unnecessar
 | RPD | Project-specific; inspect AI Studio |
 
 Google's public rate-limit page currently directs users to their active quotas instead of publishing universal model numbers. Limits apply per project, across its keys; exceeding any dimension can fail a request. Daily quotas reset at midnight Pacific time, independently of the app's local review date. **Do not copy historical 15 RPM / 250,000 TPM / 1,000 RPD figures into the product.** The owner's exact allocation remains an account setup check, not something public research can establish. [Rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
-
-Keep the model editable. Suggested current manual fallback: `gemini-3.1-flash-lite`, which also supports structured output and currently has free-tier text pricing. If the default retires, recheck the model catalog and select the then-current stable Flash-Lite successor; never silently switch to a paid-only model. The `gemini-3.1-flash-lite-preview` identifier is already listed as shut down. [3.1 model](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite), [pricing](https://ai.google.dev/gemini-api/docs/pricing), [model catalog](https://ai.google.dev/gemini-api/docs/models), [deprecations](https://ai.google.dev/gemini-api/docs/deprecations)
 
 ## HTTP and schema dialect
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../vocabulary/data/export_import_service.dart';
+import '../../vocabulary/data/gemini_models.dart';
 import '../../vocabulary/domain/gemini_lookup_result.dart';
 import '../../vocabulary/presentation/vocabulary_providers.dart';
 import 'settings_providers.dart';
@@ -14,21 +15,29 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _apiKeyController;
+  late final TextEditingController _customModelController;
   bool _isTestingKey = false;
+  bool _isCustomModelSelected = false;
 
   @override
   void initState() {
     super.initState();
     _apiKeyController = TextEditingController();
+    _customModelController = TextEditingController();
     final settingsState = ref.read(settingsProvider).value;
     if (settingsState != null) {
       _apiKeyController.text = settingsState.apiKey;
+      if (!GeminiModels.availableModels.contains(settingsState.model)) {
+        _isCustomModelSelected = true;
+        _customModelController.text = settingsState.model;
+      }
     }
   }
 
   @override
   void dispose() {
     _apiKeyController.dispose();
+    _customModelController.dispose();
     super.dispose();
   }
 
@@ -49,6 +58,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 data: (settings) {
                   if (_apiKeyController.text != settings.apiKey) {
                     _apiKeyController.text = settings.apiKey;
+                  }
+
+                  final isKnownPreset = GeminiModels.availableModels.contains(settings.model);
+                  final dropdownValue = _isCustomModelSelected || !isKnownPreset
+                      ? 'custom'
+                      : settings.model;
+
+                  if (_isCustomModelSelected &&
+                      _customModelController.text != settings.model &&
+                      !isKnownPreset) {
+                    _customModelController.text = settings.model;
                   }
 
                   return ListView(
@@ -111,27 +131,94 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        initialValue: settings.model,
+                        initialValue: dropdownValue,
                         decoration: const InputDecoration(
-                          labelText: 'Model Choice',
+                          labelText: 'Primary Model Choice',
+                          helperText:
+                              'Automatically falls back to lower models (down to 3.5 Flash Lite) if rate-limited.',
                           border: OutlineInputBorder(),
                         ),
                         items: const [
                           DropdownMenuItem(
-                            value: 'gemini-2.5-flash',
-                            child: Text('gemini-2.5-flash (Default)'),
+                            value: GeminiModels.gemini38Flash,
+                            child: Text('Gemini 3.8 Flash (Default - Strongest)'),
                           ),
                           DropdownMenuItem(
-                            value: 'gemini-1.5-pro',
-                            child: Text('gemini-1.5-pro'),
+                            value: GeminiModels.gemini37Flash,
+                            child: Text('Gemini 3.7 Flash'),
+                          ),
+                          DropdownMenuItem(
+                            value: GeminiModels.gemini36Flash,
+                            child: Text('Gemini 3.6 Flash'),
+                          ),
+                          DropdownMenuItem(
+                            value: GeminiModels.gemini35Flash,
+                            child: Text('Gemini 3.5 Flash'),
+                          ),
+                          DropdownMenuItem(
+                            value: GeminiModels.gemini35FlashLite,
+                            child: Text('Gemini 3.5 Flash Lite'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'custom',
+                            child: Text('Custom Model...'),
                           ),
                         ],
                         onChanged: (val) {
-                          if (val != null) {
+                          if (val == null) return;
+                          if (val == 'custom') {
+                            setState(() {
+                              _isCustomModelSelected = true;
+                            });
+                            final customVal = _customModelController.text.trim();
+                            if (customVal.isNotEmpty) {
+                              ref.read(settingsProvider.notifier).setModel(customVal);
+                            }
+                          } else {
+                            setState(() {
+                              _isCustomModelSelected = false;
+                            });
                             ref.read(settingsProvider.notifier).setModel(val);
                           }
                         },
                       ),
+                      if (_isCustomModelSelected || dropdownValue == 'custom') ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _customModelController,
+                          decoration: InputDecoration(
+                            labelText: 'Custom Model Name',
+                            hintText: 'e.g., gemini-1.5-pro, tunedModels/my-model',
+                            helperText:
+                                'Enter exact model identifier. Fallbacks will apply if unavailable.',
+                            border: const OutlineInputBorder(),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.check),
+                              onPressed: () {
+                                final customVal = _customModelController.text.trim();
+                                if (customVal.isNotEmpty) {
+                                  ref
+                                      .read(settingsProvider.notifier)
+                                      .setModel(customVal);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            'Custom model set to: $customVal')),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                          onChanged: (val) {
+                            final trimmed = val.trim();
+                            if (trimmed.isNotEmpty) {
+                              ref
+                                  .read(settingsProvider.notifier)
+                                  .setModel(trimmed);
+                            }
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _apiKeyController,

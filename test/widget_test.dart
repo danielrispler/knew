@@ -19,7 +19,7 @@ class TestSettingsNotifier extends SettingsNotifier {
     return const SettingsState(
       sessionSize: 20,
       theme: 'system',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.8-flash',
       apiKey: '',
     );
   }

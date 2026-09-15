@@ -86,7 +86,7 @@ void main() {
       const testSettings = SettingsState(
         sessionSize: 20,
         theme: 'system',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         apiKey: '',
       );
 
@@ -115,7 +115,7 @@ void main() {
       const testSettings = SettingsState(
         sessionSize: 20,
         theme: 'system',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         apiKey: '',
       );
 
@@ -182,7 +182,7 @@ void main() {
       const testSettings = SettingsState(
         sessionSize: 20,
         theme: 'system',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         apiKey: 'fake_key',
       );
 
@@ -247,7 +247,7 @@ void main() {
       const testSettings = SettingsState(
         sessionSize: 20,
         theme: 'system',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         apiKey: 'fake_key',
       );
 
