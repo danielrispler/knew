@@ -9,11 +9,6 @@ import 'package:knew/src/features/vocabulary/domain/meaning.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_providers.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
-
   group('Vocabulary Providers', () {
     late Database db;
     late WordsRepository wordsRepository;

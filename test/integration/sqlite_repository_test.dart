@@ -8,11 +8,6 @@ import 'package:knew/src/features/vocabulary/domain/meaning.dart';
 import 'package:knew/src/features/settings/data/sqlite_settings_repository.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
-
   group('SQLite Database Helper & Repositories', () {
     late Database db;
     late SQLiteWordsRepository wordsRepository;
