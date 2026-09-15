@@ -89,9 +89,13 @@ class _FlashcardPracticeScreenState
     if (state.questions.isEmpty) {
       return Scaffold(
         appBar: AppBar(
+          leadingWidth: 80,
           leading: TextButton(
             onPressed: widget.onExit,
-            child: const Text('Done'),
+            child: const Text(
+              'Done',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
           ),
         ),
         body: Center(
@@ -122,9 +126,13 @@ class _FlashcardPracticeScreenState
 
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: 80,
         leading: TextButton(
           onPressed: widget.onExit,
-          child: const Text('Done'),
+          child: const Text(
+            'Done',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
         ),
         title: Text(
           currentQuestion.isRepeat

@@ -130,57 +130,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                       ),
                       const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        initialValue: dropdownValue,
-                        decoration: const InputDecoration(
-                          labelText: 'Primary Model Choice',
-                          helperText:
-                              'Automatically falls back to lower models (down to 3.5 Flash Lite) if rate-limited.',
-                          border: OutlineInputBorder(),
+                      InkWell(
+                        onTap: () => _showModelPickerBottomSheet(context, dropdownValue, settings.model),
+                        borderRadius: BorderRadius.circular(4),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Primary Model Choice',
+                            helperText:
+                                'Automatically falls back to lower models (down to 3.5 Flash Lite) if rate-limited.',
+                            border: OutlineInputBorder(),
+                            suffixIcon: Icon(Icons.arrow_drop_down),
+                          ),
+                          child: Text(
+                            _getModelDisplayTitle(dropdownValue, settings.model),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: GeminiModels.gemini38Flash,
-                            child: Text('Gemini 3.8 Flash (Default - Strongest)'),
-                          ),
-                          DropdownMenuItem(
-                            value: GeminiModels.gemini37Flash,
-                            child: Text('Gemini 3.7 Flash'),
-                          ),
-                          DropdownMenuItem(
-                            value: GeminiModels.gemini36Flash,
-                            child: Text('Gemini 3.6 Flash'),
-                          ),
-                          DropdownMenuItem(
-                            value: GeminiModels.gemini35Flash,
-                            child: Text('Gemini 3.5 Flash'),
-                          ),
-                          DropdownMenuItem(
-                            value: GeminiModels.gemini35FlashLite,
-                            child: Text('Gemini 3.5 Flash Lite'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'custom',
-                            child: Text('Custom Model...'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val == null) return;
-                          if (val == 'custom') {
-                            setState(() {
-                              _isCustomModelSelected = true;
-                            });
-                            final customVal = _customModelController.text.trim();
-                            if (customVal.isNotEmpty) {
-                              ref.read(settingsProvider.notifier).setModel(customVal);
-                            }
-                          } else {
-                            setState(() {
-                              _isCustomModelSelected = false;
-                            });
-                            ref.read(settingsProvider.notifier).setModel(val);
-                          }
-                        },
                       ),
                       if (_isCustomModelSelected || dropdownValue == 'custom') ...[
                         const SizedBox(height: 12),
@@ -322,30 +289,64 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => ExportImportService.exportData(context, ref),
-                              icon: const Icon(Icons.upload_file),
-                              label: const Text('Export Backup'),
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(48),
+                      LayoutBuilder(
+                        builder: (context, buttonConstraints) {
+                          final isNarrow = buttonConstraints.maxWidth < 340;
+                          if (isNarrow) {
+                            return Column(
+                              children: [
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => ExportImportService.exportData(context, ref),
+                                    icon: const Icon(Icons.file_upload_outlined),
+                                    label: const Text('Export Backup'),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(48),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => ExportImportService.importData(context, ref),
+                                    icon: const Icon(Icons.file_download_outlined),
+                                    label: const Text('Import Backup'),
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(48),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => ExportImportService.exportData(context, ref),
+                                  icon: const Icon(Icons.file_upload_outlined),
+                                  label: const Text('Export Backup'),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(48),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => ExportImportService.importData(context, ref),
-                              icon: const Icon(Icons.download_for_offline),
-                              label: const Text('Import Backup'),
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(48),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => ExportImportService.importData(context, ref),
+                                  icon: const Icon(Icons.file_download_outlined),
+                                  label: const Text('Import Backup'),
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(48),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        },
                       ),
                     ],
                   );
@@ -357,6 +358,171 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           );
         },
       ),
+    );
+  }
+
+  String _getModelDisplayTitle(String dropdownValue, String activeModel) {
+    switch (dropdownValue) {
+      case GeminiModels.gemini38Flash:
+        return 'Gemini 3.8 Flash (Default - Strongest)';
+      case GeminiModels.gemini37Flash:
+        return 'Gemini 3.7 Flash';
+      case GeminiModels.gemini36Flash:
+        return 'Gemini 3.6 Flash';
+      case GeminiModels.gemini35Flash:
+        return 'Gemini 3.5 Flash';
+      case GeminiModels.gemini35FlashLite:
+        return 'Gemini 3.5 Flash Lite';
+      case 'custom':
+        return activeModel.isNotEmpty ? 'Custom: $activeModel' : 'Custom Model...';
+      default:
+        return activeModel;
+    }
+  }
+
+  void _showModelPickerBottomSheet(
+      BuildContext context, String currentDropdownValue, String activeModel) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        final models = [
+          {
+            'val': GeminiModels.gemini38Flash,
+            'title': 'Gemini 3.8 Flash',
+            'subtitle': 'Default - Strongest model'
+          },
+          {
+            'val': GeminiModels.gemini37Flash,
+            'title': 'Gemini 3.7 Flash',
+            'subtitle': 'High performance model'
+          },
+          {
+            'val': GeminiModels.gemini36Flash,
+            'title': 'Gemini 3.6 Flash',
+            'subtitle': 'Fast & capable model'
+          },
+          {
+            'val': GeminiModels.gemini35Flash,
+            'title': 'Gemini 3.5 Flash',
+            'subtitle': 'Balanced standard model'
+          },
+          {
+            'val': GeminiModels.gemini35FlashLite,
+            'title': 'Gemini 3.5 Flash Lite',
+            'subtitle': 'Lightweight fast fallback'
+          },
+          {
+            'val': 'custom',
+            'title': 'Custom Model...',
+            'subtitle': 'Specify custom model identifier'
+          },
+        ];
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(sheetContext)
+                          .colorScheme
+                          .outline
+                          .withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Select Gemini Model',
+                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Primary choice for automated lookups. Automatically falls back if rate-limited.',
+                  style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(sheetContext).colorScheme.outline,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                ...models.map((m) {
+                  final value = m['val']!;
+                  final isSelected = currentDropdownValue == value;
+                  return Card(
+                    elevation: 0,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    color: isSelected
+                        ? Theme.of(sheetContext)
+                            .colorScheme
+                            .primaryContainer
+                            .withOpacity(0.4)
+                        : Theme.of(sheetContext)
+                            .colorScheme
+                            .surfaceContainerLowest,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isSelected
+                            ? Theme.of(sheetContext).colorScheme.primary
+                            : Theme.of(sheetContext).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: ListTile(
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        if (value == 'custom') {
+                          setState(() {
+                            _isCustomModelSelected = true;
+                          });
+                          final customVal = _customModelController.text.trim();
+                          if (customVal.isNotEmpty) {
+                            ref
+                                .read(settingsProvider.notifier)
+                                .setModel(customVal);
+                          }
+                        } else {
+                          setState(() {
+                            _isCustomModelSelected = false;
+                          });
+                          ref.read(settingsProvider.notifier).setModel(value);
+                        }
+                      },
+                      leading: Icon(
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? Theme.of(sheetContext).colorScheme.primary
+                            : Theme.of(sheetContext).colorScheme.outline,
+                      ),
+                      title: Text(
+                        m['title']!,
+                        style: TextStyle(
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      subtitle: Text(m['subtitle']!),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
