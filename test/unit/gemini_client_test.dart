@@ -291,7 +291,7 @@ void main() {
 
       final geminiClient = GeminiClient(httpClient: mockHttpClient);
 
-      expect(
+      await expectLater(
         () => geminiClient.lookupWithFallback(
           input: 'test',
           apiKey: testApiKey,
