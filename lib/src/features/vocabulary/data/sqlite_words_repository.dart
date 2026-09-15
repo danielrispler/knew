@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 import '../domain/entry.dart';
 import 'words_repository.dart';
 
@@ -72,6 +73,29 @@ class SQLiteWordsRepository implements WordsRepository {
   }
 
   @override
+  Future<void> resetProgress(String id) async {
+    final entry = await getEntryById(id);
+    if (entry == null) {
+      throw Exception('Entry with ID $id not found.');
+    }
+
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    final nowUtc = DateTime.now().toUtc().toIso8601String();
+
+    final resetEntry = entry.copyWith(
+      level: 0,
+      dueDate: todayStr,
+      lastReviewedAt: null,
+      clearLastReviewedAt: true,
+      timesCorrect: 0,
+      timesWrong: 0,
+      updatedAt: nowUtc,
+    );
+
+    await updateEntry(resetEntry);
+  }
+
+  @override
   Future<Entry?> getEntryById(String id) async {
     final maps = await db.query(
       'words',
@@ -138,5 +162,69 @@ class SQLiteWordsRepository implements WordsRepository {
       orderBy: 'due_date ASC, created_at ASC',
     );
     return maps.map((map) => Entry.fromDatabaseMap(map)).toList();
+  }
+
+  @override
+  Future<ImportMergeResult> mergeEntries(List<Entry> incomingEntries) async {
+    int added = 0;
+    int updated = 0;
+    int skipped = 0;
+
+    await db.transaction((txn) async {
+      final existingRows = await txn.query('words');
+      final Map<String, Entry> localByKey = {};
+      final Set<String> usedIds = {};
+
+      for (final row in existingRows) {
+        final localEntry = Entry.fromDatabaseMap(row);
+        localByKey[localEntry.englishKey] = localEntry;
+        usedIds.add(localEntry.id);
+      }
+
+      for (final incoming in incomingEntries) {
+        final local = localByKey[incoming.englishKey];
+
+        if (local == null) {
+          // Absent term
+          String targetId = incoming.id;
+          if (usedIds.contains(targetId)) {
+            // UUID collision on a distinct term -> assign new UUID
+            targetId = const Uuid().v4();
+          }
+
+          final newEntry = incoming.copyWith(id: targetId);
+          await txn.insert('words', newEntry.toDatabaseMap());
+          usedIds.add(targetId);
+          localByKey[newEntry.englishKey] = newEntry;
+          added++;
+        } else {
+          // Matched term
+          final incomingUpdatedInst = DateTime.parse(incoming.updatedAt).toUtc();
+          final localUpdatedInst = DateTime.parse(local.updatedAt).toUtc();
+
+          if (incomingUpdatedInst.isAfter(localUpdatedInst)) {
+            // Replace local record preserving local ID
+            final updatedEntry = incoming.copyWith(id: local.id);
+            await txn.update(
+              'words',
+              updatedEntry.toDatabaseMap(),
+              where: 'id = ?',
+              whereArgs: [local.id],
+            );
+            localByKey[local.englishKey] = updatedEntry;
+            updated++;
+          } else {
+            // Keep local record
+            skipped++;
+          }
+        }
+      }
+    });
+
+    return ImportMergeResult(
+      added: added,
+      updated: updated,
+      skipped: skipped,
+    );
   }
 }

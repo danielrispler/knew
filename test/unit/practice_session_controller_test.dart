@@ -51,6 +51,14 @@ class MockWordsRepository implements WordsRepository {
   Future<List<Entry>> getDueEntries(String dateYYYYMMDD) async {
     return store.values.where((e) => e.dueDate.compareTo(dateYYYYMMDD) <= 0).toList();
   }
+
+  @override
+  Future<ImportMergeResult> mergeEntries(List<Entry> incomingEntries) async {
+    return const ImportMergeResult(added: 0, updated: 0, skipped: 0);
+  }
+
+  @override
+  Future<void> resetProgress(String id) async {}
 }
 
 void main() {

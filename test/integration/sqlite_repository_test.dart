@@ -122,6 +122,117 @@ void main() {
       expect(afterDelete, isNull);
     });
 
+    test('resetProgress resets learning counters and due date', () async {
+      final entry = Entry.create(
+        english: 'reset_test',
+        level: 4,
+        dueDate: '2026-09-20',
+        lastReviewedAt: '2026-09-13T10:00:00.000Z',
+        timesCorrect: 4,
+        timesWrong: 1,
+        meanings: [Meaning(partOfSpeech: 'n', definition: 'test', hebrewTranslations: ['בדיקה'])],
+      );
+      await wordsRepository.insertEntry(entry);
+
+      await wordsRepository.resetProgress(entry.id);
+
+      final reset = await wordsRepository.getEntryById(entry.id);
+      expect(reset, isNotNull);
+      expect(reset!.level, equals(0));
+      expect(reset.lastReviewedAt, isNull);
+      expect(reset.timesCorrect, equals(0));
+      expect(reset.timesWrong, equals(0));
+    });
+
+    test('mergeEntries handles insert, update on newer timestamp, skip on older/equal', () async {
+      // 1. Existing local entry
+      final localEntry = Entry(
+        id: 'id-local-1',
+        english: 'apple',
+        englishKey: 'apple',
+        meanings: const [Meaning(partOfSpeech: 'n', definition: 'fruit', hebrewTranslations: ['תפוח'])],
+        source: null,
+        context: null,
+        level: 1,
+        dueDate: '2026-09-16',
+        lastReviewedAt: '2026-09-15T08:00:00.000Z',
+        timesCorrect: 1,
+        timesWrong: 0,
+        createdAt: '2026-09-10T08:00:00.000Z',
+        updatedAt: '2026-09-15T08:00:00.000Z',
+      );
+      await wordsRepository.insertEntry(localEntry);
+
+      // 2. Incoming entries
+      // a) 'banana' -> absent, should be inserted (added)
+      final incomingNew = Entry(
+        id: 'id-incoming-2',
+        english: 'banana',
+        englishKey: 'banana',
+        meanings: const [Meaning(partOfSpeech: 'n', definition: 'fruit', hebrewTranslations: ['בננה'])],
+        source: null,
+        context: null,
+        level: 0,
+        dueDate: '2026-09-15',
+        lastReviewedAt: null,
+        timesCorrect: 0,
+        timesWrong: 0,
+        createdAt: '2026-09-15T09:00:00.000Z',
+        updatedAt: '2026-09-15T09:00:00.000Z',
+      );
+
+      // b) 'apple' -> matched, incoming updatedAt (10:00) strictly later than local (08:00) -> updated
+      final incomingUpdatedApple = localEntry.copyWith(
+        level: 3,
+        updatedAt: '2026-09-15T10:00:00.000Z',
+      );
+
+      final result = await wordsRepository.mergeEntries([incomingNew, incomingUpdatedApple]);
+
+      expect(result.added, equals(1));
+      expect(result.updated, equals(1));
+      expect(result.skipped, equals(0));
+
+      final fetchedApple = await wordsRepository.getEntryByEnglishKey('apple');
+      expect(fetchedApple!.level, equals(3));
+
+      final fetchedBanana = await wordsRepository.getEntryByEnglishKey('banana');
+      expect(fetchedBanana, isNotNull);
+    });
+
+    test('mergeEntries skips incoming entry if incoming updatedAt is older or equal', () async {
+      final localEntry = Entry(
+        id: 'id-local-1',
+        english: 'cherry',
+        englishKey: 'cherry',
+        meanings: const [Meaning(partOfSpeech: 'n', definition: 'fruit', hebrewTranslations: ['דובדבן'])],
+        source: null,
+        context: null,
+        level: 2,
+        dueDate: '2026-09-16',
+        lastReviewedAt: '2026-09-15T08:00:00.000Z',
+        timesCorrect: 2,
+        timesWrong: 0,
+        createdAt: '2026-09-10T08:00:00.000Z',
+        updatedAt: '2026-09-15T08:00:00.000Z',
+      );
+      await wordsRepository.insertEntry(localEntry);
+
+      final incomingOlderCherry = localEntry.copyWith(
+        level: 5,
+        updatedAt: '2026-09-15T07:00:00.000Z', // Older
+      );
+
+      final result = await wordsRepository.mergeEntries([incomingOlderCherry]);
+
+      expect(result.added, equals(0));
+      expect(result.updated, equals(0));
+      expect(result.skipped, equals(1));
+
+      final fetchedCherry = await wordsRepository.getEntryByEnglishKey('cherry');
+      expect(fetchedCherry!.level, equals(2)); // Local kept
+    });
+
     test('retrieves all entries sorted by creation time', () async {
       final entry1 = Entry.create(
         english: 'apple',

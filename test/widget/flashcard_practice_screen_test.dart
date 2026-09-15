@@ -49,6 +49,14 @@ class TestWordsRepository implements WordsRepository {
   Future<List<Entry>> getDueEntries(String dateYYYYMMDD) async {
     return store.values.toList();
   }
+
+  @override
+  Future<ImportMergeResult> mergeEntries(List<Entry> incomingEntries) async {
+    return const ImportMergeResult(added: 0, updated: 0, skipped: 0);
+  }
+
+  @override
+  Future<void> resetProgress(String id) async {}
 }
 
 void main() {

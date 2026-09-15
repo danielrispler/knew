@@ -43,6 +43,12 @@ class VocabularyListNotifier extends AsyncNotifier<List<Entry>> {
     await repository.deleteEntry(id);
     await refreshList();
   }
+
+  Future<void> resetProgress(String id) async {
+    final repository = ref.read(wordsRepositoryProvider);
+    await repository.resetProgress(id);
+    await refreshList();
+  }
 }
 
 final vocabularyListProvider =
