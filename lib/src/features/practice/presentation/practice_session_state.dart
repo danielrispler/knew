@@ -1,4 +1,5 @@
 import '../../vocabulary/domain/entry.dart';
+import '../domain/answer_checker.dart';
 import '../domain/practice_question.dart';
 
 class StageMovement {
@@ -29,6 +30,11 @@ class PracticeSessionState {
   final bool canOverride;
   final String? lastGradedEntryId;
 
+  // New fields for multiple choice and typing formats
+  final int? selectedOptionIndex;
+  final AnswerCheckResult? answerCheckResult;
+  final String? typedText;
+
   const PracticeSessionState({
     this.initialQueue = const [],
     this.questions = const [],
@@ -44,6 +50,9 @@ class PracticeSessionState {
     this.isCompleted = false,
     this.canOverride = false,
     this.lastGradedEntryId,
+    this.selectedOptionIndex,
+    this.answerCheckResult,
+    this.typedText,
   });
 
   PracticeQuestion? get currentQuestion {
@@ -106,6 +115,9 @@ class PracticeSessionState {
     bool? isCompleted,
     bool? canOverride,
     String? lastGradedEntryId,
+    int? selectedOptionIndex,
+    AnswerCheckResult? answerCheckResult,
+    String? typedText,
   }) {
     return PracticeSessionState(
       initialQueue: initialQueue ?? this.initialQueue,
@@ -122,6 +134,9 @@ class PracticeSessionState {
       isCompleted: isCompleted ?? this.isCompleted,
       canOverride: canOverride ?? this.canOverride,
       lastGradedEntryId: lastGradedEntryId ?? this.lastGradedEntryId,
+      selectedOptionIndex: selectedOptionIndex ?? this.selectedOptionIndex,
+      answerCheckResult: answerCheckResult ?? this.answerCheckResult,
+      typedText: typedText ?? this.typedText,
     );
   }
 }

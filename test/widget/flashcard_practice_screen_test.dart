@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:knew/src/features/practice/presentation/flashcard_practice_screen.dart';
+import 'package:knew/src/features/vocabulary/data/words_repository.dart';
 import 'package:knew/src/features/vocabulary/domain/entry.dart';
 import 'package:knew/src/features/vocabulary/domain/meaning.dart';
-import 'package:knew/src/features/vocabulary/data/words_repository.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_providers.dart';
-import 'package:knew/src/features/practice/presentation/flashcard_practice_screen.dart';
 
 class TestWordsRepository implements WordsRepository {
   final Map<String, Entry> store = {};
@@ -92,16 +92,24 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify initial prompt visible
-    expect(find.text('persistent'), findsOneWidget);
+    final isEngPrompt = find.text('persistent').evaluate().isNotEmpty;
+    if (isEngPrompt) {
+      expect(find.text('persistent'), findsOneWidget);
+    } else {
+      expect(find.text('מתמיד, עקבי'), findsOneWidget);
+    }
     expect(find.text('Show answer'), findsOneWidget);
 
     // Tap Show answer to reveal
     await tester.tap(find.text('Show answer'));
     await tester.pumpAndSettle();
 
-    // Verify revealed translation and actions visible
-    expect(find.text('מתמיד, עקבי'), findsOneWidget);
+    // Verify revealed translation/term and actions visible
+    if (isEngPrompt) {
+      expect(find.text('מתמיד, עקבי'), findsOneWidget);
+    } else {
+      expect(find.text('persistent'), findsOneWidget);
+    }
     expect(find.text('lasting for a long time'), findsOneWidget);
     expect(find.text("Didn't know"), findsOneWidget);
     expect(find.text('Knew it'), findsOneWidget);

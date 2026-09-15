@@ -2,9 +2,12 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../vocabulary/domain/entry.dart';
 import '../../vocabulary/presentation/vocabulary_providers.dart';
+import '../domain/answer_checker.dart';
+import '../domain/distractor_generator.dart';
 import '../domain/due_queue_selector.dart';
 import '../domain/practice_question.dart';
 import '../domain/practice_scheduler.dart';
+import '../domain/question_format_selector.dart';
 import 'practice_session_state.dart';
 
 class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
@@ -29,6 +32,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     final preSnapshots = <String, Entry>{};
     final questions = <PracticeQuestion>[];
 
+    QuestionFormat? lastFormat;
+    int consecutiveFormatCount = 0;
+
     for (final entry in selection.entries) {
       preSnapshots[entry.id] = entry;
 
@@ -36,11 +42,39 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
           ? PromptDirection.englishToHebrew
           : PromptDirection.hebrewToEnglish;
 
+      final format = QuestionFormatSelector.selectFormat(
+        entry: entry,
+        direction: dir,
+        library: library,
+        wasAboveLevelZeroAtSessionStart: entry.level > 0,
+        lastFormat: lastFormat,
+        consecutiveCount: consecutiveFormatCount,
+        random: rng,
+      );
+
+      if (format == lastFormat) {
+        consecutiveFormatCount++;
+      } else {
+        lastFormat = format;
+        consecutiveFormatCount = 1;
+      }
+
+      DistractorResult? distractorResult;
+      if (format == QuestionFormat.multipleChoice) {
+        distractorResult = DistractorGenerator.generate(
+          target: entry,
+          direction: dir,
+          library: library,
+          random: rng,
+        );
+      }
+
       questions.add(PracticeQuestion(
         entry: entry,
         direction: dir,
-        format: QuestionFormat.flashcard,
+        format: format,
         isRepeat: false,
+        distractorResult: distractorResult,
       ));
     }
 
@@ -55,12 +89,53 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       repeatQueue: [],
       isCompleted: questions.isEmpty,
       canOverride: false,
+      selectedOptionIndex: null,
+      answerCheckResult: null,
+      typedText: null,
     );
   }
 
   void reveal() {
     if (state.isRevealed || state.isCompleted) return;
     state = state.copyWith(isRevealed: true);
+  }
+
+  void selectOption(int optionIndex) {
+    final question = state.currentQuestion;
+    if (question == null || state.isRevealed || state.isCompleted) return;
+    if (question.format != QuestionFormat.multipleChoice || question.distractorResult == null) return;
+
+    final distractorResult = question.distractorResult!;
+    final isCorrect = (optionIndex == distractorResult.correctOptionIndex);
+
+    state = state.copyWith(
+      selectedOptionIndex: optionIndex,
+      isRevealed: true,
+      lastAttemptedGrade: isCorrect,
+    );
+  }
+
+  AnswerCheckResult submitTypedAnswer(String text) {
+    final question = state.currentQuestion;
+    if (question == null || state.isCompleted) {
+      return const AnswerCheckResult(AnswerCheckStatus.noMatch);
+    }
+
+    final result = question.direction == PromptDirection.englishToHebrew
+        ? AnswerChecker.checkHebrewAnswer(userInput: text, entry: question.entry)
+        : AnswerChecker.checkEnglishAnswer(userInput: text, entry: question.entry);
+
+    final isCorrect = (result.status == AnswerCheckStatus.exactMatch ||
+        result.status == AnswerCheckStatus.typoMatch);
+
+    state = state.copyWith(
+      typedText: text,
+      answerCheckResult: result,
+      isRevealed: true,
+      lastAttemptedGrade: isCorrect,
+    );
+
+    return result;
   }
 
   Future<void> gradeCurrent({required bool correct, DateTime? now}) async {
@@ -174,13 +249,52 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     final questions = List<PracticeQuestion>.from(state.questions);
 
     if (nextIndex >= questions.length && repeatQueue.isNotEmpty) {
+      final rng = Random();
+      QuestionFormat? lastFormat = questions.isNotEmpty ? questions.last.format : null;
+      int consecutiveCount = 1;
+
       for (final repeatEntry in repeatQueue) {
         if (!questions.any((q) => q.isRepeat && q.entry.id == repeatEntry.id)) {
+          final dir = rng.nextBool()
+              ? PromptDirection.englishToHebrew
+              : PromptDirection.hebrewToEnglish;
+
+          final preEntry = state.firstPassPreSnapshots[repeatEntry.id];
+          final wasAboveZero = (preEntry?.level ?? repeatEntry.level) > 0;
+
+          final format = QuestionFormatSelector.selectFormat(
+            entry: repeatEntry,
+            direction: dir,
+            library: state.initialQueue,
+            wasAboveLevelZeroAtSessionStart: wasAboveZero,
+            lastFormat: lastFormat,
+            consecutiveCount: consecutiveCount,
+            random: rng,
+          );
+
+          if (format == lastFormat) {
+            consecutiveCount++;
+          } else {
+            lastFormat = format;
+            consecutiveCount = 1;
+          }
+
+          DistractorResult? distractorResult;
+          if (format == QuestionFormat.multipleChoice) {
+            distractorResult = DistractorGenerator.generate(
+              target: repeatEntry,
+              direction: dir,
+              library: state.initialQueue,
+              random: rng,
+            );
+          }
+
           questions.add(PracticeQuestion(
             entry: repeatEntry,
-            direction: PromptDirection.englishToHebrew,
-            format: QuestionFormat.flashcard,
+            direction: dir,
+            format: format,
             isRepeat: true,
+            distractorResult: distractorResult,
           ));
         }
       }
@@ -199,6 +313,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       isCompleted: isCompleted,
       canOverride: canOverride,
       lastGradedEntryId: lastGradedId,
+      selectedOptionIndex: null,
+      answerCheckResult: null,
+      typedText: null,
     );
   }
 }
