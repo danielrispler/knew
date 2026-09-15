@@ -23,9 +23,7 @@ class SecureStorageRepository {
     } on Exception catch (_) {
       // In case of hardware key rotation, device restore, or corrupted KeyStore entry,
       // purge the invalid entry and return null gracefully.
-      try {
-        await _storage?.delete(key: _keyApiKey);
-      } catch (_) {}
+      await _purgeApiKeySilently();
       return null;
     }
   }
@@ -41,14 +39,12 @@ class SecureStorageRepository {
     }
     try {
       if (apiKey.trim().isEmpty) {
-        await _storage?.delete(key: _keyApiKey);
+        await _purgeApiKeySilently();
       } else {
         await _storage?.write(key: _keyApiKey, value: apiKey.trim());
       }
     } on Exception catch (_) {
-      try {
-        await _storage?.delete(key: _keyApiKey);
-      } catch (_) {}
+      await _purgeApiKeySilently();
     }
   }
 
@@ -57,8 +53,12 @@ class SecureStorageRepository {
       _inMemoryStorage.remove(_keyApiKey);
       return;
     }
+    await _purgeApiKeySilently();
+  }
+
+  Future<void> _purgeApiKeySilently() async {
     try {
       await _storage?.delete(key: _keyApiKey);
-    } on Exception catch (_) {}
+    } catch (_) {}
   }
 }

@@ -37,7 +37,7 @@ void main() {
       expect(content.contains('android:fullBackupContent="@xml/full_backup_content"'), isTrue);
     });
 
-    test('Backup XML rules exist and exclude FlutterSecureStorage', () {
+    test('Backup XML rules exist and exclude FlutterSecureStorage from cloud-backup and device-transfer', () {
       final dataRules = File('android/app/src/main/res/xml/data_extraction_rules.xml');
       final fullRules = File('android/app/src/main/res/xml/full_backup_content.xml');
 
@@ -49,11 +49,32 @@ void main() {
 
       expect(dataContent.contains('domain="database"'), isTrue);
       expect(dataContent.contains('domain="sharedpref"'), isTrue);
-      expect(dataContent.contains('FlutterSecureStorage.xml'), isTrue);
+
+      // Verify FlutterSecureStorage.xml is excluded in BOTH cloud-backup and device-transfer
+      final cloudBackupIndex = dataContent.indexOf('<cloud-backup>');
+      final deviceTransferIndex = dataContent.indexOf('<device-transfer>');
+
+      expect(cloudBackupIndex, isNot(-1));
+      expect(deviceTransferIndex, isNot(-1));
+
+      final cloudSection = dataContent.substring(cloudBackupIndex, deviceTransferIndex);
+      final deviceSection = dataContent.substring(deviceTransferIndex);
+
+      expect(
+        cloudSection.contains('<exclude domain="sharedpref" path="FlutterSecureStorage.xml" />'),
+        isTrue,
+        reason: 'FlutterSecureStorage.xml must be excluded under cloud-backup',
+      );
+
+      expect(
+        deviceSection.contains('<exclude domain="sharedpref" path="FlutterSecureStorage.xml" />'),
+        isTrue,
+        reason: 'FlutterSecureStorage.xml must be excluded under device-transfer',
+      );
 
       expect(fullContent.contains('domain="database"'), isTrue);
       expect(fullContent.contains('domain="sharedpref"'), isTrue);
-      expect(fullContent.contains('FlutterSecureStorage.xml'), isTrue);
+      expect(fullContent.contains('<exclude domain="sharedpref" path="FlutterSecureStorage.xml" />'), isTrue);
     });
   });
 }

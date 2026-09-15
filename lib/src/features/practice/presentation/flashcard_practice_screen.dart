@@ -109,7 +109,7 @@ class _FlashcardPracticeScreenState
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: widget.onExit,
-                child: const Text('Add word'),
+                child: const Text('Add entry'),
               ),
             ],
           ),
