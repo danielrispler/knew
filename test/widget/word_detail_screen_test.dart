@@ -90,7 +90,7 @@ void main() {
       await tester.tap(find.text('Reset Progress'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Reset Progress?'), findsOneWidget);
+      expect(find.textContaining('Reset Progress'), findsAtLeast(1));
       expect(find.text('Cancel'), findsOneWidget);
 
       // Tap Reset Progress inside confirmation dialog

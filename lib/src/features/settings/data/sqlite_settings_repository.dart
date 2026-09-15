@@ -12,6 +12,7 @@ class SQLiteSettingsRepository implements SettingsRepository {
   static const String keyTheme = 'theme';
   static const String keyModel = 'model';
   static const String keyLastSource = 'lastSource';
+  static const String keyLanguage = 'language';
 
   Future<String?> _getValue(String key) async {
     final maps = await db.query(
@@ -104,5 +105,24 @@ class SQLiteSettingsRepository implements SettingsRepository {
   @override
   Future<void> setLastSource(String source) async {
     await _setValue(keyLastSource, source.trim());
+  }
+
+  @override
+  Future<String> getLanguage() async {
+    final raw = await _getValue(keyLanguage);
+    if (raw == null) return 'system';
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is String && (decoded == 'system' || decoded == 'en' || decoded == 'he')) {
+        return decoded;
+      }
+    } catch (_) {}
+    return 'system';
+  }
+
+  @override
+  Future<void> setLanguage(String language) async {
+    if (language != 'system' && language != 'en' && language != 'he') return;
+    await _setValue(keyLanguage, language);
   }
 }

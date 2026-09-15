@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../vocabulary/domain/entry.dart';
 import 'practice_session_state.dart';
 
@@ -12,25 +13,26 @@ class PracticeSummaryScreen extends StatelessWidget {
     required this.onDone,
   });
 
-  String _stageName(Stage stage) {
+  String _stageName(Stage stage, AppLocalizations l10n) {
     switch (stage) {
       case Stage.newStage:
-        return 'New';
+        return l10n.stageNew;
       case Stage.familiar:
-        return 'Familiar';
+        return l10n.stageFamiliar;
       case Stage.learned:
-        return 'Learned';
+        return l10n.stageLearned;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accuracyPercent = (state.accuracy * 100).round();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(state.isExtraPractice ? 'Extra Practice Summary' : 'Practice Summary'),
+        title: Text(l10n.practiceSummary),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -56,7 +58,7 @@ class PracticeSummaryScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Accuracy (${state.reviewedCount} items reviewed)',
+                        l10n.sessionCompleteDesc(state.reviewedCount),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -83,7 +85,7 @@ class PracticeSummaryScreen extends StatelessWidget {
                       return ListTile(
                         title: Text(movement.entry.english),
                         subtitle: Text(
-                          '${_stageName(movement.fromStage)} → ${_stageName(movement.toStage)}',
+                          '${_stageName(movement.fromStage, l10n)} → ${_stageName(movement.toStage, l10n)}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.primary,
                           ),
@@ -104,7 +106,7 @@ class PracticeSummaryScreen extends StatelessWidget {
                     foregroundColor: theme.colorScheme.onPrimary,
                     minimumSize: const Size.fromHeight(52),
                   ),
-                  child: const Text('Done', style: TextStyle(fontSize: 16)),
+                  child: Text(l10n.done, style: const TextStyle(fontSize: 16)),
                 ),
               ),
               const SizedBox(height: 16),

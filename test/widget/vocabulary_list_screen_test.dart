@@ -36,7 +36,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('knew'), findsOneWidget);
-      expect(find.textContaining('No vocabulary entries saved yet'), findsOneWidget);
+      expect(find.textContaining('Your vocabulary library is empty'), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 

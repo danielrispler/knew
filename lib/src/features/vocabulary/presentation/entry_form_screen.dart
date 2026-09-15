@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../data/words_repository.dart';
@@ -312,14 +313,15 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialEntry != null;
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit Entry' : 'New Entry'),
+        title: Text(isEditing ? l10n.editTermTitle : l10n.addTermTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            tooltip: 'Save',
+            tooltip: l10n.save,
             onPressed: _isSaving ? null : _saveEntry,
           ),
         ],

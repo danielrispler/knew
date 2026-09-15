@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../domain/answer_checker.dart';
 import '../../domain/practice_question.dart';
 import '../practice_session_state.dart';
@@ -120,8 +121,8 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                 },
                 onSubmitted: isRevealed ? null : widget.onSubmit,
                 decoration: InputDecoration(
-                  labelText: expectsHebrew ? 'Answer in Hebrew' : 'Answer in English',
-                  hintText: expectsHebrew ? 'הקלד תשובה' : 'Type an answer',
+                  labelText: expectsHebrew ? context.l10n.typeAnswerInHebrew : context.l10n.typeAnswerInEnglish,
+                  hintText: expectsHebrew ? context.l10n.typeHebrewHint : context.l10n.typeEnglishHint,
                   hintTextDirection: answerDirection,
                   border: const OutlineInputBorder(),
                 ),

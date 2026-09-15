@@ -1,0 +1,149 @@
+{
+  "@@locale": "en",
+  "appTitle": "knew",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "ok": "OK",
+  "done": "Done",
+  "error": "Error",
+  "search": "Search",
+  "close": "Close",
+
+  "vocabularyTitle": "Vocabulary",
+  "practiceTitle": "Practice Session",
+  "practiceSummary": "Practice Summary",
+  "settingsTitle": "Settings",
+  "addTermTitle": "Add Term",
+  "editTermTitle": "Edit Term",
+
+  "searchPlaceholder": "Search terms or meanings...",
+  "noTermsFound": "No terms found",
+  "noTermsYet": "Your vocabulary library is empty.\nTap '+' to add your first term.",
+  "filterAll": "All",
+  "filterNew": "New (0-2)",
+  "filterFamiliar": "Familiar (3-4)",
+  "filterLearned": "Learned (5-6)",
+  "dueBadge": "Due",
+  "startPractice": "Start Practice",
+  "extraPractice": "Extra Practice",
+  "noDueForPractice": "No terms due for practice",
+
+  "wordDetailTitle": "Term Details",
+  "level": "Level {level}",
+  "@level": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "stageNew": "New",
+  "stageFamiliar": "Familiar",
+  "stageLearned": "Learned",
+  "meanings": "Meanings",
+  "source": "Source",
+  "context": "Context",
+  "lastReviewed": "Last reviewed: {date}",
+  "@lastReviewed": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "neverReviewed": "Last reviewed: Never",
+  "nextReview": "Next review: {date}",
+  "@nextReview": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "resetProgress": "Reset Progress",
+  "resetProgressConfirm": "Are you sure you want to reset learning progress for this term?",
+  "deleteTermConfirm": "Are you sure you want to delete this term?",
+
+  "termLabel": "Term (English)",
+  "termHint": "e.g., persistent",
+  "lookupWithGemini": "Lookup with Gemini",
+  "meaningSection": "Meanings",
+  "partOfSpeech": "Part of speech",
+  "hebrewTranslations": "Hebrew translations (comma separated)",
+  "englishDefinition": "English definition (optional)",
+  "addMeaning": "Add Meaning",
+  "removeMeaning": "Remove",
+  "sourceLabel": "Source (optional)",
+  "sourceHint": "e.g., Book: 1984, Article title",
+  "contextSentenceLabel": "Context sentence (optional)",
+  "contextSentenceHint": "e.g., She was persistent in seeking the truth.",
+  "saveTerm": "Save Term",
+  "termRequired": "Please enter a term",
+  "atLeastOneMeaningRequired": "Please add at least one meaning with a translation",
+
+  "practiceDefaults": "Practice Defaults",
+  "sessionSize": "Session Size",
+  "entriesPerSession": "{count} entries per session",
+  "@entriesPerSession": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appearance": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "appLanguage": "App Language",
+  "languageSystem": "System Default",
+  "languageEnglish": "English",
+  "languageHebrew": "Hebrew (עברית)",
+  "geminiSettings": "Gemini Assisted Lookup Settings",
+  "primaryModelChoice": "Primary Model Choice",
+  "modelFallbackHelper": "Automatically falls back to lower models (down to 3.5 Flash Lite) if rate-limited.",
+  "customModel": "Custom Model...",
+  "customModelName": "Custom Model Name",
+  "customModelHint": "e.g., gemini-1.5-pro, tunedModels/my-model",
+  "customModelHelper": "Enter exact model identifier. Fallbacks will apply if unavailable.",
+  "geminiApiKey": "Gemini API Key",
+  "apiKeyHint": "Paste API key here",
+  "apiKeySaved": "API Key saved securely",
+  "testKeyConnection": "Test Key Connection",
+  "connectionSuccessful": "Connection successful! Gemini API key is active.",
+  "dataBackup": "Data & Backup",
+  "dataBackupDesc": "Export or import your vocabulary library and learning progress as a backup JSON file.",
+  "exportBackup": "Export Backup",
+  "importBackup": "Import Backup",
+
+  "revealAnswer": "Reveal Answer",
+  "correct": "Correct",
+  "incorrect": "Incorrect",
+  "countAsCorrect": "Count as correct",
+  "typeAnswerInHebrew": "Answer in Hebrew",
+  "typeAnswerInEnglish": "Answer in English",
+  "typeHebrewHint": "הקלד תשובה",
+  "typeEnglishHint": "Type an answer",
+  "submitAnswer": "Submit",
+  "nextQuestion": "Next Question",
+  "sessionComplete": "Practice Complete!",
+  "sessionCompleteDesc": "Great job! You reviewed {count} terms.",
+  "@sessionCompleteDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accuracy": "Accuracy: {percent}%",
+  "@accuracy": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "returnToLibrary": "Return to Library",
+  "pronunciationUnavailable": "English pronunciation unavailable."
+}

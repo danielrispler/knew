@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/generated/app_localizations.dart';
 import 'package:knew/src/core/theme/app_theme.dart';
 import 'package:knew/src/features/settings/presentation/settings_providers.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_list_screen.dart';
@@ -26,6 +27,11 @@ class KnewApp extends ConsumerWidget {
       loading: () => ThemeMode.system,
       error: (err, stack) => ThemeMode.system,
     );
+    final locale = settingsAsync.when(
+      data: (s) => s.locale,
+      loading: () => null,
+      error: (err, stack) => null,
+    );
 
     return MaterialApp(
       title: 'knew',
@@ -33,6 +39,9 @@ class KnewApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const VocabularyListScreen(),
     );
   }

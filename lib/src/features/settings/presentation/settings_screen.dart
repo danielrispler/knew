@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../vocabulary/data/export_import_service.dart';
 import '../../vocabulary/data/gemini_models.dart';
 import '../../vocabulary/domain/gemini_lookup_result.dart';
@@ -44,10 +45,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(settingsProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l10n.settingsTitle),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -75,7 +77,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     padding: const EdgeInsets.all(16.0),
                     children: [
                       Text(
-                        'Practice Defaults',
+                        l10n.practiceDefaults,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -83,8 +85,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const SizedBox(height: 8),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Session Size'),
-                        subtitle: Text('${settings.sessionSize} entries per session'),
+                        title: Text(l10n.sessionSize),
+                        subtitle: Text(l10n.entriesPerSession(settings.sessionSize)),
                         trailing: SizedBox(
                           width: 150,
                           child: Slider(
@@ -103,17 +105,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       const Divider(height: 32),
                       Text(
-                        'Appearance',
+                        l10n.appearance,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                       ),
                       const SizedBox(height: 8),
                       SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'system', label: Text('System')),
-                          ButtonSegment(value: 'light', label: Text('Light')),
-                          ButtonSegment(value: 'dark', label: Text('Dark')),
+                        segments: [
+                          ButtonSegment(value: 'system', label: Text(l10n.themeSystem)),
+                          ButtonSegment(value: 'light', label: Text(l10n.themeLight)),
+                          ButtonSegment(value: 'dark', label: Text(l10n.themeDark)),
                         ],
                         selected: {settings.theme},
                         onSelectionChanged: (newSelection) {
@@ -122,9 +124,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               .setTheme(newSelection.first);
                         },
                       ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.appLanguage,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(value: 'system', label: Text(l10n.languageSystem)),
+                          ButtonSegment(value: 'en', label: Text(l10n.languageEnglish)),
+                          ButtonSegment(value: 'he', label: Text(l10n.languageHebrew)),
+                        ],
+                        selected: {settings.language},
+                        onSelectionChanged: (newSelection) {
+                          ref
+                              .read(settingsProvider.notifier)
+                              .setLanguage(newSelection.first);
+                        },
+                      ),
                       const Divider(height: 32),
                       Text(
-                        'Gemini Assisted Lookup Settings',
+                        l10n.geminiSettings,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -134,12 +157,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         onTap: () => _showModelPickerBottomSheet(context, dropdownValue, settings.model),
                         borderRadius: BorderRadius.circular(4),
                         child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Primary Model Choice',
-                            helperText:
-                                'Automatically falls back to lower models (down to 3.5 Flash Lite) if rate-limited.',
-                            border: OutlineInputBorder(),
-                            suffixIcon: Icon(Icons.arrow_drop_down),
+                          decoration: InputDecoration(
+                            labelText: l10n.primaryModelChoice,
+                            helperText: l10n.modelFallbackHelper,
+                            border: const OutlineInputBorder(),
+                            suffixIcon: const Icon(Icons.arrow_drop_down),
                           ),
                           child: Text(
                             _getModelDisplayTitle(dropdownValue, settings.model),
@@ -154,10 +176,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         TextFormField(
                           controller: _customModelController,
                           decoration: InputDecoration(
-                            labelText: 'Custom Model Name',
-                            hintText: 'e.g., gemini-1.5-pro, tunedModels/my-model',
-                            helperText:
-                                'Enter exact model identifier. Fallbacks will apply if unavailable.',
+                            labelText: l10n.customModelName,
+                            hintText: l10n.customModelHint,
+                            helperText: l10n.customModelHelper,
                             border: const OutlineInputBorder(),
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.check),
@@ -191,8 +212,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         controller: _apiKeyController,
                         obscureText: true,
                         decoration: InputDecoration(
-                          labelText: 'Gemini API Key',
-                          hintText: 'Paste API key here',
+                          labelText: l10n.geminiApiKey,
+                          hintText: l10n.apiKeyHint,
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: const Icon(Icons.save),
@@ -201,8 +222,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   .read(settingsProvider.notifier)
                                   .setApiKey(_apiKeyController.text);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('API Key saved securely')),
+                                SnackBar(
+                                    content: Text(l10n.apiKeySaved)),
                               );
                             },
                           ),
@@ -239,9 +260,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   );
                                   if (mounted) {
                                     messenger.showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                            'Connection successful! Gemini API key is active.'),
+                                      SnackBar(
+                                        content: Text(l10n.connectionSuccessful),
                                       ),
                                     );
                                   }
@@ -272,18 +292,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.bolt),
-                        label: const Text('Test Key Connection'),
+                        label: Text(l10n.testKeyConnection),
                       ),
                       const Divider(height: 32),
                       Text(
-                        'Data & Backup',
+                        l10n.dataBackup,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Export or import your vocabulary library and learning progress as a backup JSON file.',
+                        l10n.dataBackupDesc,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Theme.of(context).colorScheme.outline,
                             ),
@@ -300,7 +320,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   child: OutlinedButton.icon(
                                     onPressed: () => ExportImportService.exportData(context, ref),
                                     icon: const Icon(Icons.file_upload_outlined),
-                                    label: const Text('Export Backup'),
+                                    label: Text(l10n.exportBackup),
                                     style: OutlinedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
                                     ),
@@ -312,7 +332,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   child: ElevatedButton.icon(
                                     onPressed: () => ExportImportService.importData(context, ref),
                                     icon: const Icon(Icons.file_download_outlined),
-                                    label: const Text('Import Backup'),
+                                    label: Text(l10n.importBackup),
                                     style: ElevatedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
                                     ),
@@ -327,7 +347,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 child: OutlinedButton.icon(
                                   onPressed: () => ExportImportService.exportData(context, ref),
                                   icon: const Icon(Icons.file_upload_outlined),
-                                  label: const Text('Export Backup'),
+                                  label: Text(l10n.exportBackup),
                                   style: OutlinedButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
                                   ),
@@ -338,7 +358,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 child: ElevatedButton.icon(
                                   onPressed: () => ExportImportService.importData(context, ref),
                                   icon: const Icon(Icons.file_download_outlined),
-                                  label: const Text('Import Backup'),
+                                  label: Text(l10n.importBackup),
                                   style: ElevatedButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
                                   ),

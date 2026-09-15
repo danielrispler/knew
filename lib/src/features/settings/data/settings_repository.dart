@@ -10,4 +10,7 @@ abstract class SettingsRepository {
 
   Future<String> getLastSource();
   Future<void> setLastSource(String source);
+
+  Future<String> getLanguage();
+  Future<void> setLanguage(String language);
 }

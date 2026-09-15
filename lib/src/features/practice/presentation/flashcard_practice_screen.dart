@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../vocabulary/domain/entry.dart';
 import '../domain/practice_question.dart';
 import 'practice_providers.dart';

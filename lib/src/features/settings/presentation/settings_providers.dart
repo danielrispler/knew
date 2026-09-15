@@ -23,6 +23,7 @@ class SettingsState {
   final String theme;
   final String model;
   final String apiKey;
+  final String language;
   final bool isLoading;
 
   const SettingsState({
@@ -30,6 +31,7 @@ class SettingsState {
     required this.theme,
     required this.model,
     required this.apiKey,
+    this.language = 'system',
     this.isLoading = false,
   });
 
@@ -45,11 +47,24 @@ class SettingsState {
     }
   }
 
+  Locale? get locale {
+    switch (language) {
+      case 'en':
+        return const Locale('en');
+      case 'he':
+        return const Locale('he');
+      case 'system':
+      default:
+        return null;
+    }
+  }
+
   SettingsState copyWith({
     int? sessionSize,
     String? theme,
     String? model,
     String? apiKey,
+    String? language,
     bool? isLoading,
   }) {
     return SettingsState(
@@ -57,6 +72,7 @@ class SettingsState {
       theme: theme ?? this.theme,
       model: model ?? this.model,
       apiKey: apiKey ?? this.apiKey,
+      language: language ?? this.language,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -72,12 +88,14 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final theme = await settingsRepo.getTheme();
     final model = await settingsRepo.getModel();
     final apiKey = await secureStorageRepo.getApiKey() ?? '';
+    final language = await settingsRepo.getLanguage();
 
     return SettingsState(
       sessionSize: sessionSize,
       theme: theme,
       model: model,
       apiKey: apiKey,
+      language: language,
     );
   }
 
@@ -85,7 +103,7 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepo = ref.read(settingsRepositoryProvider);
     await settingsRepo.setSessionSize(size);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-2.5-flash', apiKey: ''))
+      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
           .copyWith(sessionSize: size),
     );
   }
@@ -94,8 +112,17 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepo = ref.read(settingsRepositoryProvider);
     await settingsRepo.setTheme(theme);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-2.5-flash', apiKey: ''))
+      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
           .copyWith(theme: theme),
+    );
+  }
+
+  Future<void> setLanguage(String language) async {
+    final settingsRepo = ref.read(settingsRepositoryProvider);
+    await settingsRepo.setLanguage(language);
+    state = AsyncValue.data(
+      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
+          .copyWith(language: language),
     );
   }
 
@@ -103,7 +130,7 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepo = ref.read(settingsRepositoryProvider);
     await settingsRepo.setModel(model);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-2.5-flash', apiKey: ''))
+      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
           .copyWith(model: model),
     );
   }
@@ -112,7 +139,7 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final secureStorageRepo = ref.read(secureStorageRepositoryProvider);
     await secureStorageRepo.setApiKey(apiKey);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-2.5-flash', apiKey: ''))
+      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
           .copyWith(apiKey: apiKey),
     );
   }

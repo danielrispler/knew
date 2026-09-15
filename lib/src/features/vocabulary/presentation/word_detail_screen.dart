@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../practice/data/tts_service.dart';
 import '../domain/entry.dart';
@@ -110,15 +111,13 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
     }
   }
 
-  String _stageLabel(Stage stage) {
-    switch (stage) {
-      case Stage.newStage:
-        return 'New (Level ${_entry.level})';
-      case Stage.familiar:
-        return 'Familiar (Level ${_entry.level})';
-      case Stage.learned:
-        return 'Learned (Level ${_entry.level})';
-    }
+  String _stageLabel(Stage stage, AppLocalizations l10n) {
+    final stageName = switch (stage) {
+      Stage.newStage => l10n.stageNew,
+      Stage.familiar => l10n.stageFamiliar,
+      Stage.learned => l10n.stageLearned,
+    };
+    return '$stageName (${l10n.level(_entry.level)})';
   }
 
   Future<void> _refreshEntry() async {
@@ -140,23 +139,21 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
   }
 
   Future<void> _confirmResetProgress() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Progress?'),
-        content: Text(
-          'Are you sure you want to reset learning progress for "${_entry.english}"?\n\n'
-          'This will set its level back to Level 0 (New) and clear review statistics.',
-        ),
+        title: Text(l10n.resetProgress),
+        content: Text(l10n.resetProgressConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Reset Progress'),
+            child: Text(l10n.resetProgress),
           ),
         ],
       ),
@@ -165,11 +162,6 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
     if (confirmed == true && mounted) {
       await ref.read(vocabularyListProvider.notifier).resetProgress(_entry.id);
       await _refreshEntry();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reset progress for "${_entry.english}"')),
-        );
-      }
     }
   }
 
@@ -203,6 +195,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final stageColor = _stageColor(_entry.stage);
 
     return LayoutBuilder(
@@ -264,7 +257,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                                 border: Border.all(color: stageColor, width: 1.5),
                               ),
                               child: Text(
-                                _stageLabel(_entry.stage),
+                                _stageLabel(_entry.stage, l10n),
                                 style: TextStyle(
                                   color: stageColor,
                                   fontWeight: FontWeight.bold,

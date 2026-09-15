@@ -342,6 +342,14 @@ void main() {
       expect(await settingsRepository.getLastSource(), '');
       await settingsRepository.setLastSource('Book');
       expect(await settingsRepository.getLastSource(), 'Book');
+
+      expect(await settingsRepository.getLanguage(), 'system');
+      await settingsRepository.setLanguage('he');
+      expect(await settingsRepository.getLanguage(), 'he');
+      await settingsRepository.setLanguage('en');
+      expect(await settingsRepository.getLanguage(), 'en');
+      await settingsRepository.setLanguage('invalid');
+      expect(await settingsRepository.getLanguage(), 'en');
     });
   });
 }

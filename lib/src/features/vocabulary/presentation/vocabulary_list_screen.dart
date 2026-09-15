@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../domain/entry.dart';
@@ -38,21 +39,20 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
     }
   }
 
-  String _stageLabel(Stage stage) {
+  String _stageLabel(Stage stage, AppLocalizations l10n) {
     switch (stage) {
       case Stage.newStage:
-        return 'New';
+        return l10n.stageNew;
       case Stage.familiar:
-        return 'Familiar';
+        return l10n.stageFamiliar;
       case Stage.learned:
-        return 'Learned';
+        return l10n.stageLearned;
     }
   }
 
   List<Entry> _filterEntries(List<Entry> entries) {
     var result = entries;
 
-    // Apply Stage Filter if selected
     if (_selectedStageFilter != null) {
       result = result.where((e) => e.stage == _selectedStageFilter).toList();
     }
@@ -79,14 +79,15 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
   @override
   Widget build(BuildContext context) {
     final vocabularyAsync = ref.watch(vocabularyListProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            const Text(
-              'knew',
-              style: TextStyle(
+            Text(
+              l10n.appTitle,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 26,
                 letterSpacing: -0.5,
@@ -101,7 +102,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${entries.length} terms',
+                  '${entries.length}',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -117,7 +118,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.school_outlined),
-            tooltip: 'Practice',
+            tooltip: l10n.practiceTitle,
             onPressed: () {
               final entries = vocabularyAsync.value ?? [];
               Navigator.of(context).push(
@@ -135,7 +136,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
+            tooltip: l10n.settingsTitle,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -150,9 +151,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
             MaterialPageRoute(builder: (context) => const EntryFormScreen()),
           );
         },
-        tooltip: 'Add Entry',
+        tooltip: l10n.addTermTitle,
         icon: const Icon(Icons.add),
-        label: const Text('Add Term', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: Text(l10n.addTermTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -173,7 +174,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            hintText: 'Search term, translation, definition...',
+                            hintText: l10n.searchPlaceholder,
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
@@ -202,7 +203,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                         child: Row(
                           children: [
                             FilterChip(
-                              label: const Text('All'),
+                              label: Text(l10n.filterAll),
                               selected: _selectedStageFilter == null,
                               onSelected: (_) {
                                 setState(() => _selectedStageFilter = null);
@@ -221,7 +222,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const Text('New stage'),
+                                  Text(l10n.filterNew),
                                 ],
                               ),
                               selected: _selectedStageFilter == Stage.newStage,
@@ -244,7 +245,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const Text('Familiar'),
+                                  Text(l10n.filterFamiliar),
                                 ],
                               ),
                               selected: _selectedStageFilter == Stage.familiar,
@@ -267,7 +268,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const Text('Learned'),
+                                  Text(l10n.filterLearned),
                                 ],
                               ),
                               selected: _selectedStageFilter == Stage.learned,
@@ -299,8 +300,8 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                     const SizedBox(height: 16),
                                     Text(
                                       _searchQuery.isNotEmpty || _selectedStageFilter != null
-                                          ? 'No matching entries found.'
-                                          : 'No vocabulary entries saved yet.\nTap + to add your first term.',
+                                          ? l10n.noTermsFound
+                                          : l10n.noTermsYet,
                                       textAlign: TextAlign.center,
                                       style: Theme.of(context)
                                           .textTheme
@@ -341,21 +342,19 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                       return await showDialog<bool>(
                                         context: context,
                                         builder: (context) => AlertDialog(
-                                          title: const Text('Delete Entry?'),
-                                          content: Text(
-                                              'Are you sure you want to delete "${entry.english}"?'),
+                                          title: Text(l10n.deleteTermConfirm),
                                           actions: [
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.of(context).pop(false),
-                                              child: const Text('Cancel'),
+                                              child: Text(l10n.cancel),
                                             ),
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.of(context).pop(true),
                                               style: TextButton.styleFrom(
                                                   foregroundColor: Colors.red),
-                                              child: const Text('Delete'),
+                                              child: Text(l10n.delete),
                                             ),
                                           ],
                                         ),
@@ -365,10 +364,6 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                       ref
                                           .read(vocabularyListProvider.notifier)
                                           .deleteEntry(entry.id);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text('Deleted "${entry.english}"')),
-                                      );
                                     },
                                     child: Card(
                                       child: InkWell(
@@ -408,7 +403,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                                       ),
                                                     ),
                                                     child: Text(
-                                                      _stageLabel(entry.stage),
+                                                      _stageLabel(entry.stage, l10n),
                                                       style: TextStyle(
                                                         color: _stageColor(entry.stage),
                                                         fontSize: 12,
