@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../vocabulary/domain/gemini_lookup_result.dart';
+import '../../vocabulary/presentation/vocabulary_providers.dart';
 import 'settings_providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -11,6 +13,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _apiKeyController;
+  bool _isTestingKey = false;
 
   @override
   void initState() {
@@ -140,6 +143,69 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onChanged: (val) {
                   ref.read(settingsProvider.notifier).setApiKey(val);
                 },
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _isTestingKey
+                    ? null
+                    : () async {
+                        final key = _apiKeyController.text.trim();
+                        if (key.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Add your Gemini API key in Settings, or enter the word manually.'),
+                            ),
+                          );
+                          return;
+                        }
+                        final messenger = ScaffoldMessenger.of(context);
+                        setState(() {
+                          _isTestingKey = true;
+                        });
+                        try {
+                          final currentModel = settings.model;
+                          final client = ref.read(geminiClientProvider);
+                          await client.testConnection(
+                            apiKey: key,
+                            model: currentModel,
+                          );
+                          if (mounted) {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Connection successful! Gemini API key is active.'),
+                              ),
+                            );
+                          }
+                        } on GeminiException catch (e) {
+                          if (mounted) {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(e.message)),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text('Connection error: $e')),
+                            );
+                          }
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              _isTestingKey = false;
+                            });
+                          }
+                        }
+                      },
+                icon: _isTestingKey
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.bolt),
+                label: const Text('Test Key Connection'),
               ),
             ],
           );

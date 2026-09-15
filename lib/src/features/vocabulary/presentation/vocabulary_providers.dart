@@ -1,12 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../../core/database/sqlite_database_helper.dart';
+import '../data/gemini_client.dart';
 import '../data/sqlite_words_repository.dart';
 import '../data/words_repository.dart';
 import '../domain/entry.dart';
 
 final databaseProvider = FutureProvider<Database>((ref) async {
   return await SQLiteDatabaseHelper.getDatabase();
+});
+
+final geminiClientProvider = Provider<GeminiClient>((ref) {
+  return GeminiClient();
 });
 
 final wordsRepositoryProvider = Provider<WordsRepository>((ref) {
