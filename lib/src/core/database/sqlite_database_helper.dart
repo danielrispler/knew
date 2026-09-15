@@ -4,16 +4,21 @@ import 'package:sqflite/sqflite.dart';
 class SQLiteDatabaseHelper {
   static Database? _db;
 
+  static const int currentSchemaVersion = 1;
+
   static Future<Database> getDatabase() async {
-    if (_db != null) return _db!;
+    if (_db != null && _db!.isOpen) return _db!;
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'knew.db');
 
     _db = await openDatabase(
       path,
-      version: 1,
+      version: currentSchemaVersion,
       onCreate: (db, version) async {
         await createTables(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        await handleUpgrade(db, oldVersion, newVersion);
       },
     );
     return _db!;
@@ -48,5 +53,12 @@ class SQLiteDatabaseHelper {
         value TEXT NOT NULL
       );
     ''');
+  }
+
+  static Future<void> handleUpgrade(Database db, int oldVersion, int newVersion) async {
+    await db.transaction((txn) async {
+      // Step-by-step non-destructive transactional migration handler
+      // e.g. if (oldVersion < 2) { ... }
+    });
   }
 }

@@ -18,7 +18,16 @@ class SecureStorageRepository {
     if (_inMemoryStorage != null) {
       return _inMemoryStorage[_keyApiKey];
     }
-    return await _storage?.read(key: _keyApiKey);
+    try {
+      return await _storage?.read(key: _keyApiKey);
+    } on Exception catch (_) {
+      // In case of hardware key rotation, device restore, or corrupted KeyStore entry,
+      // purge the invalid entry and return null gracefully.
+      try {
+        await _storage?.delete(key: _keyApiKey);
+      } catch (_) {}
+      return null;
+    }
   }
 
   Future<void> setApiKey(String apiKey) async {
@@ -30,10 +39,16 @@ class SecureStorageRepository {
       }
       return;
     }
-    if (apiKey.trim().isEmpty) {
-      await _storage?.delete(key: _keyApiKey);
-    } else {
-      await _storage?.write(key: _keyApiKey, value: apiKey.trim());
+    try {
+      if (apiKey.trim().isEmpty) {
+        await _storage?.delete(key: _keyApiKey);
+      } else {
+        await _storage?.write(key: _keyApiKey, value: apiKey.trim());
+      }
+    } on Exception catch (_) {
+      try {
+        await _storage?.delete(key: _keyApiKey);
+      } catch (_) {}
     }
   }
 
@@ -42,6 +57,8 @@ class SecureStorageRepository {
       _inMemoryStorage.remove(_keyApiKey);
       return;
     }
-    await _storage?.delete(key: _keyApiKey);
+    try {
+      await _storage?.delete(key: _keyApiKey);
+    } on Exception catch (_) {}
   }
 }

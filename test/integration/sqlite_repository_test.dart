@@ -351,5 +351,30 @@ void main() {
       await settingsRepository.setLanguage('invalid');
       expect(await settingsRepository.getLanguage(), 'en');
     });
+
+    test('handleUpgrade executes non-destructively within transaction', () async {
+      final oldDb = await openDatabase(
+        inMemoryDatabasePath,
+        version: 1,
+        onCreate: (db, version) async {
+          await SQLiteDatabaseHelper.createTables(db);
+        },
+      );
+
+      final entry = Entry.create(
+        english: 'migration_test',
+        meanings: [Meaning(partOfSpeech: 'v', definition: 'm', hebrewTranslations: ['בדיקת מיגרציה'])],
+      );
+      final repo = SQLiteWordsRepository(oldDb);
+      await repo.insertEntry(entry);
+
+      // Trigger upgrade routine safely
+      await SQLiteDatabaseHelper.handleUpgrade(oldDb, 1, 2);
+
+      final preserved = await repo.getEntryById(entry.id);
+      expect(preserved, isNotNull);
+      expect(preserved!.english, 'migration_test');
+      await oldDb.close();
+    });
   });
 }
