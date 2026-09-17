@@ -6,7 +6,8 @@ class TtsService {
   bool _isInitialized = false;
   bool _isVoiceAvailable = false;
 
-  TtsService({FlutterTts? flutterTts}) : _flutterTts = flutterTts ?? FlutterTts();
+  TtsService({FlutterTts? flutterTts})
+    : _flutterTts = flutterTts ?? FlutterTts();
 
   bool get isVoiceAvailable => _isVoiceAvailable;
 
@@ -23,7 +24,10 @@ class TtsService {
       if (voices is List) {
         for (final voice in voices) {
           if (voice is Map) {
-            final locale = (voice['locale'] ?? '').toString().replaceAll('_', '-');
+            final locale = (voice['locale'] ?? '').toString().replaceAll(
+              '_',
+              '-',
+            );
             if (locale.toLowerCase().startsWith('en-us')) {
               // On Android, check network_required flag ('0' means offline/installed)
               final networkRequired = voice['network_required']?.toString();
@@ -50,7 +54,8 @@ class TtsService {
       // Fallback: if voices list could not be parsed, test setLanguage result
       if (!foundInstalledEnVoice) {
         final isAvailable = await _flutterTts.isLanguageAvailable('en-US');
-        foundInstalledEnVoice = (isAvailable == true || isAvailable == 1 || isAvailable == 'true');
+        foundInstalledEnVoice =
+            (isAvailable == true || isAvailable == 1 || isAvailable == 'true');
       }
 
       _isVoiceAvailable = foundInstalledEnVoice;

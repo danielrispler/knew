@@ -1,16 +1,10 @@
 import '../../vocabulary/domain/entry.dart';
+import '../../vocabulary/domain/example_usage.dart';
 import 'distractor_generator.dart';
 
-enum PromptDirection {
-  englishToHebrew,
-  hebrewToEnglish,
-}
+enum PromptDirection { englishToHebrew, hebrewToEnglish }
 
-enum QuestionFormat {
-  flashcard,
-  typing,
-  multipleChoice,
-}
+enum QuestionFormat { flashcard, typing, multipleChoice, cloze }
 
 class PracticeQuestion {
   final Entry entry;
@@ -18,6 +12,8 @@ class PracticeQuestion {
   final QuestionFormat format;
   final bool isRepeat;
   final DistractorResult? distractorResult;
+  final int? meaningIndex;
+  final ExampleUsage? exampleUsage;
 
   const PracticeQuestion({
     required this.entry,
@@ -25,6 +21,8 @@ class PracticeQuestion {
     this.format = QuestionFormat.flashcard,
     this.isRepeat = false,
     this.distractorResult,
+    this.meaningIndex,
+    this.exampleUsage,
   });
 
   PracticeQuestion copyWith({
@@ -33,6 +31,8 @@ class PracticeQuestion {
     QuestionFormat? format,
     bool? isRepeat,
     DistractorResult? distractorResult,
+    int? meaningIndex,
+    ExampleUsage? exampleUsage,
   }) {
     return PracticeQuestion(
       entry: entry ?? this.entry,
@@ -40,6 +40,8 @@ class PracticeQuestion {
       format: format ?? this.format,
       isRepeat: isRepeat ?? this.isRepeat,
       distractorResult: distractorResult ?? this.distractorResult,
+      meaningIndex: meaningIndex ?? this.meaningIndex,
+      exampleUsage: exampleUsage ?? this.exampleUsage,
     );
   }
 }

@@ -18,7 +18,8 @@ For each question, compute legal formats before choosing:
 2. Typing is legal only if the entry was above level 0 at session start. This also applies to its repeat.
 3. Multiple choice is legal only if three distinct, unambiguous distractors are available for this direction.
 4. After three questions of the same format, remove that format if another legal format exists.
-5. Pick uniformly from the remaining formats.
+5. Cloze is legal at Levels 3–6 only when the immutable Entry snapshot has a valid marked example for one Meaning. Sentence Production remains unavailable in Phase 1.
+6. Apply the level weight matrix (Flashcard/Typing/Multiple choice/Cloze): 0 `80/0/20/0`, 1 `50/30/20/0`, 2 `35/30/20/15`, 3 `25/25/20/30`, 4–6 `20/20/20/40`; zero unavailable formats and normalize the rest.
 
 Eligibility and answer ambiguity are hard rules. The three-in-a-row preference yields when flashcard is the only legal choice. Never retry random choices until one happens to fit. The consecutive-format counter spans the whole session, including repeats, and resets between sessions. Repeat direction and format are selected again under these rules.
 

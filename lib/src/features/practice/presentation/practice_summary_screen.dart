@@ -68,7 +68,8 @@ class PracticeSummaryScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              if (!state.isExtraPractice && state.stageMovements.isNotEmpty) ...[
+              if (!state.isExtraPractice &&
+                  state.stageMovements.isNotEmpty) ...[
                 Text(
                   'Stage Progress',
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -79,7 +80,8 @@ class PracticeSummaryScreen extends StatelessWidget {
                 Expanded(
                   child: ListView.separated(
                     itemCount: state.stageMovements.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final movement = state.stageMovements[index];
                       return ListTile(

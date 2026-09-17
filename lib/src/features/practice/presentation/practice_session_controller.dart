@@ -1,8 +1,10 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../vocabulary/domain/entry.dart';
+import '../../vocabulary/domain/example_usage.dart';
 import '../../vocabulary/presentation/vocabulary_providers.dart';
 import '../domain/answer_checker.dart';
+import '../domain/cloze_answer_checker.dart';
 import '../domain/distractor_generator.dart';
 import '../domain/due_queue_selector.dart';
 import '../domain/practice_question.dart';
@@ -42,6 +44,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
           ? PromptDirection.englishToHebrew
           : PromptDirection.hebrewToEnglish;
 
+      final cloze = _clozeCandidates(entry);
       final format = QuestionFormatSelector.selectFormat(
         entry: entry,
         direction: dir,
@@ -49,6 +52,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
         wasAboveLevelZeroAtSessionStart: entry.level > 0,
         lastFormat: lastFormat,
         consecutiveCount: consecutiveFormatCount,
+        hasClozeExample: cloze.isNotEmpty,
         random: rng,
       );
 
@@ -60,6 +64,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       }
 
       DistractorResult? distractorResult;
+      final selectedCloze = format == QuestionFormat.cloze
+          ? _selectCloze(cloze, rng)
+          : null;
       if (format == QuestionFormat.multipleChoice) {
         distractorResult = DistractorGenerator.generate(
           target: entry,
@@ -76,6 +83,8 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
           format: format,
           isRepeat: false,
           distractorResult: distractorResult,
+          meaningIndex: selectedCloze?.$1,
+          exampleUsage: selectedCloze?.$2,
         ),
       );
     }
@@ -94,7 +103,32 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       selectedOptionIndex: null,
       answerCheckResult: null,
       typedText: null,
+      isAssisted: false,
     );
+  }
+
+  static List<(int, ExampleUsage)> _clozeCandidates(Entry entry) {
+    final candidates = <(int, ExampleUsage)>[];
+    for (var index = 0; index < entry.meanings.length; index++) {
+      final meaning = entry.meanings[index];
+      final forms = [entry.english, ...meaning.validInflections];
+      for (final raw in meaning.examples) {
+        final example = ExampleUsage.parse(raw, forms);
+        if (example != null) candidates.add((index, example));
+      }
+    }
+    return candidates;
+  }
+
+  static (int, ExampleUsage)? _selectCloze(
+    List<(int, ExampleUsage)> candidates,
+    Random random,
+  ) {
+    if (candidates.isEmpty) return null;
+    final meaningIndexes = candidates.map((candidate) => candidate.$1).toSet().toList();
+    final meaningIndex = meaningIndexes[random.nextInt(meaningIndexes.length)];
+    final examples = candidates.where((candidate) => candidate.$1 == meaningIndex).toList();
+    return examples[examples.length == 1 ? 0 : 1 + random.nextInt(examples.length - 1)];
   }
 
   void reveal() {
@@ -149,6 +183,48 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     return result;
   }
 
+  void submitClozeAnswer(String text) {
+    final question = state.currentQuestion;
+    if (question?.exampleUsage == null || question?.meaningIndex == null)
+      return;
+    final meaning = question!.entry.meanings[question.meaningIndex!];
+    final result = ClozeAnswerChecker.check(
+      input: text,
+      example: question.exampleUsage!,
+      validInflections: meaning.validInflections,
+    );
+    if (result.status == ClozeAnswerStatus.wrongInflection) return;
+    state = state.copyWith(
+      typedText: text,
+      isRevealed: true,
+      lastAttemptedGrade: result.status == ClozeAnswerStatus.exact,
+      canConfirmTypo: result.status == ClozeAnswerStatus.possibleTypo,
+    );
+  }
+
+  void confirmClozeTypo() {
+    if (!state.canConfirmTypo) return;
+    state = state.copyWith(
+      isAssisted: true,
+      canConfirmTypo: false,
+      lastAttemptedGrade: true,
+    );
+  }
+
+  void showClozeHint() {
+    final question = state.currentQuestion;
+    if (question?.exampleUsage == null || state.isRevealed) return;
+    state = state.copyWith(
+      typedText: question!.exampleUsage!.target.substring(0, 1),
+      isAssisted: true,
+    );
+  }
+
+  void showClozeAnswer() {
+    if (state.currentQuestion?.exampleUsage == null || state.isRevealed) return;
+    state = state.copyWith(isRevealed: true, isAssisted: true, lastAttemptedGrade: true);
+  }
+
   Future<void> gradeCurrent({required bool correct, DateTime? now}) async {
     final question = state.currentQuestion;
     if (question == null || state.isSaving || state.isCompleted) return;
@@ -164,7 +240,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
     if (isFirstPass && !state.isExtraPractice) {
       final updatedEntry = correct
-          ? PracticeScheduler.gradeCorrect(entry, now: now)
+          ? (state.isAssisted
+                ? PracticeScheduler.gradeAssistedCorrect(entry, now: now)
+                : PracticeScheduler.gradeCorrect(entry, now: now))
           : PracticeScheduler.gradeIncorrect(entry, now: now);
 
       try {
@@ -286,6 +364,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
           final preEntry = state.firstPassPreSnapshots[repeatEntry.id];
           final wasAboveZero = (preEntry?.level ?? repeatEntry.level) > 0;
 
+          final cloze = _clozeCandidates(repeatEntry);
           final format = QuestionFormatSelector.selectFormat(
             entry: repeatEntry,
             direction: dir,
@@ -293,6 +372,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
             wasAboveLevelZeroAtSessionStart: wasAboveZero,
             lastFormat: lastFormat,
             consecutiveCount: consecutiveCount,
+            hasClozeExample: cloze.isNotEmpty,
             random: rng,
           );
 
@@ -304,6 +384,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
           }
 
           DistractorResult? distractorResult;
+          final selectedCloze = format == QuestionFormat.cloze
+              ? _selectCloze(cloze, rng)
+              : null;
           if (format == QuestionFormat.multipleChoice) {
             distractorResult = DistractorGenerator.generate(
               target: repeatEntry,
@@ -320,6 +403,8 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
               format: format,
               isRepeat: true,
               distractorResult: distractorResult,
+              meaningIndex: selectedCloze?.$1,
+              exampleUsage: selectedCloze?.$2,
             ),
           );
         }
@@ -342,6 +427,8 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       selectedOptionIndex: null,
       answerCheckResult: null,
       typedText: null,
+      isAssisted: false,
+      canConfirmTypo: false,
     );
   }
 }
