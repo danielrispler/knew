@@ -46,6 +46,17 @@ abstract class PracticeScheduler {
     );
   }
 
+  static Entry gradeAssistedCorrect(Entry entry, {DateTime? now}) {
+    final currentTime = now ?? DateTime.now();
+    final nowIso = currentTime.toUtc().toIso8601String();
+    return entry.copyWith(
+      dueDate: addDaysToLocalDate(currentTime, intervalsInDays[entry.level]),
+      lastReviewedAt: nowIso,
+      timesCorrect: entry.timesCorrect + 1,
+      updatedAt: nowIso,
+    );
+  }
+
   static Entry overrideWrongWithCorrect(Entry originalEntry, {DateTime? now}) {
     // Replaces previous wrong grade using original pre-answer snapshot
     return gradeCorrect(originalEntry, now: now);

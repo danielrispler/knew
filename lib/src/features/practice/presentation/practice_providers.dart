@@ -9,5 +9,5 @@ final ttsServiceProvider = Provider<TtsService>((ref) {
 
 final practiceSessionProvider =
     NotifierProvider<PracticeSessionNotifier, PracticeSessionState>(() {
-  return PracticeSessionNotifier();
-});
+      return PracticeSessionNotifier();
+    });

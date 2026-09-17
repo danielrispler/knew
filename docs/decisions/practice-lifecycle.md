@@ -18,6 +18,10 @@ For a typing answer marked incorrect, Count as correct replaces this question's 
 
 Repeats and extra practice write no progress, counters, or timestamps. Each first-pass incorrect entry gets exactly one repeat at the end, in first-error order; an incorrect repeat never adds another. Extra practice may also repeat misses once, with all answers remaining non-durable.
 
+## Cloze (Phase 1)
+
+Cloze uses one valid example and Meaning from the session snapshot. Exact target-form answers grade normally. A valid but wrong inflection stays editable and writes nothing; possible typos require explicit confirmation. Hints, confirmed typos, and Show Answer are assisted outcomes: they never promote the Level. An ordinary incorrect answer follows the normal incorrect and one-repeat lifecycle.
+
 ## Summary and changes to the library
 
 Scheduled summary: reviewed count is the number of distinct first-pass entries committed; accuracy is correct first-pass grades divided by that count, after corrections. Repeats are excluded. Stage movements compare each entry's pre-review and final level. Extra practice uses the same first-pass accuracy calculation, is labelled Extra practice, and shows no stage movements. Zero answers never divides by zero.

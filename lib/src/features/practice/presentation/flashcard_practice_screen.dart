@@ -10,6 +10,7 @@ import 'practice_summary_screen.dart';
 import 'widgets/multiple_choice_practice_widget.dart';
 import 'widgets/practice_notebook_card.dart';
 import 'widgets/typing_practice_widget.dart';
+import 'widgets/cloze_practice_widget.dart';
 
 class FlashcardPracticeScreen extends ConsumerStatefulWidget {
   final List<Entry> initialLibrary;
@@ -43,7 +44,9 @@ class _FlashcardPracticeScreenState
       final day = now.day.toString().padLeft(2, '0');
       final todayStr = '$year-$month-$day';
 
-      ref.read(practiceSessionProvider.notifier).startSession(
+      ref
+          .read(practiceSessionProvider.notifier)
+          .startSession(
             library: widget.initialLibrary,
             todayDueDate: todayStr,
             requestedSessionSize: settings.sessionSize,
@@ -85,10 +88,7 @@ class _FlashcardPracticeScreenState
     final controller = ref.read(practiceSessionProvider.notifier);
 
     if (state.isCompleted) {
-      return PracticeSummaryScreen(
-        state: state,
-        onDone: widget.onExit,
-      );
+      return PracticeSummaryScreen(state: state, onDone: widget.onExit);
     }
 
     if (state.questions.isEmpty) {
@@ -160,7 +160,9 @@ class _FlashcardPracticeScreenState
             value: progressRatio,
             minHeight: 2,
             backgroundColor: theme.colorScheme.outlineVariant,
-            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.colorScheme.primary,
+            ),
           ),
           if (state.saveError != null)
             Container(
@@ -171,7 +173,9 @@ class _FlashcardPracticeScreenState
                   Expanded(
                     child: Text(
                       state.saveError!,
-                      style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                      style: TextStyle(
+                        color: theme.colorScheme.onErrorContainer,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -183,9 +187,7 @@ class _FlashcardPracticeScreenState
             ),
 
           // Question Format Specific Body
-          Expanded(
-            child: _buildFormatBody(currentQuestion, state, controller),
-          ),
+          Expanded(child: _buildFormatBody(currentQuestion, state, controller)),
 
           // Single-tap "Count as correct" override banner
           if (state.canOverride)
@@ -204,8 +206,16 @@ class _FlashcardPracticeScreenState
           // Bottom Action Bar
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-              child: _buildBottomActionBar(currentQuestion, state, controller, theme),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 12.0,
+              ),
+              child: _buildBottomActionBar(
+                currentQuestion,
+                state,
+                controller,
+                theme,
+              ),
             ),
           ),
         ],
@@ -242,6 +252,15 @@ class _FlashcardPracticeScreenState
             controller.submitTypedAnswer(text);
           },
         );
+      case QuestionFormat.cloze:
+        return ClozePracticeWidget(
+          question: question,
+          state: state,
+          onSubmit: controller.submitClozeAnswer,
+          onHint: controller.showClozeHint,
+          onConfirmTypo: controller.confirmClozeTypo,
+          onShowAnswer: controller.showClozeAnswer,
+        );
     }
   }
 
@@ -257,7 +276,8 @@ class _FlashcardPracticeScreenState
           final textScale = MediaQuery.textScalerOf(context).scale(1.0);
           return LayoutBuilder(
             builder: (context, constraints) {
-              final shouldStack = textScale > 1.25 || constraints.maxWidth < 320;
+              final shouldStack =
+                  textScale > 1.25 || constraints.maxWidth < 320;
               if (shouldStack) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
@@ -359,10 +379,7 @@ class _FlashcardPracticeScreenState
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text(
-                'Show answer',
-                style: TextStyle(fontSize: 16),
-              ),
+              child: const Text('Show answer', style: TextStyle(fontSize: 16)),
             ),
           );
         }
@@ -376,17 +393,14 @@ class _FlashcardPracticeScreenState
               onPressed: state.isSaving
                   ? null
                   : () => controller.gradeCurrent(
-                        correct: state.lastAttemptedGrade ?? false,
-                      ),
+                      correct: state.lastAttemptedGrade ?? false,
+                    ),
               style: FilledButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text(
-                'Next',
-                style: TextStyle(fontSize: 16),
-              ),
+              child: const Text('Next', style: TextStyle(fontSize: 16)),
             ),
           );
         } else {
@@ -415,17 +429,14 @@ class _FlashcardPracticeScreenState
               onPressed: state.isSaving
                   ? null
                   : () => controller.gradeCurrent(
-                        correct: state.lastAttemptedGrade ?? false,
-                      ),
+                      correct: state.lastAttemptedGrade ?? false,
+                    ),
               style: FilledButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text(
-                'Next',
-                style: TextStyle(fontSize: 16),
-              ),
+              child: const Text('Next', style: TextStyle(fontSize: 16)),
             ),
           );
         } else {
@@ -441,13 +452,24 @@ class _FlashcardPracticeScreenState
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text(
-                'Check answer',
-                style: TextStyle(fontSize: 16),
-              ),
+              child: const Text('Check answer', style: TextStyle(fontSize: 16)),
             ),
           );
         }
+      case QuestionFormat.cloze:
+        if (!state.isRevealed) return const SizedBox.shrink();
+        return SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: FilledButton(
+            onPressed: state.isSaving
+                ? null
+                : () => controller.gradeCurrent(
+                    correct: state.lastAttemptedGrade ?? false,
+                  ),
+            child: const Text('Next'),
+          ),
+        );
     }
   }
 }

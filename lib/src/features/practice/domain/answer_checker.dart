@@ -20,11 +20,7 @@ abstract class StringNormalizer {
   }
 }
 
-enum AnswerCheckStatus {
-  exactMatch,
-  typoMatch,
-  noMatch,
-}
+enum AnswerCheckStatus { exactMatch, typoMatch, noMatch }
 
 class AnswerCheckResult {
   final AnswerCheckStatus status;
@@ -106,10 +102,7 @@ abstract class AnswerChecker {
     required String userInput,
     required Entry entry,
   }) {
-    return evaluate(
-      userInput: userInput,
-      expectedAnswers: [entry.english],
-    );
+    return evaluate(userInput: userInput, expectedAnswers: [entry.english]);
   }
 
   /// Standard Levenshtein distance on code points (runes).

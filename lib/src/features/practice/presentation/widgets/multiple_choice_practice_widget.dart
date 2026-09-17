@@ -25,7 +25,9 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
     }
 
     final isEngToHeb = question.direction == PromptDirection.englishToHebrew;
-    final promptText = isEngToHeb ? entry.english : entry.meanings.first.hebrewTranslations.join(', ');
+    final promptText = isEngToHeb
+        ? entry.english
+        : entry.meanings.first.hebrewTranslations.join(', ');
     final options = distractorResult.options;
     final correctIndex = distractorResult.correctOptionIndex;
     final selectedIndex = state.selectedOptionIndex;
@@ -46,7 +48,9 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
                   padding: const EdgeInsets.all(28.0),
                   child: Text(
                     promptText,
-                    textDirection: isEngToHeb ? TextDirection.ltr : TextDirection.rtl,
+                    textDirection: isEngToHeb
+                        ? TextDirection.ltr
+                        : TextDirection.rtl,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontFamily: isEngToHeb ? 'FrankRuhlLibre' : null,
@@ -59,7 +63,9 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
               const SizedBox(height: 28),
 
               Text(
-                isEngToHeb ? 'Select the correct Hebrew translation:' : 'Select the correct English term:',
+                isEngToHeb
+                    ? 'Select the correct Hebrew translation:'
+                    : 'Select the correct English term:',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
@@ -100,11 +106,19 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
                       backgroundColor: backgroundColor,
                       side: BorderSide(
                         color: borderColor,
-                        width: isRevealed && (isCorrectOption || isSelectedOption) ? 2 : 1.5,
+                        width:
+                            isRevealed && (isCorrectOption || isSelectedOption)
+                            ? 2
+                            : 1.5,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 16.0,
+                      ),
                       minimumSize: const Size.fromHeight(56),
-                      alignment: isEngToHeb ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: isEngToHeb
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -114,12 +128,18 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
                         Expanded(
                           child: Text(
                             optionText,
-                            textDirection: isEngToHeb ? TextDirection.rtl : TextDirection.ltr,
-                            textAlign: isEngToHeb ? TextAlign.start : TextAlign.start,
+                            textDirection: isEngToHeb
+                                ? TextDirection.rtl
+                                : TextDirection.ltr,
+                            textAlign: isEngToHeb
+                                ? TextAlign.start
+                                : TextAlign.start,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontFamily: !isEngToHeb ? 'FrankRuhlLibre' : null,
                               color: theme.colorScheme.onSurface,
-                              fontWeight: isSelectedOption ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelectedOption
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),

@@ -35,6 +35,8 @@ class PracticeSessionState {
   final int? selectedOptionIndex;
   final AnswerCheckResult? answerCheckResult;
   final String? typedText;
+  final bool isAssisted;
+  final bool canConfirmTypo;
 
   const PracticeSessionState({
     this.initialQueue = const [],
@@ -54,6 +56,8 @@ class PracticeSessionState {
     this.selectedOptionIndex,
     this.answerCheckResult,
     this.typedText,
+    this.isAssisted = false,
+    this.canConfirmTypo = false,
   });
 
   PracticeQuestion? get currentQuestion {
@@ -73,7 +77,10 @@ class PracticeSessionState {
     for (final entry in firstPassPostSnapshots.values) {
       final pre = firstPassPreSnapshots[entry.id];
       if (pre != null) {
-        if (entry.level > pre.level || (pre.level == 6 && entry.level == 6 && entry.timesCorrect > pre.timesCorrect)) {
+        if (entry.level > pre.level ||
+            (pre.level == 6 &&
+                entry.level == 6 &&
+                entry.timesCorrect > pre.timesCorrect)) {
           correctCount++;
         }
       }
@@ -90,11 +97,13 @@ class PracticeSessionState {
         final fromStage = preEntry.stage;
         final toStage = postEntry.stage;
         if (fromStage != toStage) {
-          movements.add(StageMovement(
-            entry: postEntry,
-            fromStage: fromStage,
-            toStage: toStage,
-          ));
+          movements.add(
+            StageMovement(
+              entry: postEntry,
+              fromStage: fromStage,
+              toStage: toStage,
+            ),
+          );
         }
       }
     }
@@ -119,6 +128,8 @@ class PracticeSessionState {
     Object? selectedOptionIndex = _unset,
     Object? answerCheckResult = _unset,
     Object? typedText = _unset,
+    bool? isAssisted,
+    bool? canConfirmTypo,
   }) {
     return PracticeSessionState(
       initialQueue: initialQueue ?? this.initialQueue,
@@ -127,12 +138,16 @@ class PracticeSessionState {
       isRevealed: isRevealed ?? this.isRevealed,
       isExtraPractice: isExtraPractice ?? this.isExtraPractice,
       isSaving: isSaving ?? this.isSaving,
-      saveError: identical(saveError, _unset) ? this.saveError : saveError as String?,
+      saveError: identical(saveError, _unset)
+          ? this.saveError
+          : saveError as String?,
       lastAttemptedGrade: identical(lastAttemptedGrade, _unset)
           ? this.lastAttemptedGrade
           : lastAttemptedGrade as bool?,
-      firstPassPreSnapshots: firstPassPreSnapshots ?? this.firstPassPreSnapshots,
-      firstPassPostSnapshots: firstPassPostSnapshots ?? this.firstPassPostSnapshots,
+      firstPassPreSnapshots:
+          firstPassPreSnapshots ?? this.firstPassPreSnapshots,
+      firstPassPostSnapshots:
+          firstPassPostSnapshots ?? this.firstPassPostSnapshots,
       repeatQueue: repeatQueue ?? this.repeatQueue,
       isCompleted: isCompleted ?? this.isCompleted,
       canOverride: canOverride ?? this.canOverride,
@@ -148,6 +163,8 @@ class PracticeSessionState {
       typedText: identical(typedText, _unset)
           ? this.typedText
           : typedText as String?,
+      isAssisted: isAssisted ?? this.isAssisted,
+      canConfirmTypo: canConfirmTypo ?? this.canConfirmTypo,
     );
   }
 }

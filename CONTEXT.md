@@ -12,6 +12,16 @@ _Avoid_: "Translation" when referring to the whole saved record.
 
 **Meaning**: One sense of a term, with its part of speech, Hebrew translations, and a simple English definition.
 
+**Example Usage**: A Meaning-owned English sentence with one marked target form, used for Flashcard context and Cloze.
+
+**Cloze**: A Meaning-scoped fill-in-the-blank question using Example Usage.
+
+**Collocation**: A saved word combination displayed as usage context on Flashcards.
+
+**Inflection Match**: A valid saved form other than the example's exact target; it is editable rather than graded correct.
+
+**Enrichment**: Best-effort generated usage fields attached to a Meaning after save.
+
 **Translation**: A Hebrew expression conveying a meaning of the English term.
 
 **Definition**: A short explanation of a meaning in simple English.

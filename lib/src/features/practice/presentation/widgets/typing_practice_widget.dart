@@ -60,7 +60,9 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
         ? entry.english
         : entry.meanings.first.hebrewTranslations.join(', ');
 
-    final answerDirection = expectsHebrew ? TextDirection.rtl : TextDirection.ltr;
+    final answerDirection = expectsHebrew
+        ? TextDirection.rtl
+        : TextDirection.ltr;
 
     final expectedTargetString = isEngToHeb
         ? entry.meanings.first.hebrewTranslations.join(', ')
@@ -92,7 +94,9 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                 ),
                 child: Text(
                   promptText,
-                  textDirection: isEngToHeb ? TextDirection.ltr : TextDirection.rtl,
+                  textDirection: isEngToHeb
+                      ? TextDirection.ltr
+                      : TextDirection.rtl,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontFamily: isEngToHeb ? 'FrankRuhlLibre' : null,
@@ -110,7 +114,9 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                 textDirection: answerDirection,
                 textAlign: TextAlign.start,
                 keyboardType: TextInputType.text,
-                hintLocales: [expectsHebrew ? const Locale('he') : const Locale('en', 'US')],
+                hintLocales: [
+                  expectsHebrew ? const Locale('he') : const Locale('en', 'US'),
+                ],
                 autocorrect: false,
                 enableSuggestions: false,
                 textCapitalization: TextCapitalization.none,
@@ -120,8 +126,12 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                 },
                 onSubmitted: isRevealed ? null : widget.onSubmit,
                 decoration: InputDecoration(
-                  labelText: expectsHebrew ? context.l10n.typeAnswerInHebrew : context.l10n.typeAnswerInEnglish,
-                  hintText: expectsHebrew ? context.l10n.typeHebrewHint : context.l10n.typeEnglishHint,
+                  labelText: expectsHebrew
+                      ? context.l10n.typeAnswerInHebrew
+                      : context.l10n.typeAnswerInEnglish,
+                  hintText: expectsHebrew
+                      ? context.l10n.typeHebrewHint
+                      : context.l10n.typeEnglishHint,
                   hintTextDirection: answerDirection,
                   border: const OutlineInputBorder(),
                 ),
@@ -145,7 +155,10 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                         Expanded(
                           child: Text(
                             'Exact match!',
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -166,7 +179,10 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                         Expanded(
                           child: Text(
                             'Correct (typo: expected "${checkResult.matchedTarget ?? expectedTargetString}")',
-                            style: TextStyle(color: Colors.amber.shade900, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: Colors.amber.shade900,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -187,7 +203,10 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                         Expanded(
                           child: Text(
                             'Incorrect. Expected: "$expectedTargetString"',
-                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],

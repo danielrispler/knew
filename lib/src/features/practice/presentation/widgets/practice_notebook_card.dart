@@ -31,13 +31,15 @@ class _PracticeNotebookCardState extends State<PracticeNotebookCard>
       duration: const Duration(milliseconds: 300),
     );
 
-    _turnAnimation = Tween<double>(begin: -0.24, end: 0.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
-    );
+    _turnAnimation = Tween<double>(
+      begin: -0.24,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
 
-    _opacityAnimation = Tween<double>(begin: 0.45, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
-    );
+    _opacityAnimation = Tween<double>(
+      begin: 0.45,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
 
     if (widget.isRevealed) {
       _animController.value = 1.0;
@@ -69,19 +71,23 @@ class _PracticeNotebookCardState extends State<PracticeNotebookCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final entry = widget.question.entry;
-    final isEnglishPrompt = widget.question.direction == PromptDirection.englishToHebrew;
+    final isEnglishPrompt =
+        widget.question.direction == PromptDirection.englishToHebrew;
 
     final primaryText = isEnglishPrompt
         ? entry.english
         : entry.meanings
-            .expand((m) => m.hebrewTranslations)
-            .where((t) => t.trim().isNotEmpty)
-            .join(', ');
+              .expand((m) => m.hebrewTranslations)
+              .where((t) => t.trim().isNotEmpty)
+              .join(', ');
 
-    final isPhraseOrList = primaryText.contains(' ') || primaryText.contains(',');
+    final isPhraseOrList =
+        primaryText.contains(' ') || primaryText.contains(',');
     final primaryFontSize = isPhraseOrList ? 36.0 : 48.0;
 
-    final firstMeaning = entry.meanings.isNotEmpty ? entry.meanings.first : null;
+    final firstMeaning = entry.meanings.isNotEmpty
+        ? entry.meanings.first
+        : null;
     final posText = firstMeaning?.partOfSpeech ?? '';
     final definitionText = firstMeaning?.definition ?? '';
 
@@ -109,7 +115,9 @@ class _PracticeNotebookCardState extends State<PracticeNotebookCard>
               // Main practiced term / prompt
               Text(
                 primaryText,
-                textDirection: isEnglishPrompt ? TextDirection.ltr : TextDirection.rtl,
+                textDirection: isEnglishPrompt
+                    ? TextDirection.ltr
+                    : TextDirection.rtl,
                 style: TextStyle(
                   fontFamily: 'FrankRuhlLibre',
                   fontWeight: FontWeight.w500,
@@ -165,7 +173,9 @@ class _PracticeNotebookCardState extends State<PracticeNotebookCard>
                       // Revealed translation
                       Text(
                         isEnglishPrompt ? revealedTranslations : entry.english,
-                        textDirection: isEnglishPrompt ? TextDirection.rtl : TextDirection.ltr,
+                        textDirection: isEnglishPrompt
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
                         style: TextStyle(
                           fontFamily: 'FrankRuhlLibre',
                           fontWeight: FontWeight.w400,
@@ -183,6 +193,29 @@ class _PracticeNotebookCardState extends State<PracticeNotebookCard>
                           ),
                         ),
                       ],
+                      ...entry.meanings
+                          .expand((meaning) => meaning.examples)
+                          .take(1)
+                          .map(
+                            (example) => Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Text(
+                                  example.replaceAll(RegExp(r'\[\[|\]\]'), ''),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ...entry.meanings
+                          .expand((meaning) => meaning.collocations)
+                          .take(1)
+                          .map(
+                            (collocation) => Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(collocation),
+                            ),
+                          ),
                     ],
                   ),
                 ),
