@@ -20,11 +20,11 @@ class MeaningFormData {
     required String partOfSpeech,
     required String definition,
     required List<String> translations,
-  })  : posController = TextEditingController(text: partOfSpeech),
-        definitionController = TextEditingController(text: definition),
-        translationControllers = translations
-            .map((t) => TextEditingController(text: t))
-            .toList() {
+  }) : posController = TextEditingController(text: partOfSpeech),
+       definitionController = TextEditingController(text: definition),
+       translationControllers = translations
+           .map((t) => TextEditingController(text: t))
+           .toList() {
     if (translationControllers.isEmpty) {
       translationControllers.add(TextEditingController());
     }
@@ -59,11 +59,7 @@ class EntryFormScreen extends ConsumerStatefulWidget {
   final Entry? initialEntry;
   final TtsService? ttsService;
 
-  const EntryFormScreen({
-    super.key,
-    this.initialEntry,
-    this.ttsService,
-  });
+  const EntryFormScreen({super.key, this.initialEntry, this.ttsService});
 
   @override
   ConsumerState<EntryFormScreen> createState() => _EntryFormScreenState();
@@ -108,22 +104,23 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 
     if (entry != null && entry.meanings.isNotEmpty) {
       for (var m in entry.meanings) {
-        _meaningsData.add(MeaningFormData(
-          partOfSpeech: m.partOfSpeech,
-          definition: m.definition,
-          translations: m.hebrewTranslations,
-        ));
+        _meaningsData.add(
+          MeaningFormData(
+            partOfSpeech: m.partOfSpeech,
+            definition: m.definition,
+            translations: m.hebrewTranslations,
+          ),
+        );
       }
-      final hasCustomMetadata = (entry.source != null && entry.source!.trim().isNotEmpty) ||
+      final hasCustomMetadata =
+          (entry.source != null && entry.source!.trim().isNotEmpty) ||
           (entry.context != null && entry.context!.trim().isNotEmpty) ||
           entry.meanings.length > 1;
       _isDrawerExpanded = hasCustomMetadata;
     } else {
-      _meaningsData.add(MeaningFormData(
-        partOfSpeech: '',
-        definition: '',
-        translations: [''],
-      ));
+      _meaningsData.add(
+        MeaningFormData(partOfSpeech: '', definition: '', translations: ['']),
+      );
       _isDrawerExpanded = false;
     }
   }
@@ -185,11 +182,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
         m.dispose();
       }
       _meaningsData.clear();
-      _meaningsData.add(MeaningFormData(
-        partOfSpeech: '',
-        definition: '',
-        translations: [''],
-      ));
+      _meaningsData.add(
+        MeaningFormData(partOfSpeech: '', definition: '', translations: ['']),
+      );
     });
   }
 
@@ -237,11 +232,15 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           }
 
           if (result.englishAlternatives.isNotEmpty) {
-            _englishAlternatives = [result.english, ...result.englishAlternatives];
+            _englishAlternatives = [
+              result.english,
+              ...result.englishAlternatives,
+            ];
             _selectedAlternative = result.english;
           }
 
-          if (result.english.isNotEmpty && _termController.text != result.english) {
+          if (result.english.isNotEmpty &&
+              _termController.text != result.english) {
             _termController.text = result.english;
           }
 
@@ -253,11 +252,15 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           for (var i = 0; i < result.meanings.length; i++) {
             final m = result.meanings[i];
             final selectedForSense = _selectedTranslationsPerSense[i]!.toList();
-            _meaningsData.add(MeaningFormData(
-              partOfSpeech: m.partOfSpeech,
-              definition: m.definition,
-              translations: selectedForSense.isNotEmpty ? selectedForSense : m.hebrewTranslations,
-            ));
+            _meaningsData.add(
+              MeaningFormData(
+                partOfSpeech: m.partOfSpeech,
+                definition: m.definition,
+                translations: selectedForSense.isNotEmpty
+                    ? selectedForSense
+                    : m.hebrewTranslations,
+              ),
+            );
           }
         });
 
@@ -268,7 +271,8 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           _lookupResult = null;
           _lookupSuggestion = result.suggestion;
           if (result.suggestion == null) {
-            _lookupError = 'No suggestion found for "$input". You can enter meanings manually below.';
+            _lookupError =
+                'No suggestion found for "$input". You can enter meanings manually below.';
             _isDrawerExpanded = true;
           }
         });
@@ -286,7 +290,8 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
       setState(() {
         _isLookingUp = false;
         _lookupResult = null;
-        _lookupError = 'Lookup failed: $e. Try again or enter the word manually.';
+        _lookupError =
+            'Lookup failed: $e. Try again or enter the word manually.';
         _isDrawerExpanded = true;
       });
     }
@@ -294,7 +299,8 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 
   void _toggleTranslationChip(int senseIndex, String translation) {
     setState(() {
-      final currentSet = _selectedTranslationsPerSense[senseIndex] ?? <String>{};
+      final currentSet =
+          _selectedTranslationsPerSense[senseIndex] ?? <String>{};
       if (currentSet.contains(translation)) {
         if (currentSet.length > 1) {
           currentSet.remove(translation);
@@ -340,7 +346,8 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 
     if (existing != null && existing.id != widget.initialEntry?.id) {
       setState(() {
-        _duplicateError = 'Term "${existing.english}" already exists in library.';
+        _duplicateError =
+            'Term "${existing.english}" already exists in library.';
         _duplicateEntryId = existing.id;
       });
     } else {
@@ -381,7 +388,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     if (meanings.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please provide at least one valid meaning with part of speech, definition, and Hebrew translation.'),
+          content: Text(
+            'Please provide at least one valid meaning with part of speech, definition, and Hebrew translation.',
+          ),
         ),
       );
       return;
@@ -399,7 +408,15 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           context: _contextController.text.trim(),
           updatedAt: DateTime.now().toUtc().toIso8601String(),
         );
-        await repository.updateEntry(updated);
+        final saved = await repository.updateSemanticEntry(
+          widget.initialEntry!,
+          updated,
+        );
+        if (!saved) {
+          throw Exception(
+            'This entry changed elsewhere. Reload it before saving your edit.',
+          );
+        }
       } else {
         final newEntry = Entry.create(
           english: term,
@@ -412,9 +429,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 
       await ref.read(vocabularyListProvider.notifier).refreshList();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved "$term" to library')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Saved "$term" to library')));
         Navigator.of(context).pop();
       }
     } on DuplicateEntryException catch (e) {
@@ -426,9 +443,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     } catch (e) {
       setState(() => _isSaving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving entry: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving entry: $e')));
       }
     }
   }
@@ -476,7 +493,10 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 600.0),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 16.0,
+                      ),
                       child: Form(
                         key: _formKey,
                         child: Column(
@@ -498,7 +518,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                               child: TextField(
                                 key: const Key('hero_term_field'),
                                 controller: _termController,
-                                textDirection: isTermRtl ? TextDirection.rtl : TextDirection.ltr,
+                                textDirection: isTermRtl
+                                    ? TextDirection.rtl
+                                    : TextDirection.ltr,
                                 style: const TextStyle(
                                   fontFamily: 'FrankRuhlLibre',
                                   fontSize: 22,
@@ -506,32 +528,47 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                 ),
                                 textInputAction: TextInputAction.done,
                                 decoration: InputDecoration(
-                                  hintText: 'Enter English term or Hebrew word...',
+                                  hintText:
+                                      'Enter English term or Hebrew word...',
                                   hintStyle: TextStyle(
                                     fontSize: 16,
                                     fontFamily: 'Roboto',
                                     fontWeight: FontWeight.normal,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .withValues(alpha: 0.7),
                                   ),
                                   filled: true,
-                                  fillColor: Theme.of(context).colorScheme.surface,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                                  fillColor: Theme.of(
+                                    context,
+                                  ).colorScheme.surface,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 18,
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide(
-                                      color: Theme.of(context).colorScheme.outlineVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outlineVariant,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide(
-                                      color: Theme.of(context).colorScheme.outlineVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outlineVariant,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       width: 2,
                                     ),
                                   ),
@@ -540,17 +577,26 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                     children: [
                                       if (_isLookingUp)
                                         const Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 12),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                          ),
                                           child: SizedBox(
                                             width: 18,
                                             height: 18,
-                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
                                           ),
                                         )
                                       else if (_termController.text.isNotEmpty)
                                         IconButton(
-                                          key: const Key('clear_hero_term_button'),
-                                          icon: const Icon(Icons.clear, size: 20),
+                                          key: const Key(
+                                            'clear_hero_term_button',
+                                          ),
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            size: 20,
+                                          ),
                                           tooltip: 'Clear input',
                                           onPressed: _clearTerm,
                                         ),
@@ -570,18 +616,34 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .errorContainer
+                                      .withValues(alpha: 0.5),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Theme.of(context).colorScheme.error),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error, size: 20),
+                                    Icon(
+                                      Icons.warning_amber,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                      size: 20,
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         _duplicateError!,
-                                        style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer, fontSize: 13),
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onErrorContainer,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                     if (_duplicateEntryId != null)
@@ -608,14 +670,25 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                   'Did you mean "$_lookupSuggestion"?',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ),
-                                backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
-                                side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer
+                                    .withValues(alpha: 0.4),
+                                side: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.3),
+                                ),
                                 onPressed: () {
                                   _termController.text = _lookupSuggestion!;
-                                  _performLookup(termOverride: _lookupSuggestion);
+                                  _performLookup(
+                                    termOverride: _lookupSuggestion,
+                                  );
                                 },
                               ),
                             ],
@@ -626,22 +699,37 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.4),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .errorContainer
+                                      .withValues(alpha: 0.4),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.6)),
+                                  border: Border.all(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.error.withValues(alpha: 0.6),
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        Icon(Icons.info_outline, color: Theme.of(context).colorScheme.error, size: 18),
+                                        Icon(
+                                          Icons.info_outline,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
+                                          size: 18,
+                                        ),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             _lookupError!,
                                             style: TextStyle(
-                                              color: Theme.of(context).colorScheme.onErrorContainer,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onErrorContainer,
                                               fontSize: 13,
                                             ),
                                           ),
@@ -653,10 +741,16 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                       OutlinedButton.icon(
                                         onPressed: () {
                                           Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const SettingsScreen(),
+                                            ),
                                           );
                                         },
-                                        icon: const Icon(Icons.settings, size: 16),
+                                        icon: const Icon(
+                                          Icons.settings,
+                                          size: 16,
+                                        ),
                                         label: const Text('Open Settings'),
                                       ),
                                     ],
@@ -670,14 +764,16 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                               const SizedBox(height: 14),
                               Text(
                                 'Select English term:',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 6),
                               Wrap(
                                 spacing: 8,
                                 runSpacing: 6,
                                 children: _englishAlternatives.map((alt) {
-                                  final isSelected = _selectedAlternative == alt;
+                                  final isSelected =
+                                      _selectedAlternative == alt;
                                   return ChoiceChip(
                                     label: Text(alt),
                                     selected: isSelected,
@@ -704,13 +800,16 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   side: BorderSide(
-                                    color: Theme.of(context).colorScheme.outlineVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outlineVariant,
                                   ),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(18.0),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       // Card Header: Term, Pronunciation Speaker, POS badge
                                       Row(
@@ -722,9 +821,11 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                                   child: Text(
                                                     _lookupResult!.english,
                                                     style: const TextStyle(
-                                                      fontFamily: 'FrankRuhlLibre',
+                                                      fontFamily:
+                                                          'FrankRuhlLibre',
                                                       fontSize: 22,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
@@ -733,27 +834,47 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                                   icon: Icon(
                                                     _isPlayingAudio
                                                         ? Icons.volume_up
-                                                        : Icons.volume_up_outlined,
-                                                    color: Theme.of(context).colorScheme.primary,
+                                                        : Icons
+                                                              .volume_up_outlined,
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary,
                                                     size: 22,
                                                   ),
-                                                  tooltip: 'Listen to pronunciation',
-                                                  onPressed: () => _speakTerm(_lookupResult!.english),
+                                                  tooltip:
+                                                      'Listen to pronunciation',
+                                                  onPressed: () => _speakTerm(
+                                                    _lookupResult!.english,
+                                                  ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          if (_lookupResult!.meanings.isNotEmpty)
+                                          if (_lookupResult!
+                                              .meanings
+                                              .isNotEmpty)
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 5,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.primaryContainer,
-                                                borderRadius: BorderRadius.circular(12),
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primaryContainer,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: Text(
-                                                _lookupResult!.meanings[_selectedSenseIndex].partOfSpeech.toUpperCase(),
+                                                _lookupResult!
+                                                    .meanings[_selectedSenseIndex]
+                                                    .partOfSpeech
+                                                    .toUpperCase(),
                                                 style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimaryContainer,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 12,
                                                 ),
@@ -763,92 +884,139 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                       ),
 
                                       // Multi-sense switcher if >1 meaning
-                                      if (_lookupResult!.meanings.length > 1) ...[
+                                      if (_lookupResult!.meanings.length >
+                                          1) ...[
                                         const SizedBox(height: 14),
                                         Wrap(
                                           key: const Key('sense_switcher'),
                                           spacing: 8,
                                           runSpacing: 6,
-                                          children: _lookupResult!.meanings.asMap().entries.map((entry) {
-                                            final idx = entry.key;
-                                            final m = entry.value;
-                                            final isSelected = _selectedSenseIndex == idx;
-                                            return ChoiceChip(
-                                              label: Text('${idx + 1}: ${_capitalize(m.partOfSpeech)}'),
-                                              selected: isSelected,
-                                              onSelected: (selected) {
-                                                if (selected) {
-                                                  setState(() {
-                                                    _selectedSenseIndex = idx;
-                                                  });
-                                                }
-                                              },
-                                            );
-                                          }).toList(),
+                                          children: _lookupResult!.meanings
+                                              .asMap()
+                                              .entries
+                                              .map((entry) {
+                                                final idx = entry.key;
+                                                final m = entry.value;
+                                                final isSelected =
+                                                    _selectedSenseIndex == idx;
+                                                return ChoiceChip(
+                                                  label: Text(
+                                                    '${idx + 1}: ${_capitalize(m.partOfSpeech)}',
+                                                  ),
+                                                  selected: isSelected,
+                                                  onSelected: (selected) {
+                                                    if (selected) {
+                                                      setState(() {
+                                                        _selectedSenseIndex =
+                                                            idx;
+                                                      });
+                                                    }
+                                                  },
+                                                );
+                                              })
+                                              .toList(),
                                         ),
                                       ],
 
                                       // Hebrew translation chips (RTL)
-                                      if (_lookupResult!.meanings.isNotEmpty) ...[
+                                      if (_lookupResult!
+                                          .meanings
+                                          .isNotEmpty) ...[
                                         const SizedBox(height: 16),
                                         Text(
                                           'Hebrew Translations',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 13,
-                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
                                           ),
                                         ),
                                         const SizedBox(height: 8),
                                         Wrap(
                                           spacing: 8,
                                           runSpacing: 8,
-                                          children: _lookupResult!.meanings[_selectedSenseIndex].hebrewTranslations.map((trans) {
-                                            final isSelected = _selectedTranslationsPerSense[_selectedSenseIndex]?.contains(trans) ?? false;
-                                            return Directionality(
-                                              textDirection: TextDirection.rtl,
-                                              child: FilterChip(
-                                                label: Text(
-                                                  trans,
-                                                  textDirection: TextDirection.rtl,
-                                                  style: const TextStyle(
-                                                    fontFamily: 'FrankRuhlLibre',
-                                                    fontSize: 15,
+                                          children: _lookupResult!
+                                              .meanings[_selectedSenseIndex]
+                                              .hebrewTranslations
+                                              .map((trans) {
+                                                final isSelected =
+                                                    _selectedTranslationsPerSense[_selectedSenseIndex]
+                                                        ?.contains(trans) ??
+                                                    false;
+                                                return Directionality(
+                                                  textDirection:
+                                                      TextDirection.rtl,
+                                                  child: FilterChip(
+                                                    label: Text(
+                                                      trans,
+                                                      textDirection:
+                                                          TextDirection.rtl,
+                                                      style: const TextStyle(
+                                                        fontFamily:
+                                                            'FrankRuhlLibre',
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                    selected: isSelected,
+                                                    onSelected: (_) =>
+                                                        _toggleTranslationChip(
+                                                          _selectedSenseIndex,
+                                                          trans,
+                                                        ),
                                                   ),
-                                                ),
-                                                selected: isSelected,
-                                                onSelected: (_) => _toggleTranslationChip(_selectedSenseIndex, trans),
-                                              ),
-                                            );
-                                          }).toList(),
+                                                );
+                                              })
+                                              .toList(),
                                         ),
                                       ],
 
                                       // Formatted Definition Box
-                                      if (_lookupResult!.meanings.isNotEmpty) ...[
+                                      if (_lookupResult!
+                                          .meanings
+                                          .isNotEmpty) ...[
                                         const SizedBox(height: 16),
                                         Container(
                                           key: const Key('ai_definition_box'),
                                           width: double.infinity,
                                           decoration: BoxDecoration(
-                                            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-                                            borderRadius: const BorderRadius.only(
-                                              topRight: Radius.circular(8),
-                                              bottomRight: Radius.circular(8),
-                                            ),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerHighest
+                                                .withValues(alpha: 0.35),
+                                            borderRadius:
+                                                const BorderRadius.only(
+                                                  topRight: Radius.circular(8),
+                                                  bottomRight: Radius.circular(
+                                                    8,
+                                                  ),
+                                                ),
                                             border: Border(
                                               left: BorderSide(
-                                                color: Theme.of(context).colorScheme.primary,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
                                                 width: 4,
                                               ),
                                             ),
                                           ),
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 12,
+                                          ),
                                           child: Text(
-                                            _lookupResult!.meanings[_selectedSenseIndex].definition,
-                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                            _lookupResult!
+                                                .meanings[_selectedSenseIndex]
+                                                .definition,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
                                                   height: 1.4,
-                                                  color: Theme.of(context).colorScheme.onSurface,
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.onSurface,
                                                 ),
                                           ),
                                         ),
@@ -871,9 +1039,13 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                 });
                               },
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 4,
+                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       _isDrawerExpanded
@@ -881,13 +1053,19 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                           : 'Need custom meaning or notes? ▾',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                         fontSize: 14,
                                       ),
                                     ),
                                     Icon(
-                                      _isDrawerExpanded ? Icons.expand_less : Icons.expand_more,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      _isDrawerExpanded
+                                          ? Icons.expand_less
+                                          : Icons.expand_more,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       size: 20,
                                     ),
                                   ],
@@ -922,11 +1100,15 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           'Meanings (${_meaningsData.length}/3)',
-                                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                               ),
                                         ),
@@ -934,43 +1116,65 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                           TextButton.icon(
                                             onPressed: () {
                                               setState(() {
-                                                _meaningsData.add(MeaningFormData(
-                                                  partOfSpeech: '',
-                                                  definition: '',
-                                                  translations: [''],
-                                                ));
+                                                _meaningsData.add(
+                                                  MeaningFormData(
+                                                    partOfSpeech: '',
+                                                    definition: '',
+                                                    translations: [''],
+                                                  ),
+                                                );
                                               });
                                             },
-                                            icon: const Icon(Icons.add, size: 18),
+                                            icon: const Icon(
+                                              Icons.add,
+                                              size: 18,
+                                            ),
                                             label: const Text('Add Meaning'),
                                           ),
                                       ],
                                     ),
                                     const SizedBox(height: 10),
-                                    ..._meaningsData.asMap().entries.map((entry) {
+                                    ..._meaningsData.asMap().entries.map((
+                                      entry,
+                                    ) {
                                       final index = entry.key;
                                       final mData = entry.value;
 
                                       return Card(
-                                        margin: const EdgeInsets.only(bottom: 14),
+                                        margin: const EdgeInsets.only(
+                                          bottom: 14,
+                                        ),
                                         child: Padding(
                                           padding: const EdgeInsets.all(14.0),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
                                                 children: [
                                                   Text(
                                                     'Meaning #${index + 1}',
-                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 15,
+                                                    ),
                                                   ),
                                                   if (_meaningsData.length > 1)
                                                     IconButton(
-                                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                                      icon: const Icon(
+                                                        Icons.delete_outline,
+                                                        color: Colors.redAccent,
+                                                        size: 20,
+                                                      ),
                                                       onPressed: () {
                                                         setState(() {
-                                                          _meaningsData.removeAt(index).dispose();
+                                                          _meaningsData
+                                                              .removeAt(index)
+                                                              .dispose();
                                                         });
                                                       },
                                                     ),
@@ -981,57 +1185,98 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                                 controller: mData.posController,
                                                 decoration: const InputDecoration(
                                                   labelText: 'Part of Speech *',
-                                                  hintText: 'e.g. noun, verb, adjective',
+                                                  hintText:
+                                                      'e.g. noun, verb, adjective',
                                                 ),
                                                 validator: (val) =>
-                                                    (val == null || val.trim().isEmpty) ? 'Required' : null,
+                                                    (val == null ||
+                                                        val.trim().isEmpty)
+                                                    ? 'Required'
+                                                    : null,
                                               ),
                                               const SizedBox(height: 10),
                                               TextFormField(
-                                                controller: mData.definitionController,
-                                                decoration: const InputDecoration(
-                                                  labelText: 'English Definition *',
-                                                  hintText: 'Simple explanation',
-                                                ),
+                                                controller:
+                                                    mData.definitionController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      labelText:
+                                                          'English Definition *',
+                                                      hintText:
+                                                          'Simple explanation',
+                                                    ),
                                                 validator: (val) =>
-                                                    (val == null || val.trim().isEmpty) ? 'Required' : null,
+                                                    (val == null ||
+                                                        val.trim().isEmpty)
+                                                    ? 'Required'
+                                                    : null,
                                               ),
                                               const SizedBox(height: 14),
                                               const Text(
                                                 'Hebrew Translations (RTL)',
-                                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 13,
+                                                ),
                                               ),
                                               const SizedBox(height: 8),
-                                              ...mData.translationControllers.asMap().entries.map((tEntry) {
+                                              ...mData.translationControllers.asMap().entries.map((
+                                                tEntry,
+                                              ) {
                                                 final tIndex = tEntry.key;
-                                                final tController = tEntry.value;
+                                                final tController =
+                                                    tEntry.value;
 
                                                 return Padding(
-                                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        bottom: 8.0,
+                                                      ),
                                                   child: Row(
                                                     children: [
                                                       Expanded(
                                                         child: Directionality(
-                                                          textDirection: TextDirection.rtl,
+                                                          textDirection:
+                                                              TextDirection.rtl,
                                                           child: TextFormField(
-                                                            controller: tController,
-                                                            textDirection: TextDirection.rtl,
-                                                            decoration: const InputDecoration(
-                                                              hintText: 'תרגום בעברית',
-                                                            ),
+                                                            controller:
+                                                                tController,
+                                                            textDirection:
+                                                                TextDirection
+                                                                    .rtl,
+                                                            decoration:
+                                                                const InputDecoration(
+                                                                  hintText:
+                                                                      'תרגום בעברית',
+                                                                ),
                                                             validator: (val) =>
-                                                                (val == null || val.trim().isEmpty)
-                                                                    ? 'Required'
-                                                                    : null,
+                                                                (val == null ||
+                                                                    val
+                                                                        .trim()
+                                                                        .isEmpty)
+                                                                ? 'Required'
+                                                                : null,
                                                           ),
                                                         ),
                                                       ),
-                                                      if (mData.translationControllers.length > 1)
+                                                      if (mData
+                                                              .translationControllers
+                                                              .length >
+                                                          1)
                                                         IconButton(
-                                                          icon: const Icon(Icons.remove_circle_outline, size: 20),
+                                                          icon: const Icon(
+                                                            Icons
+                                                                .remove_circle_outline,
+                                                            size: 20,
+                                                          ),
                                                           onPressed: () {
                                                             setState(() {
-                                                              mData.translationControllers.removeAt(tIndex).dispose();
+                                                              mData
+                                                                  .translationControllers
+                                                                  .removeAt(
+                                                                    tIndex,
+                                                                  )
+                                                                  .dispose();
                                                             });
                                                           },
                                                         ),
@@ -1040,15 +1285,25 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                                 );
                                               }),
                                               Align(
-                                                alignment: Alignment.centerRight,
+                                                alignment:
+                                                    Alignment.centerRight,
                                                 child: TextButton.icon(
                                                   onPressed: () {
                                                     setState(() {
-                                                      mData.translationControllers.add(TextEditingController());
+                                                      mData
+                                                          .translationControllers
+                                                          .add(
+                                                            TextEditingController(),
+                                                          );
                                                     });
                                                   },
-                                                  icon: const Icon(Icons.add, size: 16),
-                                                  label: const Text('Add Translation'),
+                                                  icon: const Icon(
+                                                    Icons.add,
+                                                    size: 16,
+                                                  ),
+                                                  label: const Text(
+                                                    'Add Translation',
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -1076,8 +1331,13 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  isEditing ? 'Save Changes' : 'Save to Library',
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                  isEditing
+                                      ? 'Save Changes'
+                                      : 'Save to Library',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),

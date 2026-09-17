@@ -1,4 +1,5 @@
 import '../domain/entry.dart';
+import '../domain/meaning.dart';
 
 class DuplicateEntryException implements Exception {
   final String term;
@@ -7,7 +8,8 @@ class DuplicateEntryException implements Exception {
   DuplicateEntryException({required this.term, required this.existingId});
 
   @override
-  String toString() => 'DuplicateEntryException: Entry with term "$term" already exists (ID: $existingId)';
+  String toString() =>
+      'DuplicateEntryException: Entry with term "$term" already exists (ID: $existingId)';
 }
 
 class ImportMergeResult {
@@ -25,6 +27,9 @@ class ImportMergeResult {
 abstract class WordsRepository {
   Future<void> insertEntry(Entry entry);
   Future<void> updateEntry(Entry entry);
+  Future<void> updateProgress(Entry entry);
+  Future<bool> updateSemanticEntry(Entry original, Entry updated);
+  Future<bool> applyEnrichment(Entry original, List<Meaning> meanings);
   Future<void> deleteEntry(String id);
   Future<void> resetProgress(String id);
   Future<Entry?> getEntryById(String id);

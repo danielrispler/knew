@@ -69,13 +69,15 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
         );
       }
 
-      questions.add(PracticeQuestion(
-        entry: entry,
-        direction: dir,
-        format: format,
-        isRepeat: false,
-        distractorResult: distractorResult,
-      ));
+      questions.add(
+        PracticeQuestion(
+          entry: entry,
+          direction: dir,
+          format: format,
+          isRepeat: false,
+          distractorResult: distractorResult,
+        ),
+      );
     }
 
     state = PracticeSessionState(
@@ -103,7 +105,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
   void selectOption(int optionIndex) {
     final question = state.currentQuestion;
     if (question == null || state.isRevealed || state.isCompleted) return;
-    if (question.format != QuestionFormat.multipleChoice || question.distractorResult == null) return;
+    if (question.format != QuestionFormat.multipleChoice ||
+        question.distractorResult == null)
+      return;
 
     final distractorResult = question.distractorResult!;
     final isCorrect = (optionIndex == distractorResult.correctOptionIndex);
@@ -122,10 +126,17 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     }
 
     final result = question.direction == PromptDirection.englishToHebrew
-        ? AnswerChecker.checkHebrewAnswer(userInput: text, entry: question.entry)
-        : AnswerChecker.checkEnglishAnswer(userInput: text, entry: question.entry);
+        ? AnswerChecker.checkHebrewAnswer(
+            userInput: text,
+            entry: question.entry,
+          )
+        : AnswerChecker.checkEnglishAnswer(
+            userInput: text,
+            entry: question.entry,
+          );
 
-    final isCorrect = (result.status == AnswerCheckStatus.exactMatch ||
+    final isCorrect =
+        (result.status == AnswerCheckStatus.exactMatch ||
         result.status == AnswerCheckStatus.typoMatch);
 
     state = state.copyWith(
@@ -158,9 +169,11 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
       try {
         final repository = ref.read(wordsRepositoryProvider);
-        await repository.updateEntry(updatedEntry);
+        await repository.updateProgress(updatedEntry);
 
-        final newPostSnapshots = Map<String, Entry>.from(state.firstPassPostSnapshots);
+        final newPostSnapshots = Map<String, Entry>.from(
+          state.firstPassPostSnapshots,
+        );
         newPostSnapshots[entry.id] = updatedEntry;
 
         final newRepeatQueue = List<Entry>.from(state.repeatQueue);
@@ -211,17 +224,26 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
     state = state.copyWith(isSaving: true, saveError: null);
 
-    final overriddenEntry = PracticeScheduler.overrideWrongWithCorrect(preEntry, now: now);
+    final overriddenEntry = PracticeScheduler.overrideWrongWithCorrect(
+      preEntry,
+      now: now,
+    );
 
     try {
       final repository = ref.read(wordsRepositoryProvider);
-      await repository.updateEntry(overriddenEntry);
+      await repository.updateProgress(overriddenEntry);
 
-      final newPostSnapshots = Map<String, Entry>.from(state.firstPassPostSnapshots);
+      final newPostSnapshots = Map<String, Entry>.from(
+        state.firstPassPostSnapshots,
+      );
       newPostSnapshots[lastId] = overriddenEntry;
 
-      final newRepeatQueue = state.repeatQueue.where((e) => e.id != lastId).toList();
-      final newQuestions = state.questions.where((q) => !(q.isRepeat && q.entry.id == lastId)).toList();
+      final newRepeatQueue = state.repeatQueue
+          .where((e) => e.id != lastId)
+          .toList();
+      final newQuestions = state.questions
+          .where((q) => !(q.isRepeat && q.entry.id == lastId))
+          .toList();
 
       state = state.copyWith(
         isSaving: false,
@@ -250,7 +272,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
     if (nextIndex >= questions.length && repeatQueue.isNotEmpty) {
       final rng = Random();
-      QuestionFormat? lastFormat = questions.isNotEmpty ? questions.last.format : null;
+      QuestionFormat? lastFormat = questions.isNotEmpty
+          ? questions.last.format
+          : null;
       int consecutiveCount = 1;
 
       for (final repeatEntry in repeatQueue) {
@@ -289,13 +313,15 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
             );
           }
 
-          questions.add(PracticeQuestion(
-            entry: repeatEntry,
-            direction: dir,
-            format: format,
-            isRepeat: true,
-            distractorResult: distractorResult,
-          ));
+          questions.add(
+            PracticeQuestion(
+              entry: repeatEntry,
+              direction: dir,
+              format: format,
+              isRepeat: true,
+              distractorResult: distractorResult,
+            ),
+          );
         }
       }
     }

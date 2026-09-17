@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/entry.dart';
+import '../domain/meaning.dart';
 import 'words_repository.dart';
 
 class SQLiteWordsRepository implements WordsRepository {
@@ -12,7 +14,10 @@ class SQLiteWordsRepository implements WordsRepository {
   Future<void> insertEntry(Entry entry) async {
     final existing = await getEntryByEnglishKey(entry.englishKey);
     if (existing != null) {
-      throw DuplicateEntryException(term: entry.english, existingId: existing.id);
+      throw DuplicateEntryException(
+        term: entry.english,
+        existingId: existing.id,
+      );
     }
 
     try {
@@ -37,7 +42,10 @@ class SQLiteWordsRepository implements WordsRepository {
   Future<void> updateEntry(Entry entry) async {
     final existing = await getEntryByEnglishKey(entry.englishKey);
     if (existing != null && existing.id != entry.id) {
-      throw DuplicateEntryException(term: entry.english, existingId: existing.id);
+      throw DuplicateEntryException(
+        term: entry.english,
+        existingId: existing.id,
+      );
     }
 
     try {
@@ -64,12 +72,90 @@ class SQLiteWordsRepository implements WordsRepository {
   }
 
   @override
-  Future<void> deleteEntry(String id) async {
-    await db.delete(
+  Future<void> updateProgress(Entry entry) async {
+    final count = await db.update(
       'words',
+      {
+        'level': entry.level,
+        'due_date': entry.dueDate,
+        'last_reviewed_at': entry.lastReviewedAt,
+        'times_correct': entry.timesCorrect,
+        'times_wrong': entry.timesWrong,
+        'updated_at': entry.updatedAt,
+      },
       where: 'id = ?',
-      whereArgs: [id],
+      whereArgs: [entry.id],
     );
+    if (count == 0) {
+      throw Exception('Entry with ID ${entry.id} not found to update.');
+    }
+  }
+
+  @override
+  Future<bool> updateSemanticEntry(Entry original, Entry updated) async {
+    final existing = await getEntryByEnglishKey(updated.englishKey);
+    if (existing != null && existing.id != updated.id) {
+      throw DuplicateEntryException(
+        term: updated.english,
+        existingId: existing.id,
+      );
+    }
+    final meanings = updated.meanings
+        .map(
+          (m) => m.copyWith(
+            examples: const [],
+            collocations: const [],
+            validInflections: const [],
+            clearEnrichedAt: true,
+          ),
+        )
+        .toList();
+    final sourceClause = original.source == null
+        ? 'source IS NULL'
+        : 'source = ?';
+    final contextClause = original.context == null
+        ? 'context IS NULL'
+        : 'context = ?';
+    final count = await db.update(
+      'words',
+      {
+        'english': updated.english,
+        'english_key': updated.englishKey,
+        'meanings': _meaningsJson(meanings),
+        'source': updated.source,
+        'context': updated.context,
+        'updated_at': updated.updatedAt,
+      },
+      where:
+          'id = ? AND english = ? AND meanings = ? AND $sourceClause AND $contextClause',
+      whereArgs: [
+        original.id,
+        original.english,
+        _meaningsJson(original.meanings),
+        if (original.source != null) original.source,
+        if (original.context != null) original.context,
+      ],
+    );
+    return count == 1;
+  }
+
+  @override
+  Future<bool> applyEnrichment(Entry original, List<Meaning> meanings) async {
+    final count = await db.update(
+      'words',
+      {'meanings': _meaningsJson(meanings)},
+      where: 'id = ? AND meanings = ?',
+      whereArgs: [original.id, _meaningsJson(original.meanings)],
+    );
+    return count == 1;
+  }
+
+  String _meaningsJson(List<Meaning> meanings) =>
+      jsonEncode(meanings.map((meaning) => meaning.toJson()).toList());
+
+  @override
+  Future<void> deleteEntry(String id) async {
+    await db.delete('words', where: 'id = ?', whereArgs: [id]);
   }
 
   @override
@@ -92,7 +178,7 @@ class SQLiteWordsRepository implements WordsRepository {
       updatedAt: nowUtc,
     );
 
-    await updateEntry(resetEntry);
+    await updateProgress(resetEntry);
   }
 
   @override
@@ -146,10 +232,7 @@ class SQLiteWordsRepository implements WordsRepository {
 
   @override
   Future<List<Entry>> getAllEntries() async {
-    final maps = await db.query(
-      'words',
-      orderBy: 'created_at DESC',
-    );
+    final maps = await db.query('words', orderBy: 'created_at DESC');
     return maps.map((map) => Entry.fromDatabaseMap(map)).toList();
   }
 
@@ -199,7 +282,9 @@ class SQLiteWordsRepository implements WordsRepository {
           added++;
         } else {
           // Matched term
-          final incomingUpdatedInst = DateTime.parse(incoming.updatedAt).toUtc();
+          final incomingUpdatedInst = DateTime.parse(
+            incoming.updatedAt,
+          ).toUtc();
           final localUpdatedInst = DateTime.parse(local.updatedAt).toUtc();
 
           if (incomingUpdatedInst.isAfter(localUpdatedInst)) {
@@ -221,10 +306,6 @@ class SQLiteWordsRepository implements WordsRepository {
       }
     });
 
-    return ImportMergeResult(
-      added: added,
-      updated: updated,
-      skipped: skipped,
-    );
+    return ImportMergeResult(added: added, updated: updated, skipped: skipped);
   }
 }

@@ -21,6 +21,21 @@ class TestWordsRepository implements WordsRepository {
   }
 
   @override
+  Future<void> updateProgress(Entry entry) => updateEntry(entry);
+
+  @override
+  Future<bool> updateSemanticEntry(Entry original, Entry updated) async {
+    await updateEntry(updated);
+    return true;
+  }
+
+  @override
+  Future<bool> applyEnrichment(Entry original, List<Meaning> meanings) async {
+    store[original.id] = original.copyWith(meanings: meanings);
+    return true;
+  }
+
+  @override
   Future<void> deleteEntry(String id) async {
     store.remove(id);
   }
@@ -75,69 +90,69 @@ void main() {
     createdAt: DateTime(2026, 1, 1),
   );
 
-  testWidgets('FlashcardPracticeScreen displays prompt, reveals answer, and completes session',
-      (WidgetTester tester) async {
-    final repository = TestWordsRepository();
-    await repository.insertEntry(testEntry);
+  testWidgets(
+    'FlashcardPracticeScreen displays prompt, reveals answer, and completes session',
+    (WidgetTester tester) async {
+      final repository = TestWordsRepository();
+      await repository.insertEntry(testEntry);
 
-    bool exited = false;
+      bool exited = false;
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          wordsRepositoryProvider.overrideWithValue(repository),
-        ],
-        child: MaterialApp(
-          home: FlashcardPracticeScreen(
-            initialLibrary: [testEntry],
-            onExit: () {
-              exited = true;
-            },
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [wordsRepositoryProvider.overrideWithValue(repository)],
+          child: MaterialApp(
+            home: FlashcardPracticeScreen(
+              initialLibrary: [testEntry],
+              onExit: () {
+                exited = true;
+              },
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    final isEngPrompt = find.text('persistent').evaluate().isNotEmpty;
-    if (isEngPrompt) {
-      expect(find.text('persistent'), findsOneWidget);
-    } else {
-      expect(find.text('מתמיד, עקבי'), findsOneWidget);
-    }
-    expect(find.text('Show answer'), findsOneWidget);
+      final isEngPrompt = find.text('persistent').evaluate().isNotEmpty;
+      if (isEngPrompt) {
+        expect(find.text('persistent'), findsOneWidget);
+      } else {
+        expect(find.text('מתמיד, עקבי'), findsOneWidget);
+      }
+      expect(find.text('Show answer'), findsOneWidget);
 
-    // Tap Show answer to reveal
-    await tester.tap(find.text('Show answer'));
-    await tester.pumpAndSettle();
+      // Tap Show answer to reveal
+      await tester.tap(find.text('Show answer'));
+      await tester.pumpAndSettle();
 
-    // Verify revealed translation/term and actions visible
-    if (isEngPrompt) {
-      expect(find.text('מתמיד, עקבי'), findsOneWidget);
-    } else {
-      expect(find.text('persistent'), findsOneWidget);
-    }
-    expect(find.text('lasting for a long time'), findsOneWidget);
-    expect(find.text("Didn't know"), findsOneWidget);
-    expect(find.text('Knew it'), findsOneWidget);
+      // Verify revealed translation/term and actions visible
+      if (isEngPrompt) {
+        expect(find.text('מתמיד, עקבי'), findsOneWidget);
+      } else {
+        expect(find.text('persistent'), findsOneWidget);
+      }
+      expect(find.text('lasting for a long time'), findsOneWidget);
+      expect(find.text("Didn't know"), findsOneWidget);
+      expect(find.text('Knew it'), findsOneWidget);
 
-    // Tap Knew it
-    await tester.tap(find.text('Knew it'));
-    await tester.pumpAndSettle();
+      // Tap Knew it
+      await tester.tap(find.text('Knew it'));
+      await tester.pumpAndSettle();
 
-    // Verify Practice Summary screen is shown
-    expect(find.text('Practice Summary'), findsOneWidget);
-    expect(find.text('100%'), findsOneWidget);
+      // Verify Practice Summary screen is shown
+      expect(find.text('Practice Summary'), findsOneWidget);
+      expect(find.text('100%'), findsOneWidget);
 
-    // Tap Done on summary screen
-    await tester.tap(find.text('Done'));
-    await tester.pumpAndSettle();
+      // Tap Done on summary screen
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
 
-    expect(exited, isTrue);
+      expect(exited, isTrue);
 
-    // Verify DB updated level to 1
-    final updatedInDb = await repository.getEntryById('entry_1');
-    expect(updatedInDb?.level, equals(1));
-  });
+      // Verify DB updated level to 1
+      final updatedInDb = await repository.getEntryById('entry_1');
+      expect(updatedInDb?.level, equals(1));
+    },
+  );
 }

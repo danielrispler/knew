@@ -23,6 +23,21 @@ class MockWordsRepository implements WordsRepository {
   }
 
   @override
+  Future<void> updateProgress(Entry entry) => updateEntry(entry);
+
+  @override
+  Future<bool> updateSemanticEntry(Entry original, Entry updated) async {
+    await updateEntry(updated);
+    return true;
+  }
+
+  @override
+  Future<bool> applyEnrichment(Entry original, List<Meaning> meanings) async {
+    store[original.id] = original.copyWith(meanings: meanings);
+    return true;
+  }
+
+  @override
   Future<void> deleteEntry(String id) async {
     store.remove(id);
   }
@@ -49,7 +64,9 @@ class MockWordsRepository implements WordsRepository {
 
   @override
   Future<List<Entry>> getDueEntries(String dateYYYYMMDD) async {
-    return store.values.where((e) => e.dueDate.compareTo(dateYYYYMMDD) <= 0).toList();
+    return store.values
+        .where((e) => e.dueDate.compareTo(dateYYYYMMDD) <= 0)
+        .toList();
   }
 
   @override
@@ -68,7 +85,11 @@ void main() {
     hebrewTranslations: ['ללמוד'],
   );
 
-  Entry createTestEntry(String id, {int level = 0, String dueDate = '2026-09-15'}) {
+  Entry createTestEntry(
+    String id, {
+    int level = 0,
+    String dueDate = '2026-09-15',
+  }) {
     return Entry.create(
       id: id,
       english: 'learn_$id',
@@ -85,9 +106,7 @@ void main() {
   setUp(() {
     repository = MockWordsRepository();
     container = ProviderContainer(
-      overrides: [
-        wordsRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [wordsRepositoryProvider.overrideWithValue(repository)],
     );
   });
 
@@ -103,10 +122,7 @@ void main() {
       await repository.insertEntry(e2);
 
       final notifier = container.read(practiceSessionProvider.notifier);
-      notifier.startSession(
-        library: [e1, e2],
-        todayDueDate: '2026-09-15',
-      );
+      notifier.startSession(library: [e1, e2], todayDueDate: '2026-09-15');
 
       final state = container.read(practiceSessionProvider);
       expect(state.questions.length, equals(2));
@@ -158,49 +174,55 @@ void main() {
       expect(container.read(practiceSessionProvider).isCompleted, isTrue);
     });
 
-    test('Single-tap override (Count as correct) replaces wrong grade in DB and removes repeat', () async {
-      final e1 = createTestEntry('1', level: 2, dueDate: '2026-09-15');
-      await repository.insertEntry(e1);
+    test(
+      'Single-tap override (Count as correct) replaces wrong grade in DB and removes repeat',
+      () async {
+        final e1 = createTestEntry('1', level: 2, dueDate: '2026-09-15');
+        await repository.insertEntry(e1);
 
-      final notifier = container.read(practiceSessionProvider.notifier);
-      notifier.startSession(library: [e1], todayDueDate: '2026-09-15');
+        final notifier = container.read(practiceSessionProvider.notifier);
+        notifier.startSession(library: [e1], todayDueDate: '2026-09-15');
 
-      notifier.reveal();
-      await notifier.gradeCurrent(correct: false);
+        notifier.reveal();
+        await notifier.gradeCurrent(correct: false);
 
-      expect(container.read(practiceSessionProvider).canOverride, isTrue);
+        expect(container.read(practiceSessionProvider).canOverride, isTrue);
 
-      await notifier.countAsCorrect();
+        await notifier.countAsCorrect();
 
-      final dbAfterOverride = await repository.getEntryById('1');
-      expect(dbAfterOverride?.level, equals(3));
-      expect(dbAfterOverride?.timesCorrect, equals(1));
-      expect(dbAfterOverride?.timesWrong, equals(0));
-      expect(container.read(practiceSessionProvider).canOverride, isFalse);
-    });
+        final dbAfterOverride = await repository.getEntryById('1');
+        expect(dbAfterOverride?.level, equals(3));
+        expect(dbAfterOverride?.timesCorrect, equals(1));
+        expect(dbAfterOverride?.timesWrong, equals(0));
+        expect(container.read(practiceSessionProvider).canOverride, isFalse);
+      },
+    );
 
-    test('Database write failure pauses on question and shows save error', () async {
-      final e1 = createTestEntry('1', level: 0);
-      await repository.insertEntry(e1);
-      repository.shouldFail = true;
+    test(
+      'Database write failure pauses on question and shows save error',
+      () async {
+        final e1 = createTestEntry('1', level: 0);
+        await repository.insertEntry(e1);
+        repository.shouldFail = true;
 
-      final notifier = container.read(practiceSessionProvider.notifier);
-      notifier.startSession(library: [e1], todayDueDate: '2026-09-15');
+        final notifier = container.read(practiceSessionProvider.notifier);
+        notifier.startSession(library: [e1], todayDueDate: '2026-09-15');
 
-      notifier.reveal();
-      await notifier.gradeCurrent(correct: true);
+        notifier.reveal();
+        await notifier.gradeCurrent(correct: true);
 
-      var state = container.read(practiceSessionProvider);
-      expect(state.saveError, isNotNull);
-      expect(state.currentIndex, equals(0));
-      expect(state.isCompleted, isFalse);
+        var state = container.read(practiceSessionProvider);
+        expect(state.saveError, isNotNull);
+        expect(state.currentIndex, equals(0));
+        expect(state.isCompleted, isFalse);
 
-      repository.shouldFail = false;
-      await notifier.retrySave();
+        repository.shouldFail = false;
+        await notifier.retrySave();
 
-      state = container.read(practiceSessionProvider);
-      expect(state.saveError, isNull);
-      expect(state.isCompleted, isTrue);
-    });
+        state = container.read(practiceSessionProvider);
+        expect(state.saveError, isNull);
+        expect(state.isCompleted, isTrue);
+      },
+    );
   });
 }

@@ -23,6 +23,21 @@ class TestWordsRepository implements WordsRepository {
   }
 
   @override
+  Future<void> updateProgress(Entry entry) => updateEntry(entry);
+
+  @override
+  Future<bool> updateSemanticEntry(Entry original, Entry updated) async {
+    await updateEntry(updated);
+    return true;
+  }
+
+  @override
+  Future<bool> applyEnrichment(Entry original, List<Meaning> meanings) async {
+    store[original.id] = original.copyWith(meanings: meanings);
+    return true;
+  }
+
+  @override
   Future<void> deleteEntry(String id) async {
     store.remove(id);
   }
@@ -111,16 +126,15 @@ void main() {
         ttsServiceProvider.overrideWithValue(fakeTtsService),
       ],
       child: MaterialApp(
-        home: FlashcardPracticeScreen(
-          initialLibrary: library,
-          onExit: () {},
-        ),
+        home: FlashcardPracticeScreen(initialLibrary: library, onExit: () {}),
       ),
     );
   }
 
   group('FlashcardPracticeScreen - Formats & Interaction', () {
-    testWidgets('Audio button triggers TTS and shows snackbar on failure', (tester) async {
+    testWidgets('Audio button triggers TTS and shows snackbar on failure', (
+      tester,
+    ) async {
       fakeTtsService.shouldSucceed = false;
 
       final entry = createTestEntry(
@@ -144,34 +158,68 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(fakeTtsService.speakCalled, isTrue);
-      expect(find.textContaining('English pronunciation unavailable'), findsOneWidget);
+      expect(
+        find.textContaining('English pronunciation unavailable'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('Multiple choice option selection highlights feedback and shows Next button', (tester) async {
-      // Build library with 4 entries so MC is legal
-      final target = createTestEntry(id: 'target', english: 'swift', pos: 'adjective', hebrewTranslations: ['מהיר'], level: 0, dueDate: '2026-09-15');
-      final e1 = createTestEntry(id: '1', english: 'slow', pos: 'adjective', hebrewTranslations: ['איטי'], level: 1, dueDate: '2026-09-15');
-      final e2 = createTestEntry(id: '2', english: 'big', pos: 'adjective', hebrewTranslations: ['גדול'], level: 1, dueDate: '2026-09-15');
-      final e3 = createTestEntry(id: '3', english: 'small', pos: 'adjective', hebrewTranslations: ['קטן'], level: 1, dueDate: '2026-09-15');
+    testWidgets(
+      'Multiple choice option selection highlights feedback and shows Next button',
+      (tester) async {
+        // Build library with 4 entries so MC is legal
+        final target = createTestEntry(
+          id: 'target',
+          english: 'swift',
+          pos: 'adjective',
+          hebrewTranslations: ['מהיר'],
+          level: 0,
+          dueDate: '2026-09-15',
+        );
+        final e1 = createTestEntry(
+          id: '1',
+          english: 'slow',
+          pos: 'adjective',
+          hebrewTranslations: ['איטי'],
+          level: 1,
+          dueDate: '2026-09-15',
+        );
+        final e2 = createTestEntry(
+          id: '2',
+          english: 'big',
+          pos: 'adjective',
+          hebrewTranslations: ['גדול'],
+          level: 1,
+          dueDate: '2026-09-15',
+        );
+        final e3 = createTestEntry(
+          id: '3',
+          english: 'small',
+          pos: 'adjective',
+          hebrewTranslations: ['קטן'],
+          level: 1,
+          dueDate: '2026-09-15',
+        );
 
-      final library = [target, e1, e2, e3];
-      for (final e in library) {
-        await wordsRepository.insertEntry(e);
-      }
+        final library = [target, e1, e2, e3];
+        for (final e in library) {
+          await wordsRepository.insertEntry(e);
+        }
 
-      await tester.pumpWidget(createWidgetUnderTest(library));
-      await tester.pumpAndSettle();
-
-      // If rendered as MC option screen, option buttons are visible
-      final optionFinder = find.byType(OutlinedButton);
-      if (optionFinder.evaluate().isNotEmpty) {
-        // Tap first option
-        await tester.tap(optionFinder.first);
+        await tester.pumpWidget(createWidgetUnderTest(library));
         await tester.pumpAndSettle();
 
-        // Expect Next button to appear in bottom action bar
-        expect(find.text('Next'), findsOneWidget);
-      }
-    });
+        // If rendered as MC option screen, option buttons are visible
+        final optionFinder = find.byType(OutlinedButton);
+        if (optionFinder.evaluate().isNotEmpty) {
+          // Tap first option
+          await tester.tap(optionFinder.first);
+          await tester.pumpAndSettle();
+
+          // Expect Next button to appear in bottom action bar
+          expect(find.text('Next'), findsOneWidget);
+        }
+      },
+    );
   });
 }

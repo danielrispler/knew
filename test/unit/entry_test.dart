@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:knew/src/features/vocabulary/domain/entry.dart';
 import 'package:knew/src/features/vocabulary/domain/meaning.dart';
+import 'package:knew/src/features/vocabulary/domain/example_usage.dart';
 
 void main() {
   group('Meaning', () {
@@ -17,6 +18,33 @@ void main() {
       expect(restored.partOfSpeech, 'noun');
       expect(restored.definition, 'A short explanation in simple English.');
       expect(restored.hebrewTranslations, ['הסבר', 'פירוש']);
+    });
+
+    test('reads legacy JSON and round-trips enrichment fields', () {
+      final legacy = Meaning.fromJson({
+        'partOfSpeech': 'noun',
+        'definition': 'thing',
+        'hebrewTranslations': ['דבר'],
+      });
+      expect(legacy.examples, isEmpty);
+      expect(legacy.enrichedAt, isNull);
+      final enriched = legacy.copyWith(
+        examples: ['I [[thing]] so.'],
+        collocations: ['a thing'],
+        validInflections: ['things'],
+        enrichedAt: '2026-09-17T00:00:00.000Z',
+      );
+      expect(Meaning.fromJson(enriched.toJson()).validInflections, ['things']);
+    });
+
+    test('accepts exactly one marked allowed target', () {
+      final usage = ExampleUsage.parse('She [[ran]] home.', ['run', 'ran']);
+      expect(usage?.sentence, 'She ran home.');
+      expect(usage?.clozeSentence, 'She _____ home.');
+      expect(
+        ExampleUsage.parse('She [[walked]] [[home]].', ['walked']),
+        isNull,
+      );
     });
   });
 
@@ -48,7 +76,7 @@ void main() {
             partOfSpeech: 'n',
             definition: 'd',
             hebrewTranslations: ['t'],
-          )
+          ),
         ],
         level: 0,
       );
