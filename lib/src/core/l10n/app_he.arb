@@ -28,6 +28,21 @@
   "startPractice": "התחל תרגול",
   "extraPractice": "תרגול נוסף",
   "noDueForPractice": "אין מונחים הממתינים לתרגול",
+  "allCaughtUpTitle": "סיימת את כל התרגולים להיום!",
+  "allCaughtUpDesc": "תרגלת את כל המונחים שתוזמנו להיום.",
+  "earlyReviewTitle": "התקדמות (תרגול מקדים)",
+  "earlyReviewDesc": "תרגל כעת כדי לקדם מונחים לרמה הבאה לפני המועד.",
+  "repracticeTitle": "תרגול חוזר (ללא שינוי רמה)",
+  "repracticeDesc": "תרגול מונחים מבלי לשנות את רמתם או מועד התרגול הבא.",
+  "reviewedTodayCount": "{count, plural, =1{מונח אחד תורגל היום} other{{count} מונחים תורגלו היום}}",
+  "@reviewedTodayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "earlyReviewBadge": "תרגול מקדים",
 
   "wordDetailTitle": "פרטי מונח",
   "level": "רמה {level}",

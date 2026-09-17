@@ -28,6 +28,21 @@
   "startPractice": "Start Practice",
   "extraPractice": "Extra Practice",
   "noDueForPractice": "No terms due for practice",
+  "allCaughtUpTitle": "All caught up for today!",
+  "allCaughtUpDesc": "You've practiced all your scheduled terms for today.",
+  "earlyReviewTitle": "Advance (Early Review)",
+  "earlyReviewDesc": "Practice now to advance terms to the next stage early.",
+  "repracticeTitle": "Repractice (Extra Practice)",
+  "repracticeDesc": "Practice terms without changing their review schedules or levels.",
+  "reviewedTodayCount": "{count, plural, =1{1 term reviewed today} other{{count} terms reviewed today}}",
+  "@reviewedTodayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "earlyReviewBadge": "Early Review",
 
   "wordDetailTitle": "Term Details",
   "level": "Level {level}",

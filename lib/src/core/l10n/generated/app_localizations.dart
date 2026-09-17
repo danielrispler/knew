@@ -254,6 +254,54 @@ abstract class AppLocalizations {
   /// **'No terms due for practice'**
   String get noDueForPractice;
 
+  /// No description provided for @allCaughtUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up for today!'**
+  String get allCaughtUpTitle;
+
+  /// No description provided for @allCaughtUpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve practiced all your scheduled terms for today.'**
+  String get allCaughtUpDesc;
+
+  /// No description provided for @earlyReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance (Early Review)'**
+  String get earlyReviewTitle;
+
+  /// No description provided for @earlyReviewDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice now to advance terms to the next stage early.'**
+  String get earlyReviewDesc;
+
+  /// No description provided for @repracticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Repractice (Extra Practice)'**
+  String get repracticeTitle;
+
+  /// No description provided for @repracticeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice terms without changing their review schedules or levels.'**
+  String get repracticeDesc;
+
+  /// No description provided for @reviewedTodayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 term reviewed today} other{{count} terms reviewed today}}'**
+  String reviewedTodayCount(int count);
+
+  /// No description provided for @earlyReviewBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Review'**
+  String get earlyReviewBadge;
+
   /// No description provided for @wordDetailTitle.
   ///
   /// In en, this message translates to:

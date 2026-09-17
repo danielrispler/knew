@@ -44,6 +44,8 @@ _Avoid_: "Level" for the named grouping.
 
 **Extra practice**: Practice offered when nothing is due, without changing review schedules.
 
+**Early review**: Opt-in practice of entries before their scheduled due date that updates learning progress and advances levels.
+
 ## Discover
 
 **Discover**: An opt-in feature that suggests unfamiliar English words for the user to consider adding to their library.

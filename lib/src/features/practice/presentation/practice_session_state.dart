@@ -22,6 +22,7 @@ class PracticeSessionState {
   final int currentIndex;
   final bool isRevealed;
   final bool isExtraPractice;
+  final bool isEarlyReview;
   final bool isSaving;
   final String? saveError;
   final bool? lastAttemptedGrade;
@@ -48,6 +49,7 @@ class PracticeSessionState {
     this.currentIndex = 0,
     this.isRevealed = false,
     this.isExtraPractice = false,
+    this.isEarlyReview = false,
     this.isSaving = false,
     this.saveError,
     this.lastAttemptedGrade,
@@ -123,6 +125,7 @@ class PracticeSessionState {
     int? currentIndex,
     bool? isRevealed,
     bool? isExtraPractice,
+    bool? isEarlyReview,
     bool? isSaving,
     Object? saveError = _unset,
     Object? lastAttemptedGrade = _unset,
@@ -147,6 +150,7 @@ class PracticeSessionState {
       currentIndex: currentIndex ?? this.currentIndex,
       isRevealed: isRevealed ?? this.isRevealed,
       isExtraPractice: isExtraPractice ?? this.isExtraPractice,
+      isEarlyReview: isEarlyReview ?? this.isEarlyReview,
       isSaving: isSaving ?? this.isSaving,
       saveError: identical(saveError, _unset)
           ? this.saveError

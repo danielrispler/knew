@@ -88,6 +88,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noDueForPractice => 'No terms due for practice';
 
   @override
+  String get allCaughtUpTitle => 'All caught up for today!';
+
+  @override
+  String get allCaughtUpDesc =>
+      'You\'ve practiced all your scheduled terms for today.';
+
+  @override
+  String get earlyReviewTitle => 'Advance (Early Review)';
+
+  @override
+  String get earlyReviewDesc =>
+      'Practice now to advance terms to the next stage early.';
+
+  @override
+  String get repracticeTitle => 'Repractice (Extra Practice)';
+
+  @override
+  String get repracticeDesc =>
+      'Practice terms without changing their review schedules or levels.';
+
+  @override
+  String reviewedTodayCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count terms reviewed today',
+      one: '1 term reviewed today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get earlyReviewBadge => 'Early Review';
+
+  @override
   String get wordDetailTitle => 'Term Details';
 
   @override

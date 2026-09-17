@@ -16,7 +16,7 @@ Use the injected local clock's calendar components to add days, not elapsed 24-h
 
 For a typing answer marked incorrect, Count as correct replaces this question's previous grade using its in-memory pre-answer progress snapshot, in one transaction. Remove the previous wrong-counter increment, apply exactly one correct increment and the correct schedule, refresh updatedAt, and remove this question's pending repeat. Offer the action only before Next; repeated taps cannot apply it twice. Leaving without correcting retains the saved incorrect grade.
 
-Repeats and extra practice write no progress, counters, or timestamps. Each first-pass incorrect entry gets exactly one repeat at the end, in first-error order; an incorrect repeat never adds another. Extra practice may also repeat misses once, with all answers remaining non-durable.
+Repeats and extra practice write no progress, counters, or timestamps. Each first-pass incorrect entry gets exactly one repeat at the end, in first-error order; an incorrect repeat never adds another. Extra practice may also repeat misses once, with all answers remaining non-durable. For opt-in durable practice of non-due entries, see [Early review and All caught up](early-review-and-all-caught-up.md).
 
 ## Cloze (Phase 1)
 

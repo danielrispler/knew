@@ -4,6 +4,7 @@ import 'package:knew/src/core/l10n/l10n.dart';
 import '../../vocabulary/domain/entry.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../domain/practice_question.dart';
+import '../domain/due_queue_selector.dart';
 import 'practice_providers.dart';
 import 'practice_session_controller.dart';
 import 'practice_session_state.dart';
@@ -32,6 +33,9 @@ class FlashcardPracticeScreen extends ConsumerStatefulWidget {
 class _FlashcardPracticeScreenState
     extends ConsumerState<FlashcardPracticeScreen> {
   final TextEditingController _typingInputController = TextEditingController();
+  bool _checkedDue = false;
+  String _todayStr = '';
+  int _sessionSize = 20;
 
   @override
   void initState() {
@@ -46,14 +50,39 @@ class _FlashcardPracticeScreenState
       final day = now.day.toString().padLeft(2, '0');
       final todayStr = '$year-$month-$day';
 
-      ref
-          .read(practiceSessionProvider.notifier)
-          .startSession(
-            library: widget.initialLibrary,
-            todayDueDate: todayStr,
-            requestedSessionSize: settings.sessionSize,
-          );
+      _todayStr = todayStr;
+      _sessionSize = settings.sessionSize;
+
+      final hasDue = DueQueueSelector.hasDueEntries(
+        library: widget.initialLibrary,
+        todayDueDate: todayStr,
+      );
+
+      if (hasDue || widget.initialLibrary.isEmpty) {
+        ref
+            .read(practiceSessionProvider.notifier)
+            .startSession(
+              library: widget.initialLibrary,
+              todayDueDate: todayStr,
+              requestedSessionSize: settings.sessionSize,
+            );
+      } else {
+        setState(() {
+          _checkedDue = true;
+        });
+      }
     });
+  }
+
+  void _startPracticeSession({bool isEarlyReview = false}) {
+    ref
+        .read(practiceSessionProvider.notifier)
+        .startSession(
+          library: widget.initialLibrary,
+          todayDueDate: _todayStr,
+          requestedSessionSize: _sessionSize,
+          isEarlyReview: isEarlyReview,
+        );
   }
 
   @override
@@ -83,13 +112,136 @@ class _FlashcardPracticeScreenState
     }
   }
 
+  Widget _buildAllCaughtUpScreen(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final reviewedToday = DueQueueSelector.getReviewedToday(
+      library: widget.initialLibrary,
+      todayDueDate: _todayStr,
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        leadingWidth: 80,
+        leading: TextButton(
+          onPressed: widget.onExit,
+          child: const Text(
+            'Done',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+        ),
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_circle_outline,
+                      size: 48,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  l10n.allCaughtUpTitle,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.allCaughtUpDesc,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (reviewedToday.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        l10n.reviewedTodayCount(reviewedToday.length),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 40),
+                FilledButton.icon(
+                  onPressed: () => _startPracticeSession(isEarlyReview: true),
+                  icon: const Icon(Icons.trending_up),
+                  label: Text(l10n.earlyReviewTitle),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.earlyReviewDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                OutlinedButton.icon(
+                  onPressed: () => _startPracticeSession(isEarlyReview: false),
+                  icon: const Icon(Icons.replay),
+                  label: Text(l10n.repracticeTitle),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.repracticeDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final state = ref.watch(practiceSessionProvider);
     final controller = ref.read(practiceSessionProvider.notifier);
 
-    if (!state.sessionStarted) {
+    if (!_checkedDue && !state.sessionStarted) {
       return Scaffold(
         appBar: AppBar(
           leadingWidth: 80,
@@ -103,6 +255,10 @@ class _FlashcardPracticeScreenState
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
+    }
+
+    if (!state.sessionStarted) {
+      return _buildAllCaughtUpScreen(context);
     }
 
     if (state.questions.isEmpty) {
@@ -157,11 +313,34 @@ class _FlashcardPracticeScreenState
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
         ),
-        title: Text(
-          currentQuestion.isRepeat
-              ? 'Repeat $currentNumber of $totalQuestions'
-              : 'Question $currentNumber of $totalQuestions',
-          style: theme.textTheme.bodyMedium,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              currentQuestion.isRepeat
+                  ? 'Repeat $currentNumber of $totalQuestions'
+                  : 'Question $currentNumber of $totalQuestions',
+              style: theme.textTheme.bodyMedium,
+            ),
+            if (state.isExtraPractice)
+              Text(
+                context.l10n.extraPractice,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.tertiary,
+                ),
+              )
+            else if (state.isEarlyReview)
+              Text(
+                context.l10n.earlyReviewBadge,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+          ],
         ),
         centerTitle: true,
         actions: [

@@ -24,12 +24,14 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     required List<Entry> library,
     required String todayDueDate,
     int requestedSessionSize = 20,
+    bool isEarlyReview = false,
     Random? random,
   }) {
     final selection = DueQueueSelector.selectQueue(
       library: library,
       todayDueDate: todayDueDate,
       requestedSessionSize: requestedSessionSize,
+      isEarlyReview: isEarlyReview,
     );
 
     final rng = random ?? Random();
@@ -101,6 +103,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       currentIndex: 0,
       isRevealed: false,
       isExtraPractice: selection.isExtraPractice,
+      isEarlyReview: isEarlyReview,
       firstPassPreSnapshots: preSnapshots,
       firstPassPostSnapshots: {},
       repeatQueue: [],

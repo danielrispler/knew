@@ -88,6 +88,40 @@ class AppLocalizationsHe extends AppLocalizations {
   String get noDueForPractice => 'אין מונחים הממתינים לתרגול';
 
   @override
+  String get allCaughtUpTitle => 'סיימת את כל התרגולים להיום!';
+
+  @override
+  String get allCaughtUpDesc => 'תרגלת את כל המונחים שתוזמנו להיום.';
+
+  @override
+  String get earlyReviewTitle => 'התקדמות (תרגול מקדים)';
+
+  @override
+  String get earlyReviewDesc =>
+      'תרגל כעת כדי לקדם מונחים לרמה הבאה לפני המועד.';
+
+  @override
+  String get repracticeTitle => 'תרגול חוזר (ללא שינוי רמה)';
+
+  @override
+  String get repracticeDesc =>
+      'תרגול מונחים מבלי לשנות את רמתם או מועד התרגול הבא.';
+
+  @override
+  String reviewedTodayCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count מונחים תורגלו היום',
+      one: 'מונח אחד תורגל היום',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get earlyReviewBadge => 'תרגול מקדים';
+
+  @override
   String get wordDetailTitle => 'פרטי מונח';
 
   @override

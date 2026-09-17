@@ -11,10 +11,36 @@ class QueueSelectionResult {
 }
 
 abstract class DueQueueSelector {
+  static bool hasDueEntries({
+    required List<Entry> library,
+    required String todayDueDate,
+  }) {
+    return library.any((e) => e.dueDate.compareTo(todayDueDate) <= 0);
+  }
+
+  static List<Entry> getReviewedToday({
+    required List<Entry> library,
+    required String todayDueDate,
+  }) {
+    return library.where((e) {
+      if (e.lastReviewedAt == null) return false;
+      try {
+        final parsed = DateTime.parse(e.lastReviewedAt!).toLocal();
+        final year = parsed.year.toString().padLeft(4, '0');
+        final month = parsed.month.toString().padLeft(2, '0');
+        final day = parsed.day.toString().padLeft(2, '0');
+        return '$year-$month-$day' == todayDueDate;
+      } catch (_) {
+        return false;
+      }
+    }).toList();
+  }
+
   static QueueSelectionResult selectQueue({
     required List<Entry> library,
     required String todayDueDate,
     int requestedSessionSize = 20,
+    bool isEarlyReview = false,
   }) {
     if (library.isEmpty) {
       return const QueueSelectionResult(entries: [], isExtraPractice: false);
@@ -29,7 +55,24 @@ abstract class DueQueueSelector {
     bool isExtraPractice = false;
     List<Entry> candidates;
 
-    if (dueEntries.isNotEmpty) {
+    if (isEarlyReview) {
+      final reviewedToday = getReviewedToday(
+        library: library,
+        todayDueDate: todayDueDate,
+      );
+      if (reviewedToday.isNotEmpty) {
+        candidates = reviewedToday;
+      } else {
+        final futureEntries = library
+            .where((e) => e.dueDate.compareTo(todayDueDate) > 0)
+            .toList();
+        if (futureEntries.isEmpty) {
+          return const QueueSelectionResult(entries: [], isExtraPractice: false);
+        }
+        candidates = futureEntries;
+      }
+      isExtraPractice = false;
+    } else if (dueEntries.isNotEmpty) {
       candidates = dueEntries;
     } else {
       final futureEntries = library

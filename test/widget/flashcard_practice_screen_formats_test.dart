@@ -117,6 +117,7 @@ class TypingSessionNotifier extends PracticeSessionNotifier {
     required List<Entry> library,
     required String todayDueDate,
     int requestedSessionSize = 20,
+    bool isEarlyReview = false,
     Random? random,
   }) {}
 }

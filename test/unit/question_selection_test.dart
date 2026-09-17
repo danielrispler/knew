@@ -165,4 +165,70 @@ void main() {
       expect(result.isExtraPractice, isFalse);
     });
   });
+
+  group('DueQueueSelector - Early Review Queue Selection & Helpers', () {
+    final today = '2026-09-15';
+
+    test('hasDueEntries detects whether any entry is due today or earlier', () {
+      final notDue = [
+        createEntry(id: '1', english: 'a', level: 1, dueDate: '2026-09-16', createdAt: DateTime(2026, 1, 1)),
+      ];
+      final due = [
+        createEntry(id: '1', english: 'a', level: 1, dueDate: '2026-09-15', createdAt: DateTime(2026, 1, 1)),
+      ];
+
+      expect(DueQueueSelector.hasDueEntries(library: notDue, todayDueDate: today), isFalse);
+      expect(DueQueueSelector.hasDueEntries(library: due, todayDueDate: today), isTrue);
+      expect(DueQueueSelector.hasDueEntries(library: [], todayDueDate: today), isFalse);
+    });
+
+    test('getReviewedToday returns entries whose lastReviewedAt is on local today', () {
+      final reviewedTodayIso = DateTime(2026, 9, 15, 14, 30).toUtc().toIso8601String();
+      final reviewedYesterdayIso = DateTime(2026, 9, 14, 10, 0).toUtc().toIso8601String();
+
+      final e1 = createEntry(id: '1', english: 'a', level: 1, dueDate: '2026-09-16', createdAt: DateTime(2026, 1, 1))
+          .copyWith(lastReviewedAt: reviewedTodayIso);
+      final e2 = createEntry(id: '2', english: 'b', level: 1, dueDate: '2026-09-16', createdAt: DateTime(2026, 1, 1))
+          .copyWith(lastReviewedAt: reviewedYesterdayIso);
+      final e3 = createEntry(id: '3', english: 'c', level: 0, dueDate: '2026-09-15', createdAt: DateTime(2026, 1, 1));
+
+      final result = DueQueueSelector.getReviewedToday(library: [e1, e2, e3], todayDueDate: today);
+      expect(result.length, equals(1));
+      expect(result.first.id, equals('1'));
+    });
+
+    test('selectQueue with isEarlyReview: true prioritizes today-reviewed entries with isExtraPractice: false', () {
+      final reviewedTodayIso = DateTime(2026, 9, 15, 14, 30).toUtc().toIso8601String();
+      final e1 = createEntry(id: '1', english: 'a', level: 1, dueDate: '2026-09-16', createdAt: DateTime(2026, 1, 1))
+          .copyWith(lastReviewedAt: reviewedTodayIso);
+      final e2 = createEntry(id: '2', english: 'b', level: 1, dueDate: '2026-09-20', createdAt: DateTime(2026, 1, 2));
+
+      final result = DueQueueSelector.selectQueue(
+        library: [e1, e2],
+        todayDueDate: today,
+        requestedSessionSize: 20,
+        isEarlyReview: true,
+      );
+
+      expect(result.isExtraPractice, isFalse);
+      expect(result.entries.length, equals(1));
+      expect(result.entries.first.id, equals('1'));
+    });
+
+    test('selectQueue with isEarlyReview: true falls back to future entries if none reviewed today', () {
+      final e1 = createEntry(id: '1', english: 'a', level: 1, dueDate: '2026-09-20', createdAt: DateTime(2026, 1, 1));
+      final e2 = createEntry(id: '2', english: 'b', level: 2, dueDate: '2026-09-18', createdAt: DateTime(2026, 1, 2));
+
+      final result = DueQueueSelector.selectQueue(
+        library: [e1, e2],
+        todayDueDate: today,
+        requestedSessionSize: 20,
+        isEarlyReview: true,
+      );
+
+      expect(result.isExtraPractice, isFalse);
+      expect(result.entries.length, equals(2));
+      expect(result.entries.map((e) => e.id).toList(), equals(['2', '1']));
+    });
+  });
 }

@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:knew/src/features/practice/presentation/flashcard_practice_screen.dart';
 import 'package:knew/src/features/practice/presentation/practice_providers.dart';
 import 'package:knew/src/features/practice/presentation/practice_session_controller.dart';
-import 'package:knew/src/features/practice/presentation/practice_session_state.dart';
 import 'package:knew/src/features/vocabulary/data/words_repository.dart';
 import 'package:knew/src/features/vocabulary/domain/entry.dart';
 import 'package:knew/src/features/vocabulary/domain/meaning.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_providers.dart';
 import 'package:knew/src/features/settings/presentation/settings_providers.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 
 class TestSettingsNotifier extends SettingsNotifier {
   TestSettingsNotifier({this.sessionSize = 20});
@@ -258,6 +258,113 @@ void main() {
     expect(find.text('No entries available for practice.'), findsNothing);
     expect(find.text('Practice Summary'), findsNothing);
   });
+
+  testWidgets('shows All Caught Up interstitial when 0 entries are due today', (
+    tester,
+  ) async {
+    final futureEntry = testEntry.copyWith(
+      id: 'future_1',
+      dueDate: '2099-01-01',
+    );
+    final repository = TestWordsRepository();
+    await repository.insertEntry(futureEntry);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          wordsRepositoryProvider.overrideWithValue(repository),
+          settingsProvider.overrideWith(() => TestSettingsNotifier()),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: FlashcardPracticeScreen(
+            initialLibrary: [futureEntry],
+            onExit: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('All caught up for today!'), findsOneWidget);
+    expect(find.text('Advance (Early Review)'), findsOneWidget);
+    expect(find.text('Repractice (Extra Practice)'), findsOneWidget);
+  });
+
+  testWidgets(
+    'tapping Advance (Early Review) starts session and displays question',
+    (tester) async {
+      final futureEntry = testEntry.copyWith(
+        id: 'future_1',
+        dueDate: '2099-01-01',
+      );
+      final repository = TestWordsRepository();
+      await repository.insertEntry(futureEntry);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            wordsRepositoryProvider.overrideWithValue(repository),
+            settingsProvider.overrideWith(() => TestSettingsNotifier()),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: FlashcardPracticeScreen(
+              initialLibrary: [futureEntry],
+              onExit: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Advance (Early Review)'), findsOneWidget);
+      await tester.tap(find.text('Advance (Early Review)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Question 1 of 1'), findsOneWidget);
+      expect(find.text('Early Review'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'tapping Repractice (Extra Practice) starts session with extra practice badge',
+    (tester) async {
+      final futureEntry = testEntry.copyWith(
+        id: 'future_1',
+        dueDate: '2099-01-01',
+      );
+      final repository = TestWordsRepository();
+      await repository.insertEntry(futureEntry);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            wordsRepositoryProvider.overrideWithValue(repository),
+            settingsProvider.overrideWith(() => TestSettingsNotifier()),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: FlashcardPracticeScreen(
+              initialLibrary: [futureEntry],
+              onExit: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Repractice (Extra Practice)'), findsOneWidget);
+      await tester.tap(find.text('Repractice (Extra Practice)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Question 1 of 1'), findsOneWidget);
+      expect(find.text('Extra Practice'), findsOneWidget);
+    },
+  );
 }
 
 /// A notifier that does nothing on startSession, keeping the state at its
@@ -268,6 +375,7 @@ class NeverStartSessionNotifier extends PracticeSessionNotifier {
     required List<Entry> library,
     required String todayDueDate,
     int requestedSessionSize = 20,
+    bool isEarlyReview = false,
     Random? random,
   }) {
     // Intentionally empty — simulates the pre-callback frame.

@@ -261,5 +261,61 @@ void main() {
         expect(state.isCompleted, isTrue);
       },
     );
+
+    test(
+      'Early Review session saves progress and advances level for non-due entry',
+      () async {
+        // Word is at Level 1, scheduled for tomorrow, reviewed today
+        final reviewedTodayIso = DateTime(2026, 9, 15, 10, 0).toUtc().toIso8601String();
+        final e1 = createTestEntry('1', level: 1, dueDate: '2026-09-16')
+            .copyWith(lastReviewedAt: reviewedTodayIso);
+        await repository.insertEntry(e1);
+
+        final notifier = container.read(practiceSessionProvider.notifier);
+        notifier.startSession(
+          library: [e1],
+          todayDueDate: '2026-09-15',
+          isEarlyReview: true,
+        );
+
+        expect(container.read(practiceSessionProvider).isEarlyReview, isTrue);
+        expect(container.read(practiceSessionProvider).isExtraPractice, isFalse);
+
+        notifier.reveal();
+        await notifier.gradeCurrent(correct: true);
+
+        final dbAfterReview = await repository.getEntryById('1');
+        expect(dbAfterReview?.level, equals(2));
+        expect(dbAfterReview?.timesCorrect, equals(1));
+        expect(container.read(practiceSessionProvider).isCompleted, isTrue);
+      },
+    );
+
+    test(
+      'Extra Practice session does not save progress or advance level',
+      () async {
+        // Word is at Level 1, scheduled for tomorrow
+        final e1 = createTestEntry('1', level: 1, dueDate: '2026-09-16');
+        await repository.insertEntry(e1);
+
+        final notifier = container.read(practiceSessionProvider.notifier);
+        notifier.startSession(
+          library: [e1],
+          todayDueDate: '2026-09-15',
+          isEarlyReview: false,
+        );
+
+        expect(container.read(practiceSessionProvider).isExtraPractice, isTrue);
+        expect(container.read(practiceSessionProvider).isEarlyReview, isFalse);
+
+        notifier.reveal();
+        await notifier.gradeCurrent(correct: true);
+
+        final dbAfterReview = await repository.getEntryById('1');
+        expect(dbAfterReview?.level, equals(1)); // Unchanged!
+        expect(dbAfterReview?.timesCorrect, equals(0)); // Unchanged!
+        expect(container.read(practiceSessionProvider).isCompleted, isTrue);
+      },
+    );
   });
 }
