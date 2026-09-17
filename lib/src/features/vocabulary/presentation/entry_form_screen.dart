@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:knew/src/core/l10n/l10n.dart';
+import '../../practice/data/tts_service.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../data/words_repository.dart';
@@ -55,8 +57,13 @@ class MeaningFormData {
 
 class EntryFormScreen extends ConsumerStatefulWidget {
   final Entry? initialEntry;
+  final TtsService? ttsService;
 
-  const EntryFormScreen({super.key, this.initialEntry});
+  const EntryFormScreen({
+    super.key,
+    this.initialEntry,
+    this.ttsService,
+  });
 
   @override
   ConsumerState<EntryFormScreen> createState() => _EntryFormScreenState();
@@ -67,27 +74,37 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   late final TextEditingController _termController;
   late final TextEditingController _sourceController;
   late final TextEditingController _contextController;
-  late final TextEditingController _lookupController;
   final List<MeaningFormData> _meaningsData = [];
 
-  String? _duplicateError;
-  String? _duplicateEntryId;
-  bool _isSaving = false;
+  late final TtsService _ttsService;
+  bool _isPlayingAudio = false;
 
+  Timer? _debounceTimer;
+  int _lookupRequestId = 0;
   bool _isLookingUp = false;
+  GeminiSuccessResult? _lookupResult;
   String? _lookupError;
   String? _lookupSuggestion;
   List<String> _englishAlternatives = [];
   String? _selectedAlternative;
+  int _selectedSenseIndex = 0;
+  final Map<int, Set<String>> _selectedTranslationsPerSense = {};
+
+  bool _isDrawerExpanded = false;
+  String? _duplicateError;
+  String? _duplicateEntryId;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
+    _ttsService = widget.ttsService ?? TtsService();
+    _ttsService.init();
+
     final entry = widget.initialEntry;
     _termController = TextEditingController(text: entry?.english ?? '');
     _sourceController = TextEditingController(text: entry?.source ?? '');
     _contextController = TextEditingController(text: entry?.context ?? '');
-    _lookupController = TextEditingController();
 
     if (entry != null && entry.meanings.isNotEmpty) {
       for (var m in entry.meanings) {
@@ -97,36 +114,91 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           translations: m.hebrewTranslations,
         ));
       }
+      final hasCustomMetadata = (entry.source != null && entry.source!.trim().isNotEmpty) ||
+          (entry.context != null && entry.context!.trim().isNotEmpty) ||
+          entry.meanings.length > 1;
+      _isDrawerExpanded = hasCustomMetadata;
     } else {
       _meaningsData.add(MeaningFormData(
         partOfSpeech: '',
         definition: '',
         translations: [''],
       ));
+      _isDrawerExpanded = false;
     }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _termController.dispose();
     _sourceController.dispose();
     _contextController.dispose();
-    _lookupController.dispose();
     for (var m in _meaningsData) {
       m.dispose();
     }
     super.dispose();
   }
 
-  Future<void> _performLookup({String? inputOverride}) async {
-    final rawInput = inputOverride ?? _lookupController.text;
-    final input = rawInput.trim();
-    if (input.isEmpty) {
+  bool _isHebrew(String text) {
+    return RegExp(r'[\u05D0-\u05EA]').hasMatch(text);
+  }
+
+  void _onTermChanged(String text) {
+    _debounceTimer?.cancel();
+    if (_duplicateError != null) {
+      _checkDuplicate();
+    }
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
       setState(() {
-        _lookupError = 'Please enter an English term or Hebrew word to look up.';
+        _lookupResult = null;
+        _lookupError = null;
+        _lookupSuggestion = null;
+        _englishAlternatives = [];
+        _selectedAlternative = null;
       });
       return;
     }
+    if (trimmed.length >= 2) {
+      _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+        _performLookup(termOverride: trimmed);
+      });
+    }
+  }
+
+  void _clearTerm() {
+    _debounceTimer?.cancel();
+    _termController.clear();
+    setState(() {
+      _lookupResult = null;
+      _lookupError = null;
+      _lookupSuggestion = null;
+      _englishAlternatives = [];
+      _selectedAlternative = null;
+      _selectedTranslationsPerSense.clear();
+      _selectedSenseIndex = 0;
+      _duplicateError = null;
+      _duplicateEntryId = null;
+      _isLookingUp = false;
+      for (var m in _meaningsData) {
+        m.dispose();
+      }
+      _meaningsData.clear();
+      _meaningsData.add(MeaningFormData(
+        partOfSpeech: '',
+        definition: '',
+        translations: [''],
+      ));
+    });
+  }
+
+  Future<void> _performLookup({String? termOverride}) async {
+    _debounceTimer?.cancel();
+    final input = (termOverride ?? _termController.text).trim();
+    if (input.isEmpty) return;
+
+    final currentRequestId = ++_lookupRequestId;
 
     setState(() {
       _isLookingUp = true;
@@ -148,14 +220,29 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
         primaryModel: model,
       );
 
-      if (!mounted) return;
+      if (!mounted || currentRequestId != _lookupRequestId) return;
 
       if (result is GeminiSuccessResult) {
         setState(() {
-          _termController.text = result.english;
+          _isLookingUp = false;
+          _lookupResult = result;
+          _selectedSenseIndex = 0;
+          _selectedTranslationsPerSense.clear();
+
+          for (var i = 0; i < result.meanings.length; i++) {
+            final m = result.meanings[i];
+            _selectedTranslationsPerSense[i] = {
+              if (m.hebrewTranslations.isNotEmpty) m.hebrewTranslations.first,
+            };
+          }
+
           if (result.englishAlternatives.isNotEmpty) {
             _englishAlternatives = [result.english, ...result.englishAlternatives];
             _selectedAlternative = result.english;
+          }
+
+          if (result.english.isNotEmpty && _termController.text != result.english) {
+            _termController.text = result.english;
           }
 
           for (var mData in _meaningsData) {
@@ -163,41 +250,78 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           }
           _meaningsData.clear();
 
-          for (var m in result.meanings) {
+          for (var i = 0; i < result.meanings.length; i++) {
+            final m = result.meanings[i];
+            final selectedForSense = _selectedTranslationsPerSense[i]!.toList();
             _meaningsData.add(MeaningFormData(
               partOfSpeech: m.partOfSpeech,
               definition: m.definition,
-              translations: m.hebrewTranslations,
+              translations: selectedForSense.isNotEmpty ? selectedForSense : m.hebrewTranslations,
             ));
           }
-
-          _isLookingUp = false;
         });
 
         await _checkDuplicate();
       } else if (result is GeminiInvalidResult) {
         setState(() {
           _isLookingUp = false;
+          _lookupResult = null;
           _lookupSuggestion = result.suggestion;
-          if (result.suggestion != null) {
-            _lookupError = 'Word "$input" not recognized. Did you mean "${result.suggestion}"?';
-          } else {
-            _lookupError = 'No suggestion found for "$input". Try another spelling or enter the word manually.';
+          if (result.suggestion == null) {
+            _lookupError = 'No suggestion found for "$input". You can enter meanings manually below.';
+            _isDrawerExpanded = true;
           }
         });
       }
     } on GeminiException catch (e) {
-      if (!mounted) return;
+      if (!mounted || currentRequestId != _lookupRequestId) return;
       setState(() {
         _isLookingUp = false;
+        _lookupResult = null;
         _lookupError = e.message;
+        _isDrawerExpanded = true;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || currentRequestId != _lookupRequestId) return;
       setState(() {
         _isLookingUp = false;
+        _lookupResult = null;
         _lookupError = 'Lookup failed: $e. Try again or enter the word manually.';
+        _isDrawerExpanded = true;
       });
+    }
+  }
+
+  void _toggleTranslationChip(int senseIndex, String translation) {
+    setState(() {
+      final currentSet = _selectedTranslationsPerSense[senseIndex] ?? <String>{};
+      if (currentSet.contains(translation)) {
+        if (currentSet.length > 1) {
+          currentSet.remove(translation);
+        }
+      } else {
+        currentSet.add(translation);
+      }
+      _selectedTranslationsPerSense[senseIndex] = currentSet;
+
+      if (senseIndex < _meaningsData.length) {
+        final mData = _meaningsData[senseIndex];
+        for (var c in mData.translationControllers) {
+          c.dispose();
+        }
+        mData.translationControllers.clear();
+        for (var t in currentSet) {
+          mData.translationControllers.add(TextEditingController(text: t));
+        }
+      }
+    });
+  }
+
+  Future<void> _speakTerm(String term) async {
+    setState(() => _isPlayingAudio = true);
+    await _ttsService.speak(term);
+    if (mounted) {
+      setState(() => _isPlayingAudio = false);
     }
   }
 
@@ -228,16 +352,29 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   }
 
   Future<void> _saveEntry() async {
-    if (!_formKey.currentState!.validate()) return;
+    final term = _termController.text.trim();
+    if (term.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an English term')),
+      );
+      return;
+    }
+
     await _checkDuplicate();
     if (!mounted) return;
     if (_duplicateError != null) return;
 
     final meanings = <Meaning>[];
-    for (var mData in _meaningsData) {
-      final meaning = mData.toMeaning();
-      if (meaning != null) {
-        meanings.add(meaning);
+    if (_lookupResult != null && !_isDrawerExpanded) {
+      for (var mData in _meaningsData) {
+        final m = mData.toMeaning();
+        if (m != null) meanings.add(m);
+      }
+    } else {
+      if (!_formKey.currentState!.validate()) return;
+      for (var mData in _meaningsData) {
+        final m = mData.toMeaning();
+        if (m != null) meanings.add(m);
       }
     }
 
@@ -250,33 +387,34 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
       return;
     }
 
-    setState(() {
-      _isSaving = true;
-    });
+    setState(() => _isSaving = true);
 
     try {
       final repository = ref.read(wordsRepositoryProvider);
       if (widget.initialEntry != null) {
         final updated = widget.initialEntry!.copyWith(
-          english: _termController.text,
+          english: term,
           meanings: meanings,
-          source: _sourceController.text,
-          context: _contextController.text,
+          source: _sourceController.text.trim(),
+          context: _contextController.text.trim(),
           updatedAt: DateTime.now().toUtc().toIso8601String(),
         );
         await repository.updateEntry(updated);
       } else {
         final newEntry = Entry.create(
-          english: _termController.text,
+          english: term,
           meanings: meanings,
-          source: _sourceController.text,
-          context: _contextController.text,
+          source: _sourceController.text.trim(),
+          context: _contextController.text.trim(),
         );
         await repository.insertEntry(newEntry);
       }
 
       await ref.read(vocabularyListProvider.notifier).refreshList();
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Saved "$term" to library')),
+        );
         Navigator.of(context).pop();
       }
     } on DuplicateEntryException catch (e) {
@@ -286,9 +424,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
         _isSaving = false;
       });
     } catch (e) {
-      setState(() {
-        _isSaving = false;
-      });
+      setState(() => _isSaving = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error saving entry: $e')),
@@ -310,10 +446,16 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     }
   }
 
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialEntry != null;
     final l10n = context.l10n;
+    final isTermRtl = _isHebrew(_termController.text);
 
     return Scaffold(
       appBar: AppBar(
@@ -334,356 +476,612 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 600.0),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
                       child: Form(
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (!isEditing) ...[
-                              Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                            // 1. Hero Term Field
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: TextField(
+                                key: const Key('hero_term_field'),
+                                controller: _termController,
+                                textDirection: isTermRtl ? TextDirection.rtl : TextDirection.ltr,
+                                style: const TextStyle(
+                                  fontFamily: 'FrankRuhlLibre',
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textInputAction: TextInputAction.done,
+                                decoration: InputDecoration(
+                                  hintText: 'Enter English term or Hebrew word...',
+                                  hintStyle: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'Roboto',
+                                    fontWeight: FontWeight.normal,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                  ),
+                                  filled: true,
+                                  fillColor: Theme.of(context).colorScheme.surface,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).colorScheme.outlineVariant,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).colorScheme.outlineVariant,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  suffixIcon: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.auto_awesome,
-                                            color: Theme.of(context).colorScheme.primary,
-                                            size: 22,
+                                      if (_isLookingUp)
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 12),
+                                          child: SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
                                           ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Gemini Assisted Lookup',
-                                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Theme.of(context).colorScheme.primary,
-                                                ),
-                                          ),
-                                        ],
+                                        )
+                                      else if (_termController.text.isNotEmpty)
+                                        IconButton(
+                                          key: const Key('clear_hero_term_button'),
+                                          icon: const Icon(Icons.clear, size: 20),
+                                          tooltip: 'Clear input',
+                                          onPressed: _clearTerm,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                onChanged: _onTermChanged,
+                                onSubmitted: (val) {
+                                  _performLookup(termOverride: val);
+                                },
+                              ),
+                            ),
+
+                            // Duplicate error banner
+                            if (_duplicateError != null) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Theme.of(context).colorScheme.error),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _duplicateError!,
+                                        style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer, fontSize: 13),
                                       ),
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextField(
-                                              key: const Key('lookup_field'),
-                                              controller: _lookupController,
-                                              decoration: InputDecoration(
-                                                hintText: 'Lookup English term or Hebrew word...',
-                                                isDense: true,
-                                                suffixIcon: _lookupController.text.isNotEmpty
-                                                    ? IconButton(
-                                                        icon: const Icon(Icons.clear, size: 18),
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            _lookupController.clear();
-                                                            _lookupError = null;
-                                                            _lookupSuggestion = null;
-                                                          });
-                                                        },
-                                                      )
-                                                    : null,
-                                              ),
-                                              onSubmitted: (_) => _performLookup(),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          FilledButton.icon(
-                                            key: const Key('lookup_button'),
-                                            onPressed: _isLookingUp ? null : () => _performLookup(),
-                                            icon: _isLookingUp
-                                                ? const SizedBox(
-                                                    width: 16,
-                                                    height: 16,
-                                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                                  )
-                                                : const Icon(Icons.search, size: 18),
-                                            label: const Text('Look up'),
-                                            style: FilledButton.styleFrom(
-                                              minimumSize: const Size(100, 52),
-                                            ),
-                                          ),
-                                        ],
+                                    ),
+                                    if (_duplicateEntryId != null)
+                                      TextButton(
+                                        onPressed: _openExistingEntry,
+                                        child: const Text('View Entry'),
                                       ),
-                                      if (_lookupError != null) ...[
-                                        const SizedBox(height: 12),
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: Theme.of(context).colorScheme.error),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 18),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Text(
-                                                      _lookupError!,
-                                                      style: TextStyle(
-                                                        color: Theme.of(context).colorScheme.onErrorContainer,
-                                                        fontSize: 13,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              if (_lookupSuggestion != null) ...[
-                                                const SizedBox(height: 8),
-                                                FilledButton.icon(
-                                                  onPressed: () {
-                                                    _lookupController.text = _lookupSuggestion!;
-                                                    _performLookup(inputOverride: _lookupSuggestion);
-                                                  },
-                                                  icon: const Icon(Icons.check, size: 16),
-                                                  label: Text('Use "$_lookupSuggestion"'),
-                                                ),
-                                              ],
-                                              if (_lookupError!.contains('API key')) ...[
-                                                const SizedBox(height: 8),
-                                                OutlinedButton.icon(
-                                                  onPressed: () {
-                                                    Navigator.of(context).push(
-                                                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                                                    );
-                                                  },
-                                                  icon: const Icon(Icons.settings, size: 16),
-                                                  label: const Text('Open Settings'),
-                                                ),
-                                              ],
-                                            ],
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            // Spelling Suggestion Chip
+                            if (_lookupSuggestion != null) ...[
+                              const SizedBox(height: 12),
+                              ActionChip(
+                                key: const Key('spelling_suggestion_chip'),
+                                avatar: Icon(
+                                  Icons.auto_fix_high,
+                                  size: 18,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                label: Text(
+                                  'Did you mean "$_lookupSuggestion"?',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+                                side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
+                                onPressed: () {
+                                  _termController.text = _lookupSuggestion!;
+                                  _performLookup(termOverride: _lookupSuggestion);
+                                },
+                              ),
+                            ],
+
+                            // Lookup Error Banner
+                            if (_lookupError != null) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.4),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.6)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.info_outline, color: Theme.of(context).colorScheme.error, size: 18),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            _lookupError!,
+                                            style: TextStyle(
+                                              color: Theme.of(context).colorScheme.onErrorContainer,
+                                              fontSize: 13,
+                                            ),
                                           ),
                                         ),
                                       ],
-                                      if (_englishAlternatives.isNotEmpty) ...[
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          'Select English term:',
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                                        ),
-                                        const SizedBox(height: 6),
+                                    ),
+                                    if (_lookupError!.contains('API key')) ...[
+                                      const SizedBox(height: 8),
+                                      OutlinedButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.settings, size: 16),
+                                        label: const Text('Open Settings'),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            // English Alternatives (for Hebrew inputs)
+                            if (_englishAlternatives.isNotEmpty) ...[
+                              const SizedBox(height: 14),
+                              Text(
+                                'Select English term:',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                children: _englishAlternatives.map((alt) {
+                                  final isSelected = _selectedAlternative == alt;
+                                  return ChoiceChip(
+                                    label: Text(alt),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      if (selected) {
+                                        setState(() {
+                                          _selectedAlternative = alt;
+                                          _termController.text = alt;
+                                        });
+                                        _performLookup(termOverride: alt);
+                                      }
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+
+                            // 2. Instant AI Review Card
+                            if (_lookupResult != null) ...[
+                              const SizedBox(height: 16),
+                              Card(
+                                key: const Key('instant_ai_card'),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(
+                                    color: Theme.of(context).colorScheme.outlineVariant,
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(18.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Card Header: Term, Pronunciation Speaker, POS badge
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    _lookupResult!.english,
+                                                    style: const TextStyle(
+                                                      fontFamily: 'FrankRuhlLibre',
+                                                      fontSize: 22,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    _isPlayingAudio
+                                                        ? Icons.volume_up
+                                                        : Icons.volume_up_outlined,
+                                                    color: Theme.of(context).colorScheme.primary,
+                                                    size: 22,
+                                                  ),
+                                                  tooltip: 'Listen to pronunciation',
+                                                  onPressed: () => _speakTerm(_lookupResult!.english),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (_lookupResult!.meanings.isNotEmpty)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context).colorScheme.primaryContainer,
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                _lookupResult!.meanings[_selectedSenseIndex].partOfSpeech.toUpperCase(),
+                                                style: TextStyle(
+                                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+
+                                      // Multi-sense switcher if >1 meaning
+                                      if (_lookupResult!.meanings.length > 1) ...[
+                                        const SizedBox(height: 14),
                                         Wrap(
+                                          key: const Key('sense_switcher'),
                                           spacing: 8,
                                           runSpacing: 6,
-                                          children: _englishAlternatives.map((alt) {
-                                            final isSelected = _selectedAlternative == alt;
+                                          children: _lookupResult!.meanings.asMap().entries.map((entry) {
+                                            final idx = entry.key;
+                                            final m = entry.value;
+                                            final isSelected = _selectedSenseIndex == idx;
                                             return ChoiceChip(
-                                              label: Text(alt),
+                                              label: Text('${idx + 1}: ${_capitalize(m.partOfSpeech)}'),
                                               selected: isSelected,
                                               onSelected: (selected) {
                                                 if (selected) {
                                                   setState(() {
-                                                    _selectedAlternative = alt;
-                                                    _termController.text = alt;
+                                                    _selectedSenseIndex = idx;
                                                   });
-                                                  _checkDuplicate();
                                                 }
                                               },
                                             );
                                           }).toList(),
                                         ),
                                       ],
+
+                                      // Hebrew translation chips (RTL)
+                                      if (_lookupResult!.meanings.isNotEmpty) ...[
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Hebrew Translations',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children: _lookupResult!.meanings[_selectedSenseIndex].hebrewTranslations.map((trans) {
+                                            final isSelected = _selectedTranslationsPerSense[_selectedSenseIndex]?.contains(trans) ?? false;
+                                            return Directionality(
+                                              textDirection: TextDirection.rtl,
+                                              child: FilterChip(
+                                                label: Text(
+                                                  trans,
+                                                  textDirection: TextDirection.rtl,
+                                                  style: const TextStyle(
+                                                    fontFamily: 'FrankRuhlLibre',
+                                                    fontSize: 15,
+                                                  ),
+                                                ),
+                                                selected: isSelected,
+                                                onSelected: (_) => _toggleTranslationChip(_selectedSenseIndex, trans),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+
+                                      // Formatted Definition Box
+                                      if (_lookupResult!.meanings.isNotEmpty) ...[
+                                        const SizedBox(height: 16),
+                                        Container(
+                                          key: const Key('ai_definition_box'),
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                                            borderRadius: const BorderRadius.only(
+                                              topRight: Radius.circular(8),
+                                              bottomRight: Radius.circular(8),
+                                            ),
+                                            border: Border(
+                                              left: BorderSide(
+                                                color: Theme.of(context).colorScheme.primary,
+                                                width: 4,
+                                              ),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                          child: Text(
+                                            _lookupResult!.meanings[_selectedSenseIndex].definition,
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                  height: 1.4,
+                                                  color: Theme.of(context).colorScheme.onSurface,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 16),
+
+                            // 3. Collapsible Custom Drawer
+                            InkWell(
+                              key: const Key('custom_drawer_header'),
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () {
+                                setState(() {
+                                  _isDrawerExpanded = !_isDrawerExpanded;
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _isDrawerExpanded
+                                          ? 'Need custom meaning or notes? ▴'
+                                          : 'Need custom meaning or notes? ▾',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Icon(
+                                      _isDrawerExpanded ? Icons.expand_less : Icons.expand_more,
+                                      color: Theme.of(context).colorScheme.primary,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            if (_isDrawerExpanded) ...[
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                key: const Key('source_field'),
+                                controller: _sourceController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Source (Optional)',
+                                  hintText: 'e.g. Book title, article',
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              TextFormField(
+                                key: const Key('context_field'),
+                                controller: _contextController,
+                                maxLines: 2,
+                                decoration: const InputDecoration(
+                                  labelText: 'Context (Optional)',
+                                  hintText: 'Sentence or example usage',
                                 ),
                               ),
                               const SizedBox(height: 20),
-                            ],
-                            TextFormField(
-                              controller: _termController,
-                              decoration: InputDecoration(
-                                labelText: 'English Term *',
-                                hintText: 'e.g. persistent, put up with',
-                                errorText: _duplicateError,
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter an English term';
-                                }
-                                return null;
-                              },
-                              onChanged: (_) {
-                                if (_duplicateError != null) {
-                                  _checkDuplicate();
-                                }
-                              },
-                            ),
-                            if (_duplicateEntryId != null) ...[
-                              const SizedBox(height: 8),
-                              OutlinedButton.icon(
-                                onPressed: _openExistingEntry,
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('View / Edit Existing Entry'),
-                              ),
-                            ],
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _sourceController,
-                              decoration: const InputDecoration(
-                                labelText: 'Source (Optional)',
-                                hintText: 'e.g. Book title, article',
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _contextController,
-                              maxLines: 2,
-                              decoration: const InputDecoration(
-                                labelText: 'Context (Optional)',
-                                hintText: 'Sentence or example usage',
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Meanings (${_meaningsData.length}/3)',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                if (_meaningsData.length < 3)
-                                  TextButton.icon(
-                                    onPressed: () {
-                                      setState(() {
-                                        _meaningsData.add(MeaningFormData(
-                                          partOfSpeech: '',
-                                          definition: '',
-                                          translations: [''],
-                                        ));
-                                      });
-                                    },
-                                    icon: const Icon(Icons.add),
-                                    label: const Text('Add Meaning'),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            ..._meaningsData.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final mData = entry.value;
-
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'Meaning #${index + 1}',
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                          ),
-                                          if (_meaningsData.length > 1)
-                                            IconButton(
-                                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _meaningsData.removeAt(index).dispose();
-                                                });
-                                              },
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      TextFormField(
-                                        controller: mData.posController,
-                                        decoration: const InputDecoration(
-                                          labelText: 'Part of Speech *',
-                                          hintText: 'e.g. noun, verb, adjective',
-                                        ),
-                                        validator: (val) =>
-                                            (val == null || val.trim().isEmpty) ? 'Required' : null,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      TextFormField(
-                                        controller: mData.definitionController,
-                                        decoration: const InputDecoration(
-                                          labelText: 'English Definition *',
-                                          hintText: 'Simple explanation',
-                                        ),
-                                        validator: (val) =>
-                                            (val == null || val.trim().isEmpty) ? 'Required' : null,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      const Text(
-                                        'Hebrew Translations (RTL)',
-                                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ...mData.translationControllers.asMap().entries.map((tEntry) {
-                                        final tIndex = tEntry.key;
-                                        final tController = tEntry.value;
-
-                                        return Padding(
-                                          padding: const EdgeInsets.only(bottom: 8.0),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Directionality(
-                                                  textDirection: TextDirection.rtl,
-                                                  child: TextFormField(
-                                                    controller: tController,
-                                                    textDirection: TextDirection.rtl,
-                                                    decoration: const InputDecoration(
-                                                      hintText: 'תרגום בעברית',
-                                                    ),
-                                                    validator: (val) =>
-                                                        (val == null || val.trim().isEmpty)
-                                                            ? 'Required'
-                                                            : null,
-                                                  ),
-                                                ),
+                              Container(
+                                key: const Key('manual_meanings_section'),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Meanings (${_meaningsData.length}/3)',
+                                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              if (mData.translationControllers.length > 1)
-                                                IconButton(
-                                                  icon: const Icon(Icons.remove_circle_outline),
+                                        ),
+                                        if (_meaningsData.length < 3)
+                                          TextButton.icon(
+                                            onPressed: () {
+                                              setState(() {
+                                                _meaningsData.add(MeaningFormData(
+                                                  partOfSpeech: '',
+                                                  definition: '',
+                                                  translations: [''],
+                                                ));
+                                              });
+                                            },
+                                            icon: const Icon(Icons.add, size: 18),
+                                            label: const Text('Add Meaning'),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    ..._meaningsData.asMap().entries.map((entry) {
+                                      final index = entry.key;
+                                      final mData = entry.value;
+
+                                      return Card(
+                                        margin: const EdgeInsets.only(bottom: 14),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(14.0),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    'Meaning #${index + 1}',
+                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                                  ),
+                                                  if (_meaningsData.length > 1)
+                                                    IconButton(
+                                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _meaningsData.removeAt(index).dispose();
+                                                        });
+                                                      },
+                                                    ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextFormField(
+                                                controller: mData.posController,
+                                                decoration: const InputDecoration(
+                                                  labelText: 'Part of Speech *',
+                                                  hintText: 'e.g. noun, verb, adjective',
+                                                ),
+                                                validator: (val) =>
+                                                    (val == null || val.trim().isEmpty) ? 'Required' : null,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              TextFormField(
+                                                controller: mData.definitionController,
+                                                decoration: const InputDecoration(
+                                                  labelText: 'English Definition *',
+                                                  hintText: 'Simple explanation',
+                                                ),
+                                                validator: (val) =>
+                                                    (val == null || val.trim().isEmpty) ? 'Required' : null,
+                                              ),
+                                              const SizedBox(height: 14),
+                                              const Text(
+                                                'Hebrew Translations (RTL)',
+                                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              ...mData.translationControllers.asMap().entries.map((tEntry) {
+                                                final tIndex = tEntry.key;
+                                                final tController = tEntry.value;
+
+                                                return Padding(
+                                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Directionality(
+                                                          textDirection: TextDirection.rtl,
+                                                          child: TextFormField(
+                                                            controller: tController,
+                                                            textDirection: TextDirection.rtl,
+                                                            decoration: const InputDecoration(
+                                                              hintText: 'תרגום בעברית',
+                                                            ),
+                                                            validator: (val) =>
+                                                                (val == null || val.trim().isEmpty)
+                                                                    ? 'Required'
+                                                                    : null,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (mData.translationControllers.length > 1)
+                                                        IconButton(
+                                                          icon: const Icon(Icons.remove_circle_outline, size: 20),
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              mData.translationControllers.removeAt(tIndex).dispose();
+                                                            });
+                                                          },
+                                                        ),
+                                                    ],
+                                                  ),
+                                                );
+                                              }),
+                                              Align(
+                                                alignment: Alignment.centerRight,
+                                                child: TextButton.icon(
                                                   onPressed: () {
                                                     setState(() {
-                                                      mData.translationControllers.removeAt(tIndex).dispose();
+                                                      mData.translationControllers.add(TextEditingController());
                                                     });
                                                   },
+                                                  icon: const Icon(Icons.add, size: 16),
+                                                  label: const Text('Add Translation'),
                                                 ),
+                                              ),
                                             ],
                                           ),
-                                        );
-                                      }),
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: TextButton.icon(
-                                          onPressed: () {
-                                            setState(() {
-                                              mData.translationControllers.add(TextEditingController());
-                                            });
-                                          },
-                                          icon: const Icon(Icons.add, size: 18),
-                                          label: const Text('Add Translation'),
                                         ),
-                                      ),
-                                    ],
-                                  ),
+                                      );
+                                    }),
+                                  ],
                                 ),
-                              );
-                            }),
+                              ),
+                            ],
+
                             const SizedBox(height: 24),
+
+                            // 4. Primary Save Action Button
                             SizedBox(
                               width: double.infinity,
                               child: FilledButton(
+                                key: const Key('save_to_library_button'),
                                 onPressed: _isSaving ? null : _saveEntry,
-                                child: Text(isEditing ? 'Save Changes' : 'Create Entry'),
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 52),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Text(
+                                  isEditing ? 'Save Changes' : 'Save to Library',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
                               ),
                             ),
+                            const SizedBox(height: 20),
                           ],
                         ),
                       ),

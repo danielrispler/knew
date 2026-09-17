@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../domain/gemini_lookup_result.dart';
 import 'gemini_models.dart';
@@ -7,12 +8,19 @@ import 'gemini_parser.dart';
 
 class GeminiClient {
   final http.Client _httpClient;
-  final Duration _timeout;
+  final Duration timeout;
+  final void Function(String message)? logger;
 
   GeminiClient({
     http.Client? httpClient,
-    this._timeout = const Duration(seconds: 15),
+    this.timeout = const Duration(seconds: 15),
+    this.logger,
   }) : _httpClient = httpClient ?? http.Client();
+
+  void _log(String message) {
+    developer.log(message, name: 'GeminiClient');
+    logger?.call(message);
+  }
 
   bool _isHebrewInput(String input) {
     return RegExp(r'[\u05D0-\u05EA]').hasMatch(input);
@@ -22,6 +30,7 @@ class GeminiClient {
     required String input,
     required String apiKey,
     required String model,
+    bool includeThinkingConfig = true,
   }) async {
     final trimmedKey = apiKey.trim();
     if (trimmedKey.isEmpty) {
@@ -67,8 +76,12 @@ class GeminiClient {
       ],
       'generationConfig': {
         'candidateCount': 1,
-        'maxOutputTokens': 4096,
+        'maxOutputTokens': 512,
         'responseMimeType': 'application/json',
+        if (model != GeminiModels.gemini35FlashLite && includeThinkingConfig)
+          'thinkingConfig': {
+            'thinkingBudget': 0,
+          },
         'responseJsonSchema': {
           'type': 'object',
           'required': [
@@ -127,6 +140,7 @@ class GeminiClient {
       }
     };
 
+    final stopwatch = Stopwatch()..start();
     http.Response response;
     try {
       response = await _httpClient
@@ -138,8 +152,12 @@ class GeminiClient {
             },
             body: jsonEncode(requestBody),
           )
-          .timeout(_timeout);
+          .timeout(timeout);
+      final ms = stopwatch.elapsedMilliseconds;
+      _log('[GeminiClient] "$trimmedInput" -> model: $model | duration: ${ms}ms | status: ${response.statusCode}');
     } on TimeoutException {
+      final ms = stopwatch.elapsedMilliseconds;
+      _log('[GeminiClient] "$trimmedInput" -> model: $model | duration: ${ms}ms | status: timeout');
       throw const GeminiException(
         GeminiErrorType.timeout,
         'Lookup took too long. Try again or add the word manually.',
@@ -147,6 +165,8 @@ class GeminiClient {
     } on GeminiException {
       rethrow;
     } catch (e) {
+      final ms = stopwatch.elapsedMilliseconds;
+      _log('[GeminiClient] "$trimmedInput" -> model: $model | duration: ${ms}ms | status: error');
       if (e is Error) rethrow;
       throw GeminiException(
         GeminiErrorType.networkError,
@@ -178,6 +198,14 @@ class GeminiClient {
         throw const GeminiException(
           GeminiErrorType.invalidKey,
           'This API key was rejected. Replace it in Settings.',
+        );
+      }
+      if (includeThinkingConfig && _isUnsupportedThinkingError(errorJson, utf8Body)) {
+        return lookup(
+          input: input,
+          apiKey: apiKey,
+          model: model,
+          includeThinkingConfig: false,
         );
       }
       final status = _getErrorStatus(errorJson);
@@ -256,6 +284,29 @@ class GeminiClient {
       return err['status'] as String?;
     }
     return null;
+  }
+
+  bool _isUnsupportedThinkingError(Map<String, dynamic>? errorJson, String rawBody) {
+    final lowerBody = rawBody.toLowerCase();
+    if (lowerBody.contains('thinking')) {
+      return true;
+    }
+    if (errorJson == null) return false;
+    final err = errorJson['error'];
+    if (err is Map) {
+      final message = err['message']?.toString().toLowerCase() ?? '';
+      if (message.contains('thinking')) return true;
+      final details = err['details'];
+      if (details is List) {
+        for (final detail in details) {
+          if (detail is Map) {
+            final detailStr = detail.toString().toLowerCase();
+            if (detailStr.contains('thinking')) return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   Future<GeminiLookupResult> lookupWithFallback({

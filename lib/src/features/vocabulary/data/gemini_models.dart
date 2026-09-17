@@ -16,10 +16,9 @@ class GeminiModels {
   ];
 
   static List<String> getFallbackSequence(String primaryModel) {
-    final index = availableModels.indexOf(primaryModel);
-    if (index == -1) {
-      return [primaryModel, ...availableModels];
+    if (primaryModel == gemini35FlashLite) {
+      return [gemini35FlashLite];
     }
-    return availableModels.sublist(index);
+    return [primaryModel, gemini35FlashLite];
   }
 }
