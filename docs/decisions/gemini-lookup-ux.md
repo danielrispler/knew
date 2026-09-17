@@ -1,37 +1,38 @@
 # Gemini-assisted lookup UX & UI integration
 
-Accepted 2026-09-15 for [#15](https://github.com/danielrispler/knew/issues/15), within [map #2](https://github.com/danielrispler/knew/issues/2).
+Updated 2026-09-17 based on Prototype 1 (Instant AI Card) redesign for streamlined, low-friction vocabulary capture.
 
 This decision defines the interaction design and user experience for Gemini-assisted vocabulary lookup on the entry creation and editing screens, complementing the visual design rules in [visual-design.md](visual-design.md) and technical requirements in [gemini-api.md](../research/gemini-api.md).
 
-## 1. Auto-Fetch Trigger & Typing Interaction
+## 1. Hero Term Input & Typing Interaction
 
-- **Trigger**: Typing in the term input field initiates an automatic Gemini lookup after a **600ms debounce** delay once the input contains at least 2 characters.
-- **Progress Indicator**: A quiet linear progress indicator or subtle inline spinner displays directly below the term input field while the request is in flight.
-- **Form Population**: Upon successful response (`valid: true`), meanings (part of speech, definition, Hebrew translations) auto-populate into editable form fields without replacing user-edited content.
-- **Stale Request Cancellation**: If the user modifies the input while a lookup is in flight, the previous request cancellation/deadline token is invalidated and discarded.
+- **Hero Term Field**: The English term input is the primary, prominent hero element at the top of the screen with clear button (`✕`) and keyboard Enter/Done action.
+- **Trigger**: Typing initiates an automatic Gemini lookup after a **600ms debounce** delay once the input contains at least 2 characters. Pressing keyboard Search/Done triggers immediately without waiting for the timer.
+- **Progress Indicator**: A subtle inline loading indicator/shimmer renders in the card area while lookup is in flight.
+- **Stale Request Cancellation**: Modifying the input while a lookup is in flight cancels prior pending requests.
 
-## 2. Unrecognized Terms & Spelling Suggestions
+## 2. Instant AI Review Card (Prototype 1)
 
-- **Spelling Suggestion UI**: When Gemini returns `valid: false` with a non-null `suggestion` (e.g., "Did you mean *persistent*?"), an inline notebook banner is displayed directly beneath the term field.
-- **Actions**:
-  - Primary Action: Single-tap on the suggested word replaces the term field text and immediately triggers a fresh lookup for the suggestion.
-  - Secondary Action: "Keep original term" dismisses the suggestion banner and leaves form fields available for manual entry.
-- **No Suggestion Case**: When `valid: false` and `suggestion` is null, display a quiet inline banner: *"No suggestion found. You can enter the meanings manually below."*
+- **Default Layout**: Renders directly below the hero term field upon lookup completion:
+  - **Header**: Term display, phonetic pronunciation, and Part of Speech chip.
+  - **Multiple Meanings / Senses**: If Gemini returns >1 meaning, sense switcher chips (`1: Verb`, `2: Noun`) allow switching between senses.
+  - **Hebrew Translation Chips (RTL)**: All returned translations render as interactive chips with the primary translation pre-selected. Tapping toggles selection so users control which translations are saved.
+  - **Definition Box**: Clean English definition card with primary color left accent border.
+- **Primary Save Action**: A thumb-friendly full-width floating bottom button: **"Save to Library"**. Tapping saves the entry and returns to the vocabulary list.
 
-## 3. Error Handling & Recovery
+## 3. Secondary & Custom Fields (Collapsible Drawer)
 
-- **Inline Error Banners**: Transport or API errors (missing key, 429 quota exhaustion, 15s deadline timeout, invalid JSON response) do not block form usage. An inline notebook error banner displays the relevant human-friendly message from [gemini-api.md](../research/gemini-api.md).
-- **Settings Navigation Link**: For key configuration errors (`API_KEY_INVALID`, missing key), the inline banner includes a direct link button: *"Configure API Key in Settings"*.
-- **Manual Fallback**: In all error states, the user's typed term is preserved intact and all manual entry fields remain fully accessible for manual creation.
+- **New Entries**: Custom and manual fields (`Source`, `Context / Sentence`, manual meaning overrides) are placed in a collapsible drawer labeled *"Need custom meaning or notes? ▾"*, **collapsed by default**.
+- **Existing Entries**: When editing an existing entry with attached source, context, or custom meanings, the drawer **auto-expands** so existing details are immediately editable.
+- **Offline & Error States**: If a network failure or invalid API key occurs, the drawer **auto-expands** so manual entry fields are immediately accessible without blocking the user.
 
-## 4. Text Direction & Hebrew Input Handling
+## 4. Unrecognized Terms & Spelling Suggestions
 
-- **Dynamic Script Detection**: The term input field dynamically auto-detects Hebrew characters (`TextDirection.rtl`) vs English characters (`TextDirection.ltr`) to align text correctly.
-- **Target Concept Alignment**: Hebrew prompt inputs populate English as the target term in the entry model, returning distinct English alternatives per the Gemini lookup contract.
-- **Manual Field Alignment**: Hebrew translation input fields strictly enforce `TextDirection.rtl` alignment.
+- **Spelling Suggestion UI**: When Gemini returns `valid: false` with a non-null `suggestion` (e.g., *"Did you mean persistent?"*), an inline chip is displayed beneath the hero input. Single-tap replaces the term and immediately triggers a fresh lookup.
+- **No Suggestion Case**: Displays quiet inline banner: *"No suggestion found. You can enter meanings manually below"* and unfolds the custom fields drawer.
 
-## 5. Visual Integration (Notebook Theme)
+## 5. Text Direction & Hebrew Handling
 
-- Adheres to Variant A (Plain Notebook): flat surface, Quiet divider (`#D9DEE7` light / `#333C4B` dark), and typography mappings defined in [visual-design.md](visual-design.md).
-- Outlined action buttons enforce min 48px touch target height.
+- **Dynamic Script Detection**: The term field auto-detects Hebrew characters (`TextDirection.rtl`) vs English (`TextDirection.ltr`).
+- **Translation RTL Alignment**: Hebrew chips and Hebrew manual input fields strictly enforce `TextDirection.rtl`.
+

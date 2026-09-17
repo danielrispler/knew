@@ -1,34 +1,40 @@
-# Gemini model catalog & automatic rate-limit fallback
+# Gemini model catalog & direct rate-limit fallback
 
-Accepted 2026-09-15 for Gemini model catalog accuracy and rate-limit resiliency.
+Updated 2026-09-17 for fast lookups, direct Flash-Lite fallback, and low-latency API configuration.
 
 ## Context
 
-The Gemini API quota and model availability vary by model tier and Google AI Studio project limits. To maximize availability and output quality, the application requires an accurate model catalog starting from the highest performance tier down to the baseline lite tier, as well as an automatic fallback policy when encountering rate limits or model errors.
+The user's Gemini free-plan quota for the preferred primary model is limited, while significantly more quota is available for `gemini-3.5-flash-lite`. Attempting multiple intermediate models sequentially caused 6–10 second latency waterfalls. To achieve near-instant lookups (~600ms–1s), lookups must execute the primary model with zero thinking budget, avoid intermediate retries, and fall back immediately to `gemini-3.5-flash-lite`.
 
-## Model Catalog
+## Model Fallback Sequence
 
-The application catalog defines the following Gemini Flash models in descending performance order:
+1. **Primary Model**: User's selected model (default: `gemini-3.8-flash`).
+2. **Direct Fallback**: `gemini-3.5-flash-lite`.
+3. **Sequence Resolution**:
+   - If the primary model is anything other than `gemini-3.5-flash-lite`, the sequence is exactly two attempts: `[primaryModel, gemini-3.5-flash-lite]`.
+   - If the user explicitly sets `gemini-3.5-flash-lite` as their primary model, the sequence is a single attempt: `[gemini-3.5-flash-lite]`.
+   - Intermediate model attempts are eliminated.
 
-1. `gemini-3.8-flash` (Default primary model)
-2. `gemini-3.7-flash`
-3. `gemini-3.6-flash`
-4. `gemini-3.5-flash`
-5. `gemini-3.5-flash-lite` (Baseline Lite model)
+## Latency & Generation Optimization
 
-## Fallback Policy
+1. **Thinking Budget**:
+   - For the primary model, send `"thinkingConfig": {"thinkingBudget": 0}` (or lowest supported budget) to disable internal reasoning loops that otherwise add 4–8 seconds of token generation delay.
+   - For `gemini-3.5-flash-lite`, omit `thinkingConfig` entirely because Flash-Lite does not support reasoning configuration and will reject the request with HTTP 400.
+2. **Token Ceiling**:
+   - Set `maxOutputTokens: 512` (reduced from 4096) to reflect concise vocabulary entries and prevent decoding overruns.
+3. **Structured Schema**:
+   - Retain full `responseJsonSchema` ensuring type safety for part of speech, definitions, and Hebrew translations.
+4. **Attempt Timing & Observability**:
+   - Log structured metrics for every model attempt (`model`, `durationMs`, `httpStatus`, `outcome`) to console/developer logs to verify where latency occurs.
 
-1. **Triggering Conditions**:
+## Fallback Conditions
+
+1. **Triggering Conditions (Direct Fallback to Flash-Lite)**:
    - HTTP 429 (`RESOURCE_EXHAUSTED` / Quota & Rate Limit)
    - HTTP 404 (`NOT_FOUND` / Model Unavailable or Deprecated)
-   - HTTP 500 / 503 (`INTERNAL` / `UNAVAILABLE` Temporary Server Errors)
+   - HTTP 500 / 503 (`INTERNAL` / `UNAVAILABLE` Server Errors)
    - Request Timeout (15-second client deadline)
 
 2. **Non-Fallback Conditions**:
-   - HTTP 400 / 401 / 403 Invalid API key or permission errors stop execution immediately to alert the user to check their key in Settings.
+   - HTTP 400 / 401 / 403 Invalid API key or permission errors stop execution immediately to prompt the user to check their key in Settings.
 
-3. **Fallback Sequence & Custom Models**:
-   - Lookups start at the user's selected primary model (defaulting to `gemini-3.8-flash`).
-   - **Custom Model Name Support**: Users may select "Custom Model..." in Settings and enter an arbitrary Gemini model identifier (e.g. `gemini-1.5-pro` or tuned model resource name). The custom model will be attempted first; if it encounters a rate limit or 404 error, lookups fall back to the standard catalog sequence (`gemini-3.8-flash` → `gemini-3.7-flash` → ...).
-   - If a fallback-eligible error occurs, the lookup automatically retries silently with the next model down the catalog sequence until a response is received or all models are exhausted.
-   - Fallbacks operate silently to prioritize user experience and UI speed. If all models in the chain fail, the error message from the final attempt is presented in the UI.
