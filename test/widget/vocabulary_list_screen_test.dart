@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,13 +20,89 @@ class TestVocabularyListNotifier extends VocabularyListNotifier {
   }
 }
 
+class LoadingVocabularyListNotifier extends VocabularyListNotifier {
+  @override
+  Future<List<Entry>> build() => Completer<List<Entry>>().future;
+}
+
+class FailingVocabularyListNotifier extends VocabularyListNotifier {
+  @override
+  Future<List<Entry>> build() async => throw StateError('load failed');
+}
+
 void main() {
   group('VocabularyListScreen Widget Tests', () {
-    testWidgets('shows empty state when no entries exist', (WidgetTester tester) async {
+    testWidgets('disables Practice while the vocabulary library is loading', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            vocabularyListProvider.overrideWith(() => TestVocabularyListNotifier([])),
+            vocabularyListProvider.overrideWith(
+              () => LoadingVocabularyListNotifier(),
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const VocabularyListScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        tester
+            .widget<IconButton>(
+              find.ancestor(
+                of: find.byIcon(Icons.school_outlined),
+                matching: find.byType(IconButton),
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('disables Practice when the vocabulary library fails to load', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            vocabularyListProvider.overrideWith(
+              () => FailingVocabularyListNotifier(),
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const VocabularyListScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<IconButton>(
+              find.ancestor(
+                of: find.byIcon(Icons.school_outlined),
+                matching: find.byType(IconButton),
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('shows empty state when no entries exist', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            vocabularyListProvider.overrideWith(
+              () => TestVocabularyListNotifier([]),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -36,11 +114,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('knew'), findsOneWidget);
-      expect(find.textContaining('Your vocabulary library is empty'), findsOneWidget);
+      expect(
+        find.textContaining('Your vocabulary library is empty'),
+        findsOneWidget,
+      );
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets('displays list of entries when data is present', (WidgetTester tester) async {
+    testWidgets('displays list of entries when data is present', (
+      WidgetTester tester,
+    ) async {
       final entry = Entry.create(
         english: 'resilient',
         meanings: [
@@ -55,7 +138,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            vocabularyListProvider.overrideWith(() => TestVocabularyListNotifier([entry])),
+            vocabularyListProvider.overrideWith(
+              () => TestVocabularyListNotifier([entry]),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,

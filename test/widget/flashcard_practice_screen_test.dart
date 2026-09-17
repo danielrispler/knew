@@ -184,7 +184,9 @@ void main() {
       ProviderScope(
         overrides: [
           wordsRepositoryProvider.overrideWithValue(repository),
-          settingsProvider.overrideWith(() => TestSettingsNotifier(sessionSize: 1)),
+          settingsProvider.overrideWith(
+            () => TestSettingsNotifier(sessionSize: 1),
+          ),
         ],
         child: MaterialApp(
           home: FlashcardPracticeScreen(
@@ -197,5 +199,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Question 1 of 1'), findsOneWidget);
+  });
+
+  testWidgets('shows the empty-library state instead of a completed summary', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          wordsRepositoryProvider.overrideWithValue(TestWordsRepository()),
+          settingsProvider.overrideWith(() => TestSettingsNotifier()),
+        ],
+        child: MaterialApp(
+          home: FlashcardPracticeScreen(
+            initialLibrary: const [],
+            onExit: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('No entries available for practice.'), findsOneWidget);
+    expect(find.text('Practice Summary'), findsNothing);
   });
 }

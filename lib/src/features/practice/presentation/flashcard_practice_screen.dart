@@ -89,10 +89,6 @@ class _FlashcardPracticeScreenState
     final state = ref.watch(practiceSessionProvider);
     final controller = ref.read(practiceSessionProvider.notifier);
 
-    if (state.isCompleted) {
-      return PracticeSummaryScreen(state: state, onDone: widget.onExit);
-    }
-
     if (state.questions.isEmpty) {
       return Scaffold(
         appBar: AppBar(
@@ -122,6 +118,10 @@ class _FlashcardPracticeScreenState
           ),
         ),
       );
+    }
+
+    if (state.isCompleted) {
+      return PracticeSummaryScreen(state: state, onDone: widget.onExit);
     }
 
     final currentQuestion = state.currentQuestion;
