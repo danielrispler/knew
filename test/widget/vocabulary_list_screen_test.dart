@@ -61,6 +61,7 @@ void main() {
             .onPressed,
         isNull,
       );
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('disables Practice when the vocabulary library fails to load', (
@@ -92,6 +93,8 @@ void main() {
             .onPressed,
         isNull,
       );
+      expect(find.textContaining('Error loading library'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
     testWidgets('shows empty state when no entries exist', (
@@ -117,6 +120,17 @@ void main() {
       expect(
         find.textContaining('Your vocabulary library is empty'),
         findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<IconButton>(
+              find.ancestor(
+                of: find.byIcon(Icons.school_outlined),
+                matching: find.byType(IconButton),
+              ),
+            )
+            .onPressed,
+        isNotNull,
       );
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
@@ -155,6 +169,17 @@ void main() {
       expect(find.text('[adj] Able to withstand hardship'), findsOneWidget);
       expect(find.text('עמיד, בעל כושר התאוששות'), findsOneWidget);
       expect(find.text('New'), findsOneWidget);
+      expect(
+        tester
+            .widget<IconButton>(
+              find.ancestor(
+                of: find.byIcon(Icons.school_outlined),
+                matching: find.byType(IconButton),
+              ),
+            )
+            .onPressed,
+        isNotNull,
+      );
     });
   });
 }

@@ -48,7 +48,10 @@ class WordDetailBottomSheet extends StatelessWidget {
               ),
             ),
             Flexible(
-              child: WordDetailContent(initialEntry: initialEntry, isBottomSheet: true),
+              child: WordDetailContent(
+                initialEntry: initialEntry,
+                isBottomSheet: true,
+              ),
             ),
           ],
         ),
@@ -65,9 +68,7 @@ class WordDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(initialEntry.english),
-      ),
+      appBar: AppBar(title: Text(initialEntry.english)),
       body: WordDetailContent(initialEntry: initialEntry, isBottomSheet: false),
     );
   }
@@ -205,7 +206,12 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
             constraints: const BoxConstraints(maxWidth: 600.0),
             child: ListView(
               shrinkWrap: widget.isBottomSheet,
-              padding: const EdgeInsets.all(20.0),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                20 + MediaQuery.paddingOf(context).bottom,
+              ),
               children: [
                 // Term Header Card
                 Card(
@@ -221,15 +227,22 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                               child: Row(
                                 children: [
                                   Flexible(
-                                    child: Text(
-                                      _entry.english,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium
-                                          ?.copyWith(
-                                            fontFamily: 'FrankRuhlLibre',
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                    child: FittedBox(
+                                      alignment:
+                                          AlignmentDirectional.centerStart,
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        _entry.english,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium
+                                            ?.copyWith(
+                                              fontFamily: 'FrankRuhlLibre',
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -238,7 +251,9 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                                       _isPlayingAudio
                                           ? Icons.volume_up
                                           : Icons.volume_up_outlined,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                     tooltip: 'Listen to pronunciation',
                                     onPressed: _speakTerm,
@@ -254,7 +269,10 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                               decoration: BoxDecoration(
                                 color: stageColor.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: stageColor, width: 1.5),
+                                border: Border.all(
+                                  color: stageColor,
+                                  width: 1.5,
+                                ),
                               ),
                               child: Text(
                                 _stageLabel(_entry.stage, l10n),
@@ -267,7 +285,8 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                             ),
                           ],
                         ),
-                        if (_entry.source != null && _entry.source!.isNotEmpty) ...[
+                        if (_entry.source != null &&
+                            _entry.source!.isNotEmpty) ...[
                           const SizedBox(height: 12),
                           Row(
                             children: [
@@ -280,11 +299,13 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                             ],
                           ),
                         ],
-                        if (_entry.context != null && _entry.context!.isNotEmpty) ...[
+                        if (_entry.context != null &&
+                            _entry.context!.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(
                             '"${_entry.context}"',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   fontStyle: FontStyle.italic,
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
@@ -305,9 +326,8 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                       children: [
                         Text(
                           'Meanings',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const Divider(height: 24),
                         ..._entry.meanings.asMap().entries.map((entry) {
@@ -323,12 +343,13 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 4),
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.12),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withOpacity(0.12),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
@@ -336,7 +357,9 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 12,
-                                          color: Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
                                         ),
                                       ),
                                     ),
@@ -355,7 +378,9 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),
@@ -380,9 +405,8 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                       children: [
                         Text(
                           'Learning Progress',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const Divider(height: 24),
                         // Progress Bar Indicator
@@ -391,9 +415,12 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                           child: LinearProgressIndicator(
                             value: _entry.level / 6.0,
                             minHeight: 10,
-                            backgroundColor:
-                                Theme.of(context).colorScheme.outlineVariant,
-                            valueColor: AlwaysStoppedAnimation<Color>(stageColor),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.outlineVariant,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              stageColor,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -403,7 +430,9 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                             const Text('Level:'),
                             Text(
                               '${_entry.level} / 6',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -414,7 +443,9 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                             const Text('Next Due Date:'),
                             Text(
                               _entry.dueDate,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -427,7 +458,9 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                               _entry.lastReviewedAt != null
                                   ? _entry.lastReviewedAt!.substring(0, 10)
                                   : 'Never',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -490,7 +523,9 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                             ),
                           );
                           await _refreshEntry();
-                          ref.read(vocabularyListProvider.notifier).refreshList();
+                          ref
+                              .read(vocabularyListProvider.notifier)
+                              .refreshList();
                         },
                         icon: const Icon(Icons.edit),
                         label: const Text('Edit Entry'),
@@ -505,7 +540,10 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                 Center(
                   child: TextButton.icon(
                     onPressed: _confirmDelete,
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                    ),
                     label: const Text(
                       'Delete Entry',
                       style: TextStyle(color: Colors.redAccent),

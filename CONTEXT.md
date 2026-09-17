@@ -43,3 +43,22 @@ _Avoid_: "Level" for the named grouping.
 **Repeat**: The additional practice question offered after an incorrect review in the same session.
 
 **Extra practice**: Practice offered when nothing is due, without changing review schedules.
+
+## Discover
+
+**Discover**: An opt-in feature that suggests unfamiliar English words for the user to consider adding to their library.
+_Avoid_: "Recommend", "Explore".
+
+**Suggested Word**: A word offered to the user on the Discover screen that they have not yet acted on; it is not an Entry until the user chooses to learn it.
+_Avoid_: "Suggestion", "Recommendation".
+
+**Candidate Pool**: The frequency-ranked set of English words eligible to become Suggested Words, primarily sourced from a bundled word list with a small portion contributed by Gemini.
+
+**Discovery Band**: The current target frequency/rank range used to select Suggested Words from the Candidate Pool, inferred from the user's Learn and Known interactions over time.
+_Avoid_: Using this to represent the user's general English level or CEFR level.
+
+**Known**: A Suggested Word the user has explicitly marked as already familiar; permanently excluded from future suggestions.
+_Avoid_: "Dismissed", "Ignored".
+
+**Skipped**: A Suggested Word the user has deferred without indicating familiarity; it may resurface in a future batch.
+_Avoid_: "Hidden", "Snoozed".

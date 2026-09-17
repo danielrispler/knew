@@ -109,7 +109,8 @@ class TypingSessionNotifier extends PracticeSessionNotifier {
   final PracticeQuestion question;
 
   @override
-  PracticeSessionState build() => PracticeSessionState(questions: [question]);
+  PracticeSessionState build() =>
+      PracticeSessionState(questions: [question], sessionStarted: true);
 
   @override
   void startSession({

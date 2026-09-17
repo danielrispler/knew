@@ -1,7 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:knew/src/features/practice/presentation/flashcard_practice_screen.dart';
+import 'package:knew/src/features/practice/presentation/practice_providers.dart';
+import 'package:knew/src/features/practice/presentation/practice_session_controller.dart';
+import 'package:knew/src/features/practice/presentation/practice_session_state.dart';
 import 'package:knew/src/features/vocabulary/data/words_repository.dart';
 import 'package:knew/src/features/vocabulary/domain/entry.dart';
 import 'package:knew/src/features/vocabulary/domain/meaning.dart';
@@ -223,4 +228,48 @@ void main() {
     expect(find.text('No entries available for practice.'), findsOneWidget);
     expect(find.text('Practice Summary'), findsNothing);
   });
+
+  testWidgets('shows a loading indicator before the session starts', (
+    tester,
+  ) async {
+    // Override with a notifier that never calls startSession, simulating
+    // the frame between widget mount and the post-frame callback.
+    final notifier = NeverStartSessionNotifier();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          wordsRepositoryProvider.overrideWithValue(TestWordsRepository()),
+          settingsProvider.overrideWith(() => TestSettingsNotifier()),
+          practiceSessionProvider.overrideWith(() => notifier),
+        ],
+        child: MaterialApp(
+          home: FlashcardPracticeScreen(
+            initialLibrary: [testEntry],
+            onExit: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Should show the loading spinner, not the empty-library text
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('No entries available for practice.'), findsNothing);
+    expect(find.text('Practice Summary'), findsNothing);
+  });
+}
+
+/// A notifier that does nothing on startSession, keeping the state at its
+/// initial default (sessionStarted: false) to simulate the loading phase.
+class NeverStartSessionNotifier extends PracticeSessionNotifier {
+  @override
+  void startSession({
+    required List<Entry> library,
+    required String todayDueDate,
+    int requestedSessionSize = 20,
+    Random? random,
+  }) {
+    // Intentionally empty — simulates the pre-callback frame.
+  }
 }

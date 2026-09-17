@@ -89,6 +89,22 @@ class _FlashcardPracticeScreenState
     final state = ref.watch(practiceSessionProvider);
     final controller = ref.read(practiceSessionProvider.notifier);
 
+    if (!state.sessionStarted) {
+      return Scaffold(
+        appBar: AppBar(
+          leadingWidth: 80,
+          leading: TextButton(
+            onPressed: widget.onExit,
+            child: const Text(
+              'Done',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (state.questions.isEmpty) {
       return Scaffold(
         appBar: AppBar(

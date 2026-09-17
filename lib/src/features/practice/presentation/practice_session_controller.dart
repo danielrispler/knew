@@ -105,6 +105,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       firstPassPostSnapshots: {},
       repeatQueue: [],
       isCompleted: questions.isEmpty,
+      sessionStarted: true,
       canOverride: false,
       selectedOptionIndex: null,
       answerCheckResult: null,

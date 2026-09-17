@@ -29,6 +29,7 @@ class PracticeSessionState {
   final Map<String, Entry> firstPassPostSnapshots;
   final List<Entry> repeatQueue;
   final bool isCompleted;
+  final bool sessionStarted;
   final bool canOverride;
   final String? lastGradedEntryId;
 
@@ -54,6 +55,7 @@ class PracticeSessionState {
     this.firstPassPostSnapshots = const {},
     this.repeatQueue = const [],
     this.isCompleted = false,
+    this.sessionStarted = false,
     this.canOverride = false,
     this.lastGradedEntryId,
     this.selectedOptionIndex,
@@ -128,6 +130,7 @@ class PracticeSessionState {
     Map<String, Entry>? firstPassPostSnapshots,
     List<Entry>? repeatQueue,
     bool? isCompleted,
+    bool? sessionStarted,
     bool? canOverride,
     Object? lastGradedEntryId = _unset,
     Object? selectedOptionIndex = _unset,
@@ -157,6 +160,7 @@ class PracticeSessionState {
           firstPassPostSnapshots ?? this.firstPassPostSnapshots,
       repeatQueue: repeatQueue ?? this.repeatQueue,
       isCompleted: isCompleted ?? this.isCompleted,
+      sessionStarted: sessionStarted ?? this.sessionStarted,
       canOverride: canOverride ?? this.canOverride,
       lastGradedEntryId: identical(lastGradedEntryId, _unset)
           ? this.lastGradedEntryId
