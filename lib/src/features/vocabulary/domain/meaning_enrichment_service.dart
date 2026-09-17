@@ -17,7 +17,7 @@ class MeaningEnrichmentService {
     final byKey = {for (final result in results) result.correlationKey: result};
     final enrichedAt = (now ?? DateTime.now()).toUtc().toIso8601String();
     final meanings = entry.meanings.map((meaning) {
-      final result = byKey[_key(meaning)];
+      final result = byKey[keyFor(meaning)];
       if (result == null) return meaning;
       final forms = [entry.english, ...result.validInflections];
       return result
@@ -31,6 +31,6 @@ class MeaningEnrichmentService {
     return repository.applyEnrichment(entry, meanings);
   }
 
-  static String _key(Meaning meaning) =>
+  static String keyFor(Meaning meaning) =>
       '${meaning.partOfSpeech}\u0000${meaning.definition}\u0000${meaning.hebrewTranslations.join('\u0000')}';
 }

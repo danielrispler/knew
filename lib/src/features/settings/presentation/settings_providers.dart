@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../vocabulary/presentation/vocabulary_providers.dart';
+import '../../vocabulary/domain/library_enrichment_controller.dart';
 import '../data/secure_storage_repository.dart';
 import '../data/settings_repository.dart';
 import '../data/sqlite_settings_repository.dart';
@@ -14,7 +16,9 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   );
 });
 
-final secureStorageRepositoryProvider = Provider<SecureStorageRepository>((ref) {
+final secureStorageRepositoryProvider = Provider<SecureStorageRepository>((
+  ref,
+) {
   return SecureStorageRepository();
 });
 
@@ -103,7 +107,14 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepo = ref.read(settingsRepositoryProvider);
     await settingsRepo.setSessionSize(size);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
+      (state.value ??
+              const SettingsState(
+                sessionSize: 20,
+                theme: 'system',
+                model: 'gemini-3.8-flash',
+                apiKey: '',
+                language: 'system',
+              ))
           .copyWith(sessionSize: size),
     );
   }
@@ -112,7 +123,14 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepo = ref.read(settingsRepositoryProvider);
     await settingsRepo.setTheme(theme);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
+      (state.value ??
+              const SettingsState(
+                sessionSize: 20,
+                theme: 'system',
+                model: 'gemini-3.8-flash',
+                apiKey: '',
+                language: 'system',
+              ))
           .copyWith(theme: theme),
     );
   }
@@ -121,7 +139,14 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepo = ref.read(settingsRepositoryProvider);
     await settingsRepo.setLanguage(language);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
+      (state.value ??
+              const SettingsState(
+                sessionSize: 20,
+                theme: 'system',
+                model: 'gemini-3.8-flash',
+                apiKey: '',
+                language: 'system',
+              ))
           .copyWith(language: language),
     );
   }
@@ -130,7 +155,14 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final settingsRepo = ref.read(settingsRepositoryProvider);
     await settingsRepo.setModel(model);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
+      (state.value ??
+              const SettingsState(
+                sessionSize: 20,
+                theme: 'system',
+                model: 'gemini-3.8-flash',
+                apiKey: '',
+                language: 'system',
+              ))
           .copyWith(model: model),
     );
   }
@@ -139,12 +171,43 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final secureStorageRepo = ref.read(secureStorageRepositoryProvider);
     await secureStorageRepo.setApiKey(apiKey);
     state = AsyncValue.data(
-      (state.value ?? const SettingsState(sessionSize: 20, theme: 'system', model: 'gemini-3.8-flash', apiKey: '', language: 'system'))
+      (state.value ??
+              const SettingsState(
+                sessionSize: 20,
+                theme: 'system',
+                model: 'gemini-3.8-flash',
+                apiKey: '',
+                language: 'system',
+              ))
           .copyWith(apiKey: apiKey),
     );
   }
 }
 
-final settingsProvider = AsyncNotifierProvider<SettingsNotifier, SettingsState>(() {
-  return SettingsNotifier();
-});
+final settingsProvider = AsyncNotifierProvider<SettingsNotifier, SettingsState>(
+  () {
+    return SettingsNotifier();
+  },
+);
+
+final libraryEnrichmentProvider =
+    ChangeNotifierProvider<LibraryEnrichmentController>((ref) {
+      final repository = ref.watch(wordsRepositoryProvider);
+      final client = ref.watch(geminiClientProvider);
+      final controller = LibraryEnrichmentController(
+        repository: repository,
+        enrich: (entry) {
+          final settings = ref.read(settingsProvider).value!;
+          return client.enrichWithFallback(
+            term: entry.english,
+            meanings: entry.meanings
+                .where((meaning) => meaning.enrichedAt == null)
+                .toList(),
+            apiKey: settings.apiKey,
+            primaryModel: settings.model,
+          );
+        },
+      );
+      controller.refresh();
+      return controller;
+    });

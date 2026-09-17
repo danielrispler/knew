@@ -45,12 +45,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(settingsProvider);
+    final enrichment = ref.watch(libraryEnrichmentProvider);
     final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Center(
@@ -62,7 +61,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _apiKeyController.text = settings.apiKey;
                   }
 
-                  final isKnownPreset = GeminiModels.availableModels.contains(settings.model);
+                  final isKnownPreset = GeminiModels.availableModels.contains(
+                    settings.model,
+                  );
                   final dropdownValue = _isCustomModelSelected || !isKnownPreset
                       ? 'custom'
                       : settings.model;
@@ -78,15 +79,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     children: [
                       Text(
                         l10n.practiceDefaults,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(l10n.sessionSize),
-                        subtitle: Text(l10n.entriesPerSession(settings.sessionSize)),
+                        subtitle: Text(
+                          l10n.entriesPerSession(settings.sessionSize),
+                        ),
                         trailing: SizedBox(
                           width: 150,
                           child: Slider(
@@ -105,17 +107,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       const Divider(height: 32),
                       Text(
+                        'Library Enrichment',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        enrichment.isRunning
+                            ? '${enrichment.completed}/${enrichment.total} complete · ${enrichment.remaining} remaining${enrichment.currentTerm == null ? '' : ' · ${enrichment.currentTerm}'}'
+                            : '${enrichment.remaining} entries need enrichment',
+                      ),
+                      if (enrichment.error != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          enrichment.error!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: enrichment.isRunning
+                            ? enrichment.stop
+                            : () => ref.read(libraryEnrichmentProvider).start(),
+                        icon: Icon(
+                          enrichment.isRunning ? Icons.stop : Icons.play_arrow,
+                        ),
+                        label: Text(
+                          enrichment.isRunning
+                              ? 'Stop enrichment'
+                              : 'Start enrichment',
+                        ),
+                      ),
+                      const Divider(height: 32),
+                      Text(
                         l10n.appearance,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       SegmentedButton<String>(
                         segments: [
-                          ButtonSegment(value: 'system', label: Text(l10n.themeSystem)),
-                          ButtonSegment(value: 'light', label: Text(l10n.themeLight)),
-                          ButtonSegment(value: 'dark', label: Text(l10n.themeDark)),
+                          ButtonSegment(
+                            value: 'system',
+                            label: Text(l10n.themeSystem),
+                          ),
+                          ButtonSegment(
+                            value: 'light',
+                            label: Text(l10n.themeLight),
+                          ),
+                          ButtonSegment(
+                            value: 'dark',
+                            label: Text(l10n.themeDark),
+                          ),
                         ],
                         selected: {settings.theme},
                         onSelectionChanged: (newSelection) {
@@ -127,16 +172,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const SizedBox(height: 16),
                       Text(
                         l10n.appLanguage,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       SegmentedButton<String>(
                         segments: [
-                          ButtonSegment(value: 'system', label: Text(l10n.languageSystem)),
-                          ButtonSegment(value: 'en', label: Text(l10n.languageEnglish)),
-                          ButtonSegment(value: 'he', label: Text(l10n.languageHebrew)),
+                          ButtonSegment(
+                            value: 'system',
+                            label: Text(l10n.languageSystem),
+                          ),
+                          ButtonSegment(
+                            value: 'en',
+                            label: Text(l10n.languageEnglish),
+                          ),
+                          ButtonSegment(
+                            value: 'he',
+                            label: Text(l10n.languageHebrew),
+                          ),
                         ],
                         selected: {settings.language},
                         onSelectionChanged: (newSelection) {
@@ -148,13 +201,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const Divider(height: 32),
                       Text(
                         l10n.geminiSettings,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       InkWell(
-                        onTap: () => _showModelPickerBottomSheet(context, dropdownValue, settings.model),
+                        onTap: () => _showModelPickerBottomSheet(
+                          context,
+                          dropdownValue,
+                          settings.model,
+                        ),
                         borderRadius: BorderRadius.circular(4),
                         child: InputDecorator(
                           decoration: InputDecoration(
@@ -164,14 +220,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             suffixIcon: const Icon(Icons.arrow_drop_down),
                           ),
                           child: Text(
-                            _getModelDisplayTitle(dropdownValue, settings.model),
+                            _getModelDisplayTitle(
+                              dropdownValue,
+                              settings.model,
+                            ),
                             style: Theme.of(context).textTheme.bodyMedium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
-                      if (_isCustomModelSelected || dropdownValue == 'custom') ...[
+                      if (_isCustomModelSelected ||
+                          dropdownValue == 'custom') ...[
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _customModelController,
@@ -183,15 +243,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.check),
                               onPressed: () {
-                                final customVal = _customModelController.text.trim();
+                                final customVal = _customModelController.text
+                                    .trim();
                                 if (customVal.isNotEmpty) {
                                   ref
                                       .read(settingsProvider.notifier)
                                       .setModel(customVal);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                        content: Text(
-                                            'Custom model set to: $customVal')),
+                                      content: Text(
+                                        'Custom model set to: $customVal',
+                                      ),
+                                    ),
                                   );
                                 }
                               },
@@ -222,8 +285,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   .read(settingsProvider.notifier)
                                   .setApiKey(_apiKeyController.text);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(l10n.apiKeySaved)),
+                                SnackBar(content: Text(l10n.apiKeySaved)),
                               );
                             },
                           ),
@@ -242,7 +304,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
-                                          'Add your Gemini API key in Settings, or enter the word manually.'),
+                                        'Add your Gemini API key in Settings, or enter the word manually.',
+                                      ),
                                     ),
                                   );
                                   return;
@@ -261,7 +324,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   if (mounted) {
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text(l10n.connectionSuccessful),
+                                        content: Text(
+                                          l10n.connectionSuccessful,
+                                        ),
                                       ),
                                     );
                                   }
@@ -274,7 +339,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 } catch (e) {
                                   if (mounted) {
                                     messenger.showSnackBar(
-                                      SnackBar(content: Text('Connection error: $e')),
+                                      SnackBar(
+                                        content: Text('Connection error: $e'),
+                                      ),
                                     );
                                   }
                                 } finally {
@@ -289,7 +356,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.bolt),
                         label: Text(l10n.testKeyConnection),
@@ -297,16 +366,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const Divider(height: 32),
                       Text(
                         l10n.dataBackup,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         l10n.dataBackupDesc,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       LayoutBuilder(
@@ -318,8 +386,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 SizedBox(
                                   width: double.infinity,
                                   child: OutlinedButton.icon(
-                                    onPressed: () => ExportImportService.exportData(context, ref),
-                                    icon: const Icon(Icons.file_upload_outlined),
+                                    onPressed: () =>
+                                        ExportImportService.exportData(
+                                          context,
+                                          ref,
+                                        ),
+                                    icon: const Icon(
+                                      Icons.file_upload_outlined,
+                                    ),
                                     label: Text(l10n.exportBackup),
                                     style: OutlinedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
@@ -330,8 +404,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
-                                    onPressed: () => ExportImportService.importData(context, ref),
-                                    icon: const Icon(Icons.file_download_outlined),
+                                    onPressed: () =>
+                                        ExportImportService.importData(
+                                          context,
+                                          ref,
+                                        ),
+                                    icon: const Icon(
+                                      Icons.file_download_outlined,
+                                    ),
                                     label: Text(l10n.importBackup),
                                     style: ElevatedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
@@ -345,7 +425,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: () => ExportImportService.exportData(context, ref),
+                                  onPressed: () =>
+                                      ExportImportService.exportData(
+                                        context,
+                                        ref,
+                                      ),
                                   icon: const Icon(Icons.file_upload_outlined),
                                   label: Text(l10n.exportBackup),
                                   style: OutlinedButton.styleFrom(
@@ -356,8 +440,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton.icon(
-                                  onPressed: () => ExportImportService.importData(context, ref),
-                                  icon: const Icon(Icons.file_download_outlined),
+                                  onPressed: () =>
+                                      ExportImportService.importData(
+                                        context,
+                                        ref,
+                                      ),
+                                  icon: const Icon(
+                                    Icons.file_download_outlined,
+                                  ),
                                   label: Text(l10n.importBackup),
                                   style: ElevatedButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
@@ -372,7 +462,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(child: Text('Error loading settings: $err')),
+                error: (err, stack) =>
+                    Center(child: Text('Error loading settings: $err')),
               ),
             ),
           );
@@ -394,14 +485,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case GeminiModels.gemini35FlashLite:
         return 'Gemini 3.5 Flash Lite';
       case 'custom':
-        return activeModel.isNotEmpty ? 'Custom: $activeModel' : 'Custom Model...';
+        return activeModel.isNotEmpty
+            ? 'Custom: $activeModel'
+            : 'Custom Model...';
       default:
         return activeModel;
     }
   }
 
   void _showModelPickerBottomSheet(
-      BuildContext context, String currentDropdownValue, String activeModel) {
+    BuildContext context,
+    String currentDropdownValue,
+    String activeModel,
+  ) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -413,32 +509,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           {
             'val': GeminiModels.gemini38Flash,
             'title': 'Gemini 3.8 Flash',
-            'subtitle': 'Default - Strongest model'
+            'subtitle': 'Default - Strongest model',
           },
           {
             'val': GeminiModels.gemini37Flash,
             'title': 'Gemini 3.7 Flash',
-            'subtitle': 'High performance model'
+            'subtitle': 'High performance model',
           },
           {
             'val': GeminiModels.gemini36Flash,
             'title': 'Gemini 3.6 Flash',
-            'subtitle': 'Fast & capable model'
+            'subtitle': 'Fast & capable model',
           },
           {
             'val': GeminiModels.gemini35Flash,
             'title': 'Gemini 3.5 Flash',
-            'subtitle': 'Balanced standard model'
+            'subtitle': 'Balanced standard model',
           },
           {
             'val': GeminiModels.gemini35FlashLite,
             'title': 'Gemini 3.5 Flash Lite',
-            'subtitle': 'Lightweight fast fallback'
+            'subtitle': 'Lightweight fast fallback',
           },
           {
             'val': 'custom',
             'title': 'Custom Model...',
-            'subtitle': 'Specify custom model identifier'
+            'subtitle': 'Specify custom model identifier',
           },
         ];
 
@@ -455,26 +551,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Theme.of(sheetContext)
-                          .colorScheme
-                          .outline
-                          .withOpacity(0.4),
+                      color: Theme.of(
+                        sheetContext,
+                      ).colorScheme.outline.withOpacity(0.4),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
                 Text(
                   'Select Gemini Model',
-                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    sheetContext,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Primary choice for automated lookups. Automatically falls back if rate-limited.',
                   style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(sheetContext).colorScheme.outline,
-                      ),
+                    color: Theme.of(sheetContext).colorScheme.outline,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ...models.map((m) {
@@ -484,13 +579,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     elevation: 0,
                     margin: const EdgeInsets.only(bottom: 8),
                     color: isSelected
-                        ? Theme.of(sheetContext)
-                            .colorScheme
-                            .primaryContainer
-                            .withOpacity(0.4)
-                        : Theme.of(sheetContext)
-                            .colorScheme
-                            .surfaceContainerLowest,
+                        ? Theme.of(
+                            sheetContext,
+                          ).colorScheme.primaryContainer.withOpacity(0.4)
+                        : Theme.of(
+                            sheetContext,
+                          ).colorScheme.surfaceContainerLowest,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
@@ -530,8 +624,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: Text(
                         m['title']!,
                         style: TextStyle(
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                       subtitle: Text(m['subtitle']!),

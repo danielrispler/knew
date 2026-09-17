@@ -6,6 +6,18 @@ import 'package:knew/src/features/settings/data/secure_storage_repository.dart';
 import 'package:knew/src/features/settings/data/settings_repository.dart';
 import 'package:knew/src/features/settings/presentation/settings_providers.dart';
 import 'package:knew/src/features/settings/presentation/settings_screen.dart';
+import 'package:knew/src/features/vocabulary/data/words_repository.dart';
+import 'package:knew/src/features/vocabulary/domain/entry.dart';
+import 'package:knew/src/features/vocabulary/domain/library_enrichment_controller.dart';
+import 'package:knew/src/features/vocabulary/domain/meaning_enrichment.dart';
+
+class EmptyWordsRepository implements WordsRepository {
+  @override
+  Future<List<Entry>> getAllEntries() async => [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class FakeSettingsRepository implements SettingsRepository {
   int sessionSize = 20;
@@ -65,40 +77,49 @@ class FakeSecureStorageRepository implements SecureStorageRepository {
 }
 
 void main() {
-  testWidgets('SettingsScreen displays app language option and updates provider state', (tester) async {
-    final fakeRepo = FakeSettingsRepository();
-    final fakeSecure = FakeSecureStorageRepository();
+  testWidgets(
+    'SettingsScreen displays app language option and updates provider state',
+    (tester) async {
+      final fakeRepo = FakeSettingsRepository();
+      final fakeSecure = FakeSecureStorageRepository();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          settingsRepositoryProvider.overrideWithValue(fakeRepo),
-          secureStorageRepositoryProvider.overrideWithValue(fakeSecure),
-        ],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const SettingsScreen(),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(fakeRepo),
+            secureStorageRepositoryProvider.overrideWithValue(fakeSecure),
+            libraryEnrichmentProvider.overrideWith(
+              (ref) => LibraryEnrichmentController(
+                repository: EmptyWordsRepository(),
+                enrich: (_) async => const <MeaningEnrichment>[],
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const SettingsScreen(),
+          ),
         ),
-      ),
-    );
+      );
 
-    await tester.pump();
-    await tester.pump(Duration.zero);
-    await tester.pump();
+      await tester.pump();
+      await tester.pump(Duration.zero);
+      await tester.pump();
 
-    // Verify App Language header is rendered
-    expect(find.text('App Language'), findsOneWidget);
-    expect(find.text('System Default'), findsOneWidget);
-    expect(find.text('English'), findsOneWidget);
-    expect(find.text('Hebrew (עברית)'), findsOneWidget);
+      // Verify App Language header is rendered
+      expect(find.text('App Language'), findsOneWidget);
+      expect(find.text('System Default'), findsOneWidget);
+      expect(find.text('English'), findsOneWidget);
+      expect(find.text('Hebrew (עברית)'), findsOneWidget);
 
-    // Tap Hebrew option
-    await tester.tap(find.text('Hebrew (עברית)'));
-    await tester.pump();
-    await tester.pump(Duration.zero);
-    await tester.pump();
+      // Tap Hebrew option
+      await tester.tap(find.text('Hebrew (עברית)'));
+      await tester.pump();
+      await tester.pump(Duration.zero);
+      await tester.pump();
 
-    expect(fakeRepo.language, 'he');
-  });
+      expect(fakeRepo.language, 'he');
+    },
+  );
 }

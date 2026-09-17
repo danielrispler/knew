@@ -20,8 +20,14 @@ class GeminiException implements Exception {
   final GeminiErrorType errorType;
   final String message;
   final String? originalDetails;
+  final Duration? retryAfter;
 
-  const GeminiException(this.errorType, this.message, [this.originalDetails]);
+  const GeminiException(
+    this.errorType,
+    this.message, [
+    this.originalDetails,
+    this.retryAfter,
+  ]);
 
   @override
   String toString() => 'GeminiException($errorType): $message';
