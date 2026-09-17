@@ -6,6 +6,7 @@ import '../domain/gemini_lookup_result.dart';
 import '../domain/meaning.dart';
 import '../domain/meaning_enrichment.dart';
 import '../domain/meaning_enrichment_service.dart';
+import '../../practice/domain/sentence_evaluation.dart';
 import 'gemini_models.dart';
 import 'gemini_parser.dart';
 
@@ -372,6 +373,123 @@ class GeminiClient {
       primaryModel: model,
     );
     return result is GeminiSuccessResult || result is GeminiInvalidResult;
+  }
+
+  Future<SentenceEvaluation> evaluateSentenceWithFallback({
+    required String term,
+    required Meaning meaning,
+    required String sentence,
+    required String feedbackLanguage,
+    required String apiKey,
+    required String primaryModel,
+  }) async {
+    if (apiKey.trim().isEmpty) {
+      throw const GeminiException(
+        GeminiErrorType.missingKey,
+        'Add your Gemini API key in Settings.',
+      );
+    }
+    GeminiException? last;
+    for (final model in GeminiModels.getFallbackSequence(primaryModel)) {
+      try {
+        final response = await _httpClient
+            .post(
+              Uri.parse(
+                'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
+              ),
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey.trim(),
+              },
+              body: jsonEncode({
+                'systemInstruction': {
+                  'parts': [
+                    {
+                      'text':
+                          'Return JSON only. Evaluate the learner sentence for the supplied English vocabulary meaning. Feedback and suggested improvement must be in $feedbackLanguage.',
+                    },
+                  ],
+                },
+                'contents': [
+                  {
+                    'role': 'user',
+                    'parts': [
+                      {
+                        'text': jsonEncode({
+                          'term': term,
+                          'partOfSpeech': meaning.partOfSpeech,
+                          'definition': meaning.definition,
+                          'hebrew': meaning.hebrewTranslations,
+                          'sentence': sentence,
+                        }),
+                      },
+                    ],
+                  },
+                ],
+                'generationConfig': {
+                  'responseMimeType': 'application/json',
+                  'responseJsonSchema': {
+                    'type': 'object',
+                    'required': [
+                      'usesTargetTerm',
+                      'meaningCorrect',
+                      'grammarCorrect',
+                      'naturalUsage',
+                      'feedback',
+                      'suggestedImprovement',
+                    ],
+                    'properties': {
+                      'usesTargetTerm': {'type': 'boolean'},
+                      'meaningCorrect': {'type': 'boolean'},
+                      'grammarCorrect': {'type': 'boolean'},
+                      'naturalUsage': {'type': 'boolean'},
+                      'feedback': {'type': 'string'},
+                      'suggestedImprovement': {
+                        'type': ['string', 'null'],
+                      },
+                    },
+                  },
+                },
+              }),
+            )
+            .timeout(timeout);
+        if (response.statusCode != 200)
+          throw GeminiException(
+            GeminiErrorType.serviceUnavailable,
+            'Sentence evaluation is unavailable.',
+          );
+        final envelope =
+            jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        final payload =
+            jsonDecode(
+                  envelope['candidates'][0]['content']['parts'][0]['text']
+                      as String,
+                )
+                as Map<String, dynamic>;
+        return SentenceEvaluation(
+          usesTargetTerm: payload['usesTargetTerm'] == true,
+          meaningCorrect: payload['meaningCorrect'] == true,
+          grammarCorrect: payload['grammarCorrect'] == true,
+          naturalUsage: payload['naturalUsage'] == true,
+          feedback: payload['feedback'] as String? ?? '',
+          suggestedImprovement: payload['suggestedImprovement'] as String?,
+        );
+      } on GeminiException catch (error) {
+        last = error;
+        if (!_shouldFallback(error.errorType)) rethrow;
+      } on TimeoutException {
+        last = const GeminiException(
+          GeminiErrorType.timeout,
+          'Sentence evaluation timed out.',
+        );
+      } catch (_) {
+        last = const GeminiException(
+          GeminiErrorType.unusableResponse,
+          'Sentence evaluation returned unusable feedback.',
+        );
+      }
+    }
+    throw last!;
   }
 
   Future<List<MeaningEnrichment>> enrich({

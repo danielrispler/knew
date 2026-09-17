@@ -22,6 +22,10 @@ Repeats and extra practice write no progress, counters, or timestamps. Each firs
 
 Cloze uses one valid example and Meaning from the session snapshot. Exact target-form answers grade normally. A valid but wrong inflection stays editable and writes nothing; possible typos require explicit confirmation. Hints, confirmed typos, and Show Answer are assisted outcomes: they never promote the Level. An ordinary incorrect answer follows the normal incorrect and one-repeat lifecycle.
 
+## Sentence Production (Phase 2)
+
+At Levels 5–6, Sentence Production is Meaning-scoped. A local whole-token check requires the Term or a saved valid inflection before requesting AI feedback. Validity requires target use, intended meaning, and grammar; naturalness remains feedback only. An invalid first pass keeps the Level, schedules tomorrow, increments `timesWrong`, and gets one offline repeat. Count as correct replaces that result from the pre-review snapshot. An AI failure writes no progress, disables Sentence Production for the session, and replaces affected questions with Cloze for that Meaning when available, otherwise Typing.
+
 ## Summary and changes to the library
 
 Scheduled summary: reviewed count is the number of distinct first-pass entries committed; accuracy is correct first-pass grades divided by that count, after corrections. Repeats are excluded. Stage movements compare each entry's pre-review and final level. Extra practice uses the same first-pass accuracy calculation, is labelled Extra practice, and shows no stage movements. Zero answers never divides by zero.

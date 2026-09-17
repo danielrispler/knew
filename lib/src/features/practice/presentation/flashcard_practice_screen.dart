@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../vocabulary/domain/entry.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../domain/practice_question.dart';
@@ -11,6 +12,7 @@ import 'widgets/multiple_choice_practice_widget.dart';
 import 'widgets/practice_notebook_card.dart';
 import 'widgets/typing_practice_widget.dart';
 import 'widgets/cloze_practice_widget.dart';
+import 'widgets/sentence_production_practice_widget.dart';
 
 class FlashcardPracticeScreen extends ConsumerStatefulWidget {
   final List<Entry> initialLibrary;
@@ -261,6 +263,12 @@ class _FlashcardPracticeScreenState
           onConfirmTypo: controller.confirmClozeTypo,
           onShowAnswer: controller.showClozeAnswer,
         );
+      case QuestionFormat.sentenceProduction:
+        return SentenceProductionPracticeWidget(
+          question: question,
+          state: state,
+          controller: _typingInputController,
+        );
     }
   }
 
@@ -468,6 +476,37 @@ class _FlashcardPracticeScreenState
                     correct: state.lastAttemptedGrade ?? false,
                   ),
             child: const Text('Next'),
+          ),
+        );
+      case QuestionFormat.sentenceProduction:
+        if (state.isRevealed) {
+          return SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              onPressed: state.isSaving
+                  ? null
+                  : () => controller.gradeCurrent(
+                      correct: state.lastAttemptedGrade ?? false,
+                    ),
+              child: const Text('Next'),
+            ),
+          );
+        }
+        return SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: FilledButton(
+            onPressed: state.isEvaluatingSentence
+                ? null
+                : () => controller.submitSentence(
+                    _typingInputController.text,
+                    feedbackLanguage:
+                        Localizations.localeOf(context).languageCode == 'he'
+                        ? 'Hebrew'
+                        : 'English',
+                  ),
+            child: Text(context.l10n.getFeedback),
           ),
         );
     }

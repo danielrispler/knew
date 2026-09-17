@@ -4,7 +4,13 @@ import 'distractor_generator.dart';
 
 enum PromptDirection { englishToHebrew, hebrewToEnglish }
 
-enum QuestionFormat { flashcard, typing, multipleChoice, cloze }
+enum QuestionFormat {
+  flashcard,
+  typing,
+  multipleChoice,
+  cloze,
+  sentenceProduction,
+}
 
 class PracticeQuestion {
   final Entry entry;

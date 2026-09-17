@@ -650,6 +650,24 @@ abstract class AppLocalizations {
   /// **'Submit'**
   String get submitAnswer;
 
+  /// No description provided for @sentenceProductionPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a sentence using “{term}”.'**
+  String sentenceProductionPrompt(String term);
+
+  /// No description provided for @sentenceProductionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your sentence in English'**
+  String get sentenceProductionHint;
+
+  /// No description provided for @getFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Get feedback'**
+  String get getFeedback;
+
   /// No description provided for @nextQuestion.
   ///
   /// In en, this message translates to:

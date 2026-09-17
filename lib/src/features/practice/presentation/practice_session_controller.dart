@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../vocabulary/domain/entry.dart';
 import '../../vocabulary/domain/example_usage.dart';
 import '../../vocabulary/presentation/vocabulary_providers.dart';
+import '../../settings/presentation/settings_providers.dart';
 import '../domain/answer_checker.dart';
 import '../domain/cloze_answer_checker.dart';
 import '../domain/distractor_generator.dart';
@@ -10,6 +11,7 @@ import '../domain/due_queue_selector.dart';
 import '../domain/practice_question.dart';
 import '../domain/practice_scheduler.dart';
 import '../domain/question_format_selector.dart';
+import '../domain/sentence_evaluation.dart';
 import 'practice_session_state.dart';
 
 class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
@@ -53,6 +55,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
         lastFormat: lastFormat,
         consecutiveCount: consecutiveFormatCount,
         hasClozeExample: cloze.isNotEmpty,
+        hasSentenceMeaning: entry.meanings.isNotEmpty,
         random: rng,
       );
 
@@ -67,6 +70,9 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       final selectedCloze = format == QuestionFormat.cloze
           ? _selectCloze(cloze, rng)
           : null;
+      final meaningIndex = format == QuestionFormat.sentenceProduction
+          ? rng.nextInt(entry.meanings.length)
+          : selectedCloze?.$1;
       if (format == QuestionFormat.multipleChoice) {
         distractorResult = DistractorGenerator.generate(
           target: entry,
@@ -83,7 +89,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
           format: format,
           isRepeat: false,
           distractorResult: distractorResult,
-          meaningIndex: selectedCloze?.$1,
+          meaningIndex: meaningIndex,
           exampleUsage: selectedCloze?.$2,
         ),
       );
@@ -107,6 +113,89 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     );
   }
 
+  Future<void> submitSentence(
+    String text, {
+    required String feedbackLanguage,
+  }) async {
+    final question = state.currentQuestion;
+    if (question?.format != QuestionFormat.sentenceProduction ||
+        question?.meaningIndex == null ||
+        state.isEvaluatingSentence)
+      return;
+    final meaning = question!.entry.meanings[question.meaningIndex!];
+    if (!SentenceTargetDetector.containsTarget(
+      sentence: text,
+      forms: [question.entry.english, ...meaning.validInflections],
+    )) {
+      state = state.copyWith(
+        typedText: text,
+        isRevealed: true,
+        lastAttemptedGrade: false,
+        sentenceEvaluation: SentenceEvaluation(
+          usesTargetTerm: false,
+          meaningCorrect: false,
+          grammarCorrect: false,
+          naturalUsage: false,
+          feedback: feedbackLanguage == 'Hebrew'
+              ? 'השתמש במונח היעד או בהטיה תקינה שלו במשפט.'
+              : 'Use the target term or a valid inflection in your sentence.',
+        ),
+      );
+      return;
+    }
+    state = state.copyWith(isEvaluatingSentence: true, typedText: text);
+    try {
+      final settings = await ref.read(settingsProvider.future);
+      final evaluation = await ref
+          .read(geminiClientProvider)
+          .evaluateSentenceWithFallback(
+            term: question.entry.english,
+            meaning: meaning,
+            sentence: text,
+            feedbackLanguage: feedbackLanguage,
+            apiKey: settings.apiKey,
+            primaryModel: settings.model,
+          );
+      state = state.copyWith(
+        isEvaluatingSentence: false,
+        isRevealed: true,
+        lastAttemptedGrade: evaluation.isValid,
+        sentenceEvaluation: evaluation,
+      );
+    } catch (_) {
+      _replaceSentenceQuestions();
+    }
+  }
+
+  void _replaceSentenceQuestions() {
+    PracticeQuestion fallback(PracticeQuestion question) {
+      final cloze = _clozeCandidates(
+        question.entry,
+      ).where((candidate) => candidate.$1 == question.meaningIndex).toList();
+      if (cloze.isNotEmpty)
+        return question.copyWith(
+          format: QuestionFormat.cloze,
+          meaningIndex: cloze.first.$1,
+          exampleUsage: cloze.first.$2,
+        );
+      return question.copyWith(format: QuestionFormat.typing);
+    }
+
+    state = state.copyWith(
+      questions: state.questions
+          .map(
+            (q) =>
+                q.format == QuestionFormat.sentenceProduction ? fallback(q) : q,
+          )
+          .toList(),
+      isEvaluatingSentence: false,
+      isRevealed: false,
+      typedText: null,
+      sentenceEvaluation: null,
+      lastAttemptedGrade: null,
+    );
+  }
+
   static List<(int, ExampleUsage)> _clozeCandidates(Entry entry) {
     final candidates = <(int, ExampleUsage)>[];
     for (var index = 0; index < entry.meanings.length; index++) {
@@ -125,10 +214,17 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     Random random,
   ) {
     if (candidates.isEmpty) return null;
-    final meaningIndexes = candidates.map((candidate) => candidate.$1).toSet().toList();
+    final meaningIndexes = candidates
+        .map((candidate) => candidate.$1)
+        .toSet()
+        .toList();
     final meaningIndex = meaningIndexes[random.nextInt(meaningIndexes.length)];
-    final examples = candidates.where((candidate) => candidate.$1 == meaningIndex).toList();
-    return examples[examples.length == 1 ? 0 : 1 + random.nextInt(examples.length - 1)];
+    final examples = candidates
+        .where((candidate) => candidate.$1 == meaningIndex)
+        .toList();
+    return examples[examples.length == 1
+        ? 0
+        : 1 + random.nextInt(examples.length - 1)];
   }
 
   void reveal() {
@@ -207,6 +303,7 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     state = state.copyWith(
       isAssisted: true,
       canConfirmTypo: false,
+      sentenceEvaluation: null,
       lastAttemptedGrade: true,
     );
   }
@@ -222,7 +319,11 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
   void showClozeAnswer() {
     if (state.currentQuestion?.exampleUsage == null || state.isRevealed) return;
-    state = state.copyWith(isRevealed: true, isAssisted: true, lastAttemptedGrade: true);
+    state = state.copyWith(
+      isRevealed: true,
+      isAssisted: true,
+      lastAttemptedGrade: true,
+    );
   }
 
   Future<void> gradeCurrent({required bool correct, DateTime? now}) async {
@@ -239,7 +340,10 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     final isFirstPass = !question.isRepeat;
 
     if (isFirstPass && !state.isExtraPractice) {
-      final updatedEntry = correct
+      final updatedEntry =
+          question.format == QuestionFormat.sentenceProduction && !correct
+          ? PracticeScheduler.gradeSentenceIncorrect(entry, now: now)
+          : correct
           ? (state.isAssisted
                 ? PracticeScheduler.gradeAssistedCorrect(entry, now: now)
                 : PracticeScheduler.gradeCorrect(entry, now: now))
@@ -373,6 +477,8 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
             lastFormat: lastFormat,
             consecutiveCount: consecutiveCount,
             hasClozeExample: cloze.isNotEmpty,
+            hasSentenceMeaning: repeatEntry.meanings.isNotEmpty,
+            sentenceProductionEnabled: false,
             random: rng,
           );
 

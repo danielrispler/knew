@@ -126,6 +126,12 @@
   "typeHebrewHint": "הקלד תשובה",
   "typeEnglishHint": "Type an answer",
   "submitAnswer": "Submit",
+  "sentenceProductionPrompt": "Write a sentence using “{term}”.",
+  "@sentenceProductionPrompt": {
+    "placeholders": {"term": {"type": "String"}}
+  },
+  "sentenceProductionHint": "Write your sentence in English",
+  "getFeedback": "Get feedback",
   "nextQuestion": "Next Question",
   "sessionComplete": "Practice Complete!",
   "sessionCompleteDesc": "Great job! You reviewed {count} terms.",

@@ -299,6 +299,17 @@ class AppLocalizationsHe extends AppLocalizations {
   String get submitAnswer => 'שלח';
 
   @override
+  String sentenceProductionPrompt(String term) {
+    return 'כתוב משפט עם „$term”.';
+  }
+
+  @override
+  String get sentenceProductionHint => 'כתוב את המשפט באנגלית';
+
+  @override
+  String get getFeedback => 'קבל משוב';
+
+  @override
   String get nextQuestion => 'שאלה הבאה';
 
   @override

@@ -301,6 +301,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get submitAnswer => 'Submit';
 
   @override
+  String sentenceProductionPrompt(String term) {
+    return 'Write a sentence using “$term”.';
+  }
+
+  @override
+  String get sentenceProductionHint => 'Write your sentence in English';
+
+  @override
+  String get getFeedback => 'Get feedback';
+
+  @override
   String get nextQuestion => 'Next Question';
 
   @override

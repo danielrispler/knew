@@ -46,6 +46,17 @@ abstract class PracticeScheduler {
     );
   }
 
+  static Entry gradeSentenceIncorrect(Entry entry, {DateTime? now}) {
+    final currentTime = now ?? DateTime.now();
+    final nowIso = currentTime.toUtc().toIso8601String();
+    return entry.copyWith(
+      dueDate: addDaysToLocalDate(currentTime, 1),
+      lastReviewedAt: nowIso,
+      timesWrong: entry.timesWrong + 1,
+      updatedAt: nowIso,
+    );
+  }
+
   static Entry gradeAssistedCorrect(Entry entry, {DateTime? now}) {
     final currentTime = now ?? DateTime.now();
     final nowIso = currentTime.toUtc().toIso8601String();

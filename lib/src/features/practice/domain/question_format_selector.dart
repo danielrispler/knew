@@ -7,13 +7,13 @@ abstract class QuestionFormatSelector {
   /// Weights are deliberately data, so Phase 2 can enable its format without
   /// changing the selection rules.
   static const _weights = <List<int>>[
-    [80, 0, 20, 0],
-    [50, 30, 20, 0],
-    [35, 30, 20, 15],
-    [25, 25, 20, 30],
-    [20, 20, 20, 40],
-    [20, 20, 20, 40],
-    [20, 20, 20, 40],
+    [80, 0, 20, 0, 0],
+    [50, 30, 20, 0, 0],
+    [35, 30, 20, 15, 0],
+    [25, 25, 20, 30, 0],
+    [20, 20, 20, 40, 0],
+    [15, 15, 15, 30, 25],
+    [15, 15, 15, 30, 25],
   ];
 
   static List<double> computeWeights({
@@ -47,6 +47,8 @@ abstract class QuestionFormatSelector {
     required QuestionFormat? lastFormat,
     required int consecutiveCount,
     bool hasClozeExample = false,
+    bool hasSentenceMeaning = false,
+    bool sentenceProductionEnabled = true,
     Random? random,
   }) {
     final rng = random ?? Random();
@@ -72,6 +74,9 @@ abstract class QuestionFormatSelector {
     }
     if (hasClozeExample && entry.level >= 3)
       legalFormats.add(QuestionFormat.cloze);
+    if (sentenceProductionEnabled && hasSentenceMeaning && entry.level >= 5) {
+      legalFormats.add(QuestionFormat.sentenceProduction);
+    }
 
     // 4. Apply 3-in-a-row constraint
     List<QuestionFormat> eligibleFormats = legalFormats;

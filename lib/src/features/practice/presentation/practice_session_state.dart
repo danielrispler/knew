@@ -1,6 +1,7 @@
 import '../../vocabulary/domain/entry.dart';
 import '../domain/answer_checker.dart';
 import '../domain/practice_question.dart';
+import '../domain/sentence_evaluation.dart';
 
 class StageMovement {
   final Entry entry;
@@ -37,6 +38,8 @@ class PracticeSessionState {
   final String? typedText;
   final bool isAssisted;
   final bool canConfirmTypo;
+  final SentenceEvaluation? sentenceEvaluation;
+  final bool isEvaluatingSentence;
 
   const PracticeSessionState({
     this.initialQueue = const [],
@@ -58,6 +61,8 @@ class PracticeSessionState {
     this.typedText,
     this.isAssisted = false,
     this.canConfirmTypo = false,
+    this.sentenceEvaluation,
+    this.isEvaluatingSentence = false,
   });
 
   PracticeQuestion? get currentQuestion {
@@ -130,6 +135,8 @@ class PracticeSessionState {
     Object? typedText = _unset,
     bool? isAssisted,
     bool? canConfirmTypo,
+    Object? sentenceEvaluation = _unset,
+    bool? isEvaluatingSentence,
   }) {
     return PracticeSessionState(
       initialQueue: initialQueue ?? this.initialQueue,
@@ -165,6 +172,10 @@ class PracticeSessionState {
           : typedText as String?,
       isAssisted: isAssisted ?? this.isAssisted,
       canConfirmTypo: canConfirmTypo ?? this.canConfirmTypo,
+      sentenceEvaluation: identical(sentenceEvaluation, _unset)
+          ? this.sentenceEvaluation
+          : sentenceEvaluation as SentenceEvaluation?,
+      isEvaluatingSentence: isEvaluatingSentence ?? this.isEvaluatingSentence,
     );
   }
 }
