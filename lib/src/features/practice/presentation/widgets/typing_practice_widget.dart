@@ -7,12 +7,14 @@ import '../practice_session_state.dart';
 class TypingPracticeWidget extends StatefulWidget {
   final PracticeQuestion question;
   final PracticeSessionState state;
+  final TextEditingController textController;
   final ValueChanged<String> onSubmit;
 
   const TypingPracticeWidget({
     super.key,
     required this.question,
     required this.state,
+    required this.textController,
     required this.onSubmit,
   });
 
@@ -21,28 +23,25 @@ class TypingPracticeWidget extends StatefulWidget {
 }
 
 class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
-  late final TextEditingController _textController;
   late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController(text: widget.state.typedText ?? '');
     _focusNode = FocusNode();
   }
 
   @override
   void didUpdateWidget(covariant TypingPracticeWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.question.entry.id != oldWidget.question.entry.id) {
-      _textController.text = widget.state.typedText ?? '';
+    if (widget.question != oldWidget.question) {
+      widget.textController.text = widget.state.typedText ?? '';
       _focusNode.requestFocus();
     }
   }
 
   @override
   void dispose() {
-    _textController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -105,7 +104,7 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
 
               // TextField
               TextField(
-                controller: _textController,
+                controller: widget.textController,
                 focusNode: _focusNode,
                 enabled: !isRevealed,
                 textDirection: answerDirection,

@@ -15,6 +15,7 @@ class StageMovement {
 }
 
 class PracticeSessionState {
+  static const Object _unset = Object();
   final List<Entry> initialQueue;
   final List<PracticeQuestion> questions;
   final int currentIndex;
@@ -107,17 +108,17 @@ class PracticeSessionState {
     bool? isRevealed,
     bool? isExtraPractice,
     bool? isSaving,
-    String? saveError,
-    bool? lastAttemptedGrade,
+    Object? saveError = _unset,
+    Object? lastAttemptedGrade = _unset,
     Map<String, Entry>? firstPassPreSnapshots,
     Map<String, Entry>? firstPassPostSnapshots,
     List<Entry>? repeatQueue,
     bool? isCompleted,
     bool? canOverride,
-    String? lastGradedEntryId,
-    int? selectedOptionIndex,
-    AnswerCheckResult? answerCheckResult,
-    String? typedText,
+    Object? lastGradedEntryId = _unset,
+    Object? selectedOptionIndex = _unset,
+    Object? answerCheckResult = _unset,
+    Object? typedText = _unset,
   }) {
     return PracticeSessionState(
       initialQueue: initialQueue ?? this.initialQueue,
@@ -126,17 +127,27 @@ class PracticeSessionState {
       isRevealed: isRevealed ?? this.isRevealed,
       isExtraPractice: isExtraPractice ?? this.isExtraPractice,
       isSaving: isSaving ?? this.isSaving,
-      saveError: saveError,
-      lastAttemptedGrade: lastAttemptedGrade ?? this.lastAttemptedGrade,
+      saveError: identical(saveError, _unset) ? this.saveError : saveError as String?,
+      lastAttemptedGrade: identical(lastAttemptedGrade, _unset)
+          ? this.lastAttemptedGrade
+          : lastAttemptedGrade as bool?,
       firstPassPreSnapshots: firstPassPreSnapshots ?? this.firstPassPreSnapshots,
       firstPassPostSnapshots: firstPassPostSnapshots ?? this.firstPassPostSnapshots,
       repeatQueue: repeatQueue ?? this.repeatQueue,
       isCompleted: isCompleted ?? this.isCompleted,
       canOverride: canOverride ?? this.canOverride,
-      lastGradedEntryId: lastGradedEntryId ?? this.lastGradedEntryId,
-      selectedOptionIndex: selectedOptionIndex ?? this.selectedOptionIndex,
-      answerCheckResult: answerCheckResult ?? this.answerCheckResult,
-      typedText: typedText ?? this.typedText,
+      lastGradedEntryId: identical(lastGradedEntryId, _unset)
+          ? this.lastGradedEntryId
+          : lastGradedEntryId as String?,
+      selectedOptionIndex: identical(selectedOptionIndex, _unset)
+          ? this.selectedOptionIndex
+          : selectedOptionIndex as int?,
+      answerCheckResult: identical(answerCheckResult, _unset)
+          ? this.answerCheckResult
+          : answerCheckResult as AnswerCheckResult?,
+      typedText: identical(typedText, _unset)
+          ? this.typedText
+          : typedText as String?,
     );
   }
 }

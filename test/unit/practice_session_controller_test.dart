@@ -5,6 +5,8 @@ import 'package:knew/src/features/vocabulary/domain/meaning.dart';
 import 'package:knew/src/features/vocabulary/data/words_repository.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_providers.dart';
 import 'package:knew/src/features/practice/presentation/practice_providers.dart';
+import 'package:knew/src/features/practice/presentation/practice_session_state.dart';
+import 'package:knew/src/features/practice/domain/answer_checker.dart';
 
 class MockWordsRepository implements WordsRepository {
   final Map<String, Entry> store = {};
@@ -115,6 +117,41 @@ void main() {
   });
 
   group('PracticeSessionNotifier - Initial Queue & Progression', () {
+    test(
+      'copyWith preserves omitted nullable state and clears explicit nulls',
+      () {
+        const initial = PracticeSessionState(
+          saveError: 'save failed',
+          lastAttemptedGrade: true,
+          lastGradedEntryId: 'entry_1',
+          selectedOptionIndex: 2,
+          answerCheckResult: AnswerCheckResult(AnswerCheckStatus.noMatch),
+          typedText: 'answer',
+        );
+
+        final preserved = initial.copyWith(isRevealed: true);
+        expect(preserved.saveError, 'save failed');
+        expect(preserved.selectedOptionIndex, 2);
+        expect(preserved.answerCheckResult, isNotNull);
+        expect(preserved.typedText, 'answer');
+
+        final cleared = initial.copyWith(
+          saveError: null,
+          lastAttemptedGrade: null,
+          lastGradedEntryId: null,
+          selectedOptionIndex: null,
+          answerCheckResult: null,
+          typedText: null,
+        );
+        expect(cleared.saveError, isNull);
+        expect(cleared.lastAttemptedGrade, isNull);
+        expect(cleared.lastGradedEntryId, isNull);
+        expect(cleared.selectedOptionIndex, isNull);
+        expect(cleared.answerCheckResult, isNull);
+        expect(cleared.typedText, isNull);
+      },
+    );
+
     test('Starts session and builds questions from queue selection', () async {
       final e1 = createTestEntry('1', level: 0);
       final e2 = createTestEntry('2', level: 1);

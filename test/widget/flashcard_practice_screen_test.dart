@@ -6,6 +6,21 @@ import 'package:knew/src/features/vocabulary/data/words_repository.dart';
 import 'package:knew/src/features/vocabulary/domain/entry.dart';
 import 'package:knew/src/features/vocabulary/domain/meaning.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_providers.dart';
+import 'package:knew/src/features/settings/presentation/settings_providers.dart';
+
+class TestSettingsNotifier extends SettingsNotifier {
+  TestSettingsNotifier({this.sessionSize = 20});
+
+  final int sessionSize;
+
+  @override
+  Future<SettingsState> build() async => SettingsState(
+    sessionSize: sessionSize,
+    theme: 'system',
+    model: 'gemini-3.8-flash',
+    apiKey: '',
+  );
+}
 
 class TestWordsRepository implements WordsRepository {
   final Map<String, Entry> store = {};
@@ -100,7 +115,10 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [wordsRepositoryProvider.overrideWithValue(repository)],
+          overrides: [
+            wordsRepositoryProvider.overrideWithValue(repository),
+            settingsProvider.overrideWith(() => TestSettingsNotifier()),
+          ],
           child: MaterialApp(
             home: FlashcardPracticeScreen(
               initialLibrary: [testEntry],
@@ -155,4 +173,29 @@ void main() {
       expect(updatedInDb?.level, equals(1));
     },
   );
+
+  testWidgets('uses the configured practice session size', (tester) async {
+    final repository = TestWordsRepository();
+    final secondEntry = testEntry.copyWith(id: 'entry_2', english: 'steady');
+    await repository.insertEntry(testEntry);
+    await repository.insertEntry(secondEntry);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          wordsRepositoryProvider.overrideWithValue(repository),
+          settingsProvider.overrideWith(() => TestSettingsNotifier(sessionSize: 1)),
+        ],
+        child: MaterialApp(
+          home: FlashcardPracticeScreen(
+            initialLibrary: [testEntry, secondEntry],
+            onExit: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Question 1 of 1'), findsOneWidget);
+  });
 }

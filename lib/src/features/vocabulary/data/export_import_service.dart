@@ -397,14 +397,7 @@ class ExportImportService {
         return; // User cancelled
       }
 
-      List<int>? bytes;
-      if (pickedFile.path != null) {
-        bytes = await XFile(pickedFile.path!).readAsBytes();
-      }
-
-      if (bytes == null) {
-        throw ExportImportException('Unable to read selected backup file content.');
-      }
+      final bytes = await pickedFile.readAsBytes();
 
       // Show progress dialog
       if (context.mounted) {

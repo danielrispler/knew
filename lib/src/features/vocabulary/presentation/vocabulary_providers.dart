@@ -53,5 +53,5 @@ class VocabularyListNotifier extends AsyncNotifier<List<Entry>> {
 
 final vocabularyListProvider =
     AsyncNotifierProvider<VocabularyListNotifier, List<Entry>>(() {
-  return VocabularyListNotifier();
-});
+      return VocabularyListNotifier();
+    });

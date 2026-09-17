@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../vocabulary/domain/entry.dart';
+import '../../settings/presentation/settings_providers.dart';
 import '../domain/practice_question.dart';
 import 'practice_providers.dart';
 import 'practice_session_controller.dart';
@@ -32,7 +33,10 @@ class _FlashcardPracticeScreenState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final settings = await ref.read(settingsProvider.future);
+      if (!mounted) return;
+
       final now = DateTime.now();
       final year = now.year.toString().padLeft(4, '0');
       final month = now.month.toString().padLeft(2, '0');
@@ -42,6 +46,7 @@ class _FlashcardPracticeScreenState
       ref.read(practiceSessionProvider.notifier).startSession(
             library: widget.initialLibrary,
             todayDueDate: todayStr,
+            requestedSessionSize: settings.sessionSize,
           );
     });
   }
@@ -232,6 +237,7 @@ class _FlashcardPracticeScreenState
         return TypingPracticeWidget(
           question: question,
           state: state,
+          textController: _typingInputController,
           onSubmit: (text) {
             controller.submitTypedAnswer(text);
           },
@@ -428,8 +434,7 @@ class _FlashcardPracticeScreenState
             height: 52,
             child: FilledButton(
               onPressed: () {
-                final typedText = state.typedText ?? '';
-                controller.submitTypedAnswer(typedText);
+                controller.submitTypedAnswer(_typingInputController.text);
               },
               style: FilledButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,

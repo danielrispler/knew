@@ -1,9 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:knew/src/features/practice/data/tts_service.dart';
 import 'package:knew/src/features/practice/presentation/flashcard_practice_screen.dart';
 import 'package:knew/src/features/practice/presentation/practice_providers.dart';
+import 'package:knew/src/features/practice/presentation/practice_session_controller.dart';
+import 'package:knew/src/features/practice/presentation/practice_session_state.dart';
+import 'package:knew/src/features/practice/domain/practice_question.dart';
+import 'package:knew/src/features/settings/presentation/settings_providers.dart';
 import 'package:knew/src/features/vocabulary/data/words_repository.dart';
 import 'package:knew/src/features/vocabulary/domain/entry.dart';
 import 'package:knew/src/features/vocabulary/domain/meaning.dart';
@@ -87,6 +93,33 @@ class FakeTtsService extends TtsService {
   }
 }
 
+class TestSettingsNotifier extends SettingsNotifier {
+  @override
+  Future<SettingsState> build() async => const SettingsState(
+    sessionSize: 20,
+    theme: 'system',
+    model: 'gemini-3.8-flash',
+    apiKey: '',
+  );
+}
+
+class TypingSessionNotifier extends PracticeSessionNotifier {
+  TypingSessionNotifier(this.question);
+
+  final PracticeQuestion question;
+
+  @override
+  PracticeSessionState build() => PracticeSessionState(questions: [question]);
+
+  @override
+  void startSession({
+    required List<Entry> library,
+    required String todayDueDate,
+    int requestedSessionSize = 20,
+    Random? random,
+  }) {}
+}
+
 void main() {
   late TestWordsRepository wordsRepository;
   late FakeTtsService fakeTtsService;
@@ -124,6 +157,7 @@ void main() {
       overrides: [
         wordsRepositoryProvider.overrideWithValue(wordsRepository),
         ttsServiceProvider.overrideWithValue(fakeTtsService),
+        settingsProvider.overrideWith(() => TestSettingsNotifier()),
       ],
       child: MaterialApp(
         home: FlashcardPracticeScreen(initialLibrary: library, onExit: () {}),
@@ -132,6 +166,48 @@ void main() {
   }
 
   group('FlashcardPracticeScreen - Formats & Interaction', () {
+    testWidgets('Check answer submits the typing field text', (tester) async {
+      final entry = createTestEntry(
+        id: 'typing',
+        english: 'apple',
+        pos: 'noun',
+        hebrewTranslations: ['תפוח'],
+        level: 1,
+        dueDate: '2026-09-15',
+      );
+      final question = PracticeQuestion(
+        entry: entry,
+        direction: PromptDirection.englishToHebrew,
+        format: QuestionFormat.typing,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            wordsRepositoryProvider.overrideWithValue(wordsRepository),
+            ttsServiceProvider.overrideWithValue(fakeTtsService),
+            settingsProvider.overrideWith(() => TestSettingsNotifier()),
+            practiceSessionProvider.overrideWith(
+              () => TypingSessionNotifier(question),
+            ),
+          ],
+          child: MaterialApp(
+            home: FlashcardPracticeScreen(
+              initialLibrary: [entry],
+              onExit: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'תפוח');
+      await tester.tap(find.text('Check answer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Exact match!'), findsOneWidget);
+    });
+
     testWidgets('Audio button triggers TTS and shows snackbar on failure', (
       tester,
     ) async {
