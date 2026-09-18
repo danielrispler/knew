@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../vocabulary/presentation/entry_form_screen.dart';
 import '../../vocabulary/presentation/vocabulary_providers.dart';
+import '../../settings/presentation/settings_providers.dart';
 import '../data/suggested_words_repository.dart';
 import '../domain/suggested_word.dart';
 
@@ -15,6 +16,7 @@ class DiscoverScreen extends ConsumerStatefulWidget {
 class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   SuggestedWordsRepository? _repository;
   List<SuggestedWord>? _words;
+  Future<void>? _prefetching;
 
   @override
   void initState() {
@@ -34,6 +36,33 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         _words = words;
       });
     }
+    _startPrefetch(repository);
+  }
+
+  void _startPrefetch(SuggestedWordsRepository repository) {
+    if (_prefetching != null) return;
+    final pending = _prefetch(repository);
+    _prefetching = pending;
+    pending.whenComplete(() {
+      if (_prefetching == pending) _prefetching = null;
+    });
+  }
+
+  Future<void> _prefetch(SuggestedWordsRepository repository) async {
+    try {
+      final settings = await ref.read(settingsProvider.future);
+      final bandCenter = await repository.bandCenter();
+      await repository.refillGeminiQueue(
+        (excluded) => ref
+            .read(geminiClientProvider)
+            .suggestedWords(
+              excluded: excluded,
+              bandCenter: bandCenter,
+              apiKey: settings.apiKey,
+              model: settings.model,
+            ),
+      );
+    } catch (_) {}
   }
 
   Future<void> _act(Future<void> Function() action) async {
@@ -96,7 +125,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            if (!word.revealed)
+                            if (!word.revealed && word.meaning.isNotEmpty)
                               OutlinedButton(
                                 onPressed: () =>
                                     _act(() => _repository!.reveal(word.key)),
