@@ -25,7 +25,7 @@ Google's public rate-limit page currently directs users to their active quotas i
 
 ## HTTP and schema dialect
 
-`generateContent` remains documented at `POST /v1beta/models/{model}:generateContent`. The API reference now marks `responseSchema` deprecated, while still documenting it. Its OpenAPI subset supports `nullable`, nested arrays/objects, string enums, and explicit `propertyOrdering`; array bounds are int64 strings. `responseJsonSchema` is the JSON Schema alternative. Do not mix the dialects. [REST reference](https://ai.google.dev/api/generate-content)
+Use `POST /v1beta/interactions` with `model`, string `input`, and `system_instruction`. Structured JSON uses `response_format: {type: "text", mime_type: "application/json", schema: ...}`; model behavior belongs in snake-case `generation_config`. [Interactions REST reference](https://ai.google.dev/api/interactions-api-v1)
 
 `x-goog-api-key` is supported. Supply the owner's key in that header, never embed it in the app or documentation. New AI Studio keys are auth keys; existing standard keys may need migration. [API key guide](https://ai.google.dev/gemini-api/docs/api-key)
 
@@ -36,7 +36,7 @@ The copy-pasteable request below answers the brief's explicit `responseSchema` r
 Replace `YOUR_API_KEY` and the example input. The input is a JSON-encoded data object inside the user text part; construct it with a JSON encoder, not string interpolation. Apply the brief's 15-second deadline on the client.
 
 ```http
-POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent
+POST https://generativelanguage.googleapis.com/v1beta/interactions
 Content-Type: application/json
 x-goog-api-key: YOUR_API_KEY
 ```

@@ -283,7 +283,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get geminiApiKey => 'Gemini API Key';
 
   @override
-  String get apiKeyHint => 'Paste API key here';
+  String get apiKeyHint =>
+      'Paste an AI Studio auth key here. Restrict it to Gemini and this app where appropriate.';
 
   @override
   String get apiKeySaved => 'API Key saved securely';

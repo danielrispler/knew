@@ -123,7 +123,7 @@
   "customModelHint": "e.g., gemini-1.5-pro, tunedModels/my-model",
   "customModelHelper": "Enter exact model identifier. Fallbacks will apply if unavailable.",
   "geminiApiKey": "Gemini API Key",
-  "apiKeyHint": "Paste API key here",
+  "apiKeyHint": "Paste an AI Studio auth key here. Restrict it to Gemini and this app where appropriate.",
   "apiKeySaved": "API Key saved securely",
   "testKeyConnection": "Test Key Connection",
   "connectionSuccessful": "Connection successful! Gemini API key is active.",

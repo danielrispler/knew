@@ -281,7 +281,8 @@ class AppLocalizationsHe extends AppLocalizations {
   String get geminiApiKey => 'מפתח API של Gemini';
 
   @override
-  String get apiKeyHint => 'הדבק מפתח API כאן';
+  String get apiKeyHint =>
+      'הדבק כאן מפתח אימות מ-AI Studio. הגבל אותו ל-Gemini ולאפליקציה הזו כשמתאים.';
 
   @override
   String get apiKeySaved => 'מפתח ה-API נשמר בבטחה';

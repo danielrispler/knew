@@ -95,7 +95,7 @@
   "customModelHint": "למשל, gemini-1.5-pro",
   "customModelHelper": "הזן מזהה מודל מדויק. גיבויים יופעלו אם המודל אינו זמין.",
   "geminiApiKey": "מפתח API של Gemini",
-  "apiKeyHint": "הדבק מפתח API כאן",
+  "apiKeyHint": "הדבק כאן מפתח אימות מ-AI Studio. הגבל אותו ל-Gemini ולאפליקציה הזו כשמתאים.",
   "apiKeySaved": "מפתח ה-API נשמר בבטחה",
   "testKeyConnection": "בדוק חיבור מפתח",
   "connectionSuccessful": "החיבור הצליח! מפתח Gemini API פעיל.",

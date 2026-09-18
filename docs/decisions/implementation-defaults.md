@@ -4,7 +4,7 @@ These reversible choices complete the nonvisual gaps in [Map: knew build-ready p
 
 ## Lookup and pronunciation
 
-Adopt the current model, responseJsonSchema configuration, parser, and specific error messages in [Gemini research](../research/gemini-api.md). Keep one 15-second request deadline, manual retry, and the editable model setting. Settings Test key performs a small real lookup through the same request/parser path and reports configuration errors; it consumes quota. Public documentation cannot determine this owner's quota or prove that their key works.
+Adopt the current model, Interactions `response_format` JSON schema contract, parser, and specific error messages in [Gemini research](../research/gemini-api.md). Keep one 15-second request deadline, manual retry, and the editable model setting. Settings Test key performs a small real lookup through the same request/parser path and reports configuration errors; it consumes quota. Public documentation cannot determine this owner's quota or prove that their key works.
 
 Hebrew lookup alternatives name different English terms; selecting another alternative triggers a fresh English lookup so its meanings actually describe it. Keep the current draft until that succeeds, and permit manual editing if it fails. Discard stale responses after the input changes or the user leaves. Confirm before replacing any manually edited lookup fields. Never send Source or Context to Gemini. Changes to the selected English term use the ordinary duplicate check before save.
 

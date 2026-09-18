@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @apiKeyHint.
   ///
   /// In en, this message translates to:
-  /// **'Paste API key here'**
+  /// **'Paste an AI Studio auth key here. Restrict it to Gemini and this app where appropriate.'**
   String get apiKeyHint;
 
   /// No description provided for @apiKeySaved.
