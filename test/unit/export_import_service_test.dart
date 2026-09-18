@@ -53,22 +53,57 @@ void main() {
 
     test('validateAndParseImport accepts valid export payload', () {
       final jsonStr = ExportImportService.generateExportPayload([validEntry]);
-      final entries = ExportImportService.validateAndParseImport(utf8.encode(jsonStr));
+      final entries = ExportImportService.validateAndParseImport(
+        utf8.encode(jsonStr),
+      );
 
       expect(entries.length, equals(1));
       expect(entries.first.id, equals(validEntry.id));
       expect(entries.first.english, equals(validEntry.english));
     });
 
+    test('exports and parses optional discovery history', () {
+      final jsonStr = ExportImportService.generateExportPayload(
+        [validEntry],
+        discovery: {
+          'bandCenter': 42,
+          'known': [
+            {'key': 'known', 'updatedAt': '2026-09-15T08:00:00.000Z'},
+          ],
+          'learned': [
+            {'key': 'learned', 'updatedAt': '2026-09-16T08:00:00.000Z'},
+          ],
+        },
+      );
+
+      final map = jsonDecode(jsonStr) as Map<String, dynamic>;
+      expect(map['discovery'], isA<Map>());
+      expect(
+        ExportImportService.parseDiscoveryImport(utf8.encode(jsonStr)),
+        equals(map['discovery']),
+      );
+    });
+
+    test('accepts backups without discovery history', () {
+      final jsonStr = ExportImportService.generateExportPayload([validEntry]);
+
+      expect(
+        ExportImportService.parseDiscoveryImport(utf8.encode(jsonStr)),
+        isNull,
+      );
+    });
+
     test('rejects file larger than 10MB', () {
       final dummyBytes = List<int>.filled(10 * 1024 * 1024 + 1, 0);
       expect(
         () => ExportImportService.validateAndParseImport(dummyBytes),
-        throwsA(isA<ExportImportException>().having(
-          (e) => e.message,
-          'message',
-          contains('10 MB'),
-        )),
+        throwsA(
+          isA<ExportImportException>().having(
+            (e) => e.message,
+            'message',
+            contains('10 MB'),
+          ),
+        ),
       );
     });
 
@@ -79,12 +114,16 @@ void main() {
         'words': [],
       };
       expect(
-        () => ExportImportService.validateAndParseImport(utf8.encode(jsonEncode(payload))),
-        throwsA(isA<ExportImportException>().having(
-          (e) => e.message,
-          'message',
-          contains('This backup needs a newer version of knew'),
-        )),
+        () => ExportImportService.validateAndParseImport(
+          utf8.encode(jsonEncode(payload)),
+        ),
+        throwsA(
+          isA<ExportImportException>().having(
+            (e) => e.message,
+            'message',
+            contains('This backup needs a newer version of knew'),
+          ),
+        ),
       );
     });
 
@@ -101,7 +140,7 @@ void main() {
                 'partOfSpeech': 'noun',
                 'hebrew': ['משהו'],
                 'definition': 'something',
-              }
+              },
             ],
             'level': 0,
             'dueDate': '2026-09-15',
@@ -110,11 +149,13 @@ void main() {
             'timesWrong': 0,
             'createdAt': '2026-09-15T08:00:00.000Z',
             'updatedAt': '2026-09-15T08:00:00.000Z',
-          }
+          },
         ],
       };
       expect(
-        () => ExportImportService.validateAndParseImport(utf8.encode(jsonEncode(payload))),
+        () => ExportImportService.validateAndParseImport(
+          utf8.encode(jsonEncode(payload)),
+        ),
         throwsA(isA<ExportImportException>()),
       );
     });
@@ -132,7 +173,7 @@ void main() {
                 'partOfSpeech': 'noun',
                 'hebrew': ['בדיקה'],
                 'definition': 'test',
-              }
+              },
             ],
             'level': 0,
             'dueDate': '2026-09-15',
@@ -150,7 +191,7 @@ void main() {
                 'partOfSpeech': 'noun',
                 'hebrew': ['בדיקה'],
                 'definition': 'test',
-              }
+              },
             ],
             'level': 0,
             'dueDate': '2026-09-15',
@@ -163,12 +204,16 @@ void main() {
         ],
       };
       expect(
-        () => ExportImportService.validateAndParseImport(utf8.encode(jsonEncode(payload))),
-        throwsA(isA<ExportImportException>().having(
-          (e) => e.message,
-          'message',
-          contains('Duplicate term key'),
-        )),
+        () => ExportImportService.validateAndParseImport(
+          utf8.encode(jsonEncode(payload)),
+        ),
+        throwsA(
+          isA<ExportImportException>().having(
+            (e) => e.message,
+            'message',
+            contains('Duplicate term key'),
+          ),
+        ),
       );
     });
 
@@ -185,7 +230,7 @@ void main() {
                 'partOfSpeech': 'noun',
                 'hebrew': ['בדיקה'],
                 'definition': 'test',
-              }
+              },
             ],
             'level': 0,
             'dueDate': '2026-02-30', // Invalid calendar date
@@ -198,12 +243,16 @@ void main() {
         ],
       };
       expect(
-        () => ExportImportService.validateAndParseImport(utf8.encode(jsonEncode(payload))),
-        throwsA(isA<ExportImportException>().having(
-          (e) => e.message,
-          'message',
-          contains('invalid calendar date'),
-        )),
+        () => ExportImportService.validateAndParseImport(
+          utf8.encode(jsonEncode(payload)),
+        ),
+        throwsA(
+          isA<ExportImportException>().having(
+            (e) => e.message,
+            'message',
+            contains('invalid calendar date'),
+          ),
+        ),
       );
     });
   });

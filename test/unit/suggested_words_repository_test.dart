@@ -22,6 +22,8 @@ void main() {
         Candidate('four', 'ארבע'),
         Candidate('five', 'חמש'),
         Candidate('six', 'שש'),
+        Candidate('known', 'ידוע'),
+        Candidate('learned', 'נלמד'),
       ],
     );
   });
@@ -80,4 +82,37 @@ void main() {
       expect(row['skip_count'], 3);
     },
   );
+
+  test('merges discovery history without replacing the active batch', () async {
+    final batch = await repository.loadOrCreateBatch();
+    await repository.mergeHistory({
+      'bandCenter': 4,
+      'known': [
+        {'key': 'known', 'updatedAt': '2026-09-15T08:00:00.000Z'},
+      ],
+      'learned': [
+        {'key': 'learned', 'updatedAt': '2026-09-16T08:00:00.000Z'},
+      ],
+    });
+
+    expect(
+      (await repository.batch()).map((word) => word.key),
+      equals(batch.map((word) => word.key)),
+    );
+    expect(
+      await db.query(
+        'suggested_words',
+        where: "status IN ('known', 'learned')",
+      ),
+      hasLength(2),
+    );
+    expect(
+      (await db.query(
+        'settings',
+        where: 'name = ?',
+        whereArgs: ['discovery_band_center'],
+      )).single['value'],
+      '4',
+    );
+  });
 }

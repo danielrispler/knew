@@ -269,6 +269,74 @@ class SuggestedWordsRepository {
     await _setStatus(key, 'learned');
   }
 
+  Future<Map<String, dynamic>> exportHistory() async {
+    final history = await db.query(
+      'suggested_words',
+      columns: ['english_key', 'status', 'updated_at'],
+      where: "status IN ('known', 'learned')",
+    );
+    return {
+      'bandCenter': await _band(),
+      for (final status in ['known', 'learned'])
+        status: history
+            .where((row) => row['status'] == status)
+            .map(
+              (row) => {
+                'key': row['english_key'],
+                'updatedAt': row['updated_at'],
+              },
+            )
+            .toList(),
+    };
+  }
+
+  Future<void> mergeHistory(Map<String, dynamic> history) async {
+    await db.transaction((txn) async {
+      for (final status in ['known', 'learned']) {
+        for (final record in history[status] as List) {
+          final key = (record as Map<String, dynamic>)['key'] as String;
+          final existing = await txn.query(
+            'suggested_words',
+            where: 'english_key = ?',
+            whereArgs: [key],
+          );
+          if (existing.singleOrNull?['status'] == 'batch') continue;
+          final candidate = pool
+              .where((candidate) => candidate.key == key)
+              .firstOrNull;
+          if (candidate == null) continue;
+          final values = {
+            'status': status,
+            'batch_order': null,
+            'updated_at': record['updatedAt'],
+          };
+          if (existing.isEmpty) {
+            await txn.insert('suggested_words', {
+              'english_key': key,
+              'term': candidate.term,
+              'frequency_rank': pool.indexOf(candidate) + 1,
+              ...values,
+              'revealed_before_action': 0,
+              'skip_count': 0,
+              'created_at': record['updatedAt'],
+            });
+          } else {
+            await txn.update(
+              'suggested_words',
+              values,
+              where: 'english_key = ?',
+              whereArgs: [key],
+            );
+          }
+        }
+      }
+      await txn.insert('settings', {
+        'name': 'discovery_band_center',
+        'value': '${_clamp(history['bandCenter'] as int)}',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+  }
+
   Future<void> _setStatus(String key, String status) => db.update(
     'suggested_words',
     {

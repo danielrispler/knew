@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../domain/entry.dart';
 import '../domain/meaning.dart';
 import '../presentation/vocabulary_providers.dart';
+import '../../discover/data/suggested_words_repository.dart';
 
 class ExportImportException implements Exception {
   final String message;
@@ -28,7 +29,10 @@ class ExportImportService {
   static final RegExp _dateRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
   /// Generates a pretty-printed JSON v1 payload representing the provided entries.
-  static String generateExportPayload(List<Entry> entries) {
+  static String generateExportPayload(
+    List<Entry> entries, {
+    Map<String, dynamic>? discovery,
+  }) {
     if (entries.length > maxEntriesCount) {
       throw ExportImportException(
         'Library exceeds maximum export limit of $maxEntriesCount entries.',
@@ -63,6 +67,7 @@ class ExportImportService {
       'version': 1,
       'exportedAt': nowUtc,
       'words': wordsJson,
+      'discovery': ?discovery,
     };
 
     const encoder = JsonEncoder.withIndent('  ');
@@ -134,7 +139,9 @@ class ExportImportService {
       // ID
       final id = item['id'];
       if (id is! String || !_uuidRegex.hasMatch(id)) {
-        throw ExportImportException('Entry at index $i has invalid UUID: "$id".');
+        throw ExportImportException(
+          'Entry at index $i has invalid UUID: "$id".',
+        );
       }
       if (seenIds.contains(id)) {
         throw ExportImportException('Duplicate UUID "$id" found at index $i.');
@@ -144,17 +151,23 @@ class ExportImportService {
       // English term
       final english = item['english'];
       if (english is! String || english.trim().isEmpty) {
-        throw ExportImportException('Entry at index $i has missing or empty English term.');
+        throw ExportImportException(
+          'Entry at index $i has missing or empty English term.',
+        );
       }
       final englishKey = Entry.generateKey(english);
       if (seenEnglishKeys.contains(englishKey)) {
-        throw ExportImportException('Duplicate term key "$englishKey" found at index $i.');
+        throw ExportImportException(
+          'Duplicate term key "$englishKey" found at index $i.',
+        );
       }
       seenEnglishKeys.add(englishKey);
 
       // Meanings
       final meaningsRaw = item['meanings'];
-      if (meaningsRaw is! List || meaningsRaw.isEmpty || meaningsRaw.length > 3) {
+      if (meaningsRaw is! List ||
+          meaningsRaw.isEmpty ||
+          meaningsRaw.length > 3) {
         throw ExportImportException(
           'Entry "$english" (index $i) must have between 1 and 3 meanings.',
         );
@@ -265,7 +278,8 @@ class ExportImportService {
           );
         }
       } else {
-        if (lastReviewedAt == null || DateTime.tryParse(lastReviewedAt) == null) {
+        if (lastReviewedAt == null ||
+            DateTime.tryParse(lastReviewedAt) == null) {
           throw ExportImportException(
             'Reviewed entry "$english" (index $i) requires valid lastReviewedAt timestamp.',
           );
@@ -280,12 +294,16 @@ class ExportImportService {
       // Timestamps
       final createdAt = item['createdAt'];
       if (createdAt is! String || DateTime.tryParse(createdAt) == null) {
-        throw ExportImportException('Entry "$english" (index $i) missing valid createdAt.');
+        throw ExportImportException(
+          'Entry "$english" (index $i) missing valid createdAt.',
+        );
       }
 
       final updatedAt = item['updatedAt'];
       if (updatedAt is! String || DateTime.tryParse(updatedAt) == null) {
-        throw ExportImportException('Entry "$english" (index $i) missing valid updatedAt.');
+        throw ExportImportException(
+          'Entry "$english" (index $i) missing valid updatedAt.',
+        );
       }
 
       final createdInst = DateTime.parse(createdAt).toUtc();
@@ -311,8 +329,12 @@ class ExportImportService {
           english: english.trim(),
           englishKey: englishKey,
           meanings: parsedMeanings,
-          source: (source != null && source.trim().isNotEmpty) ? source.trim() : null,
-          context: (context != null && context.trim().isNotEmpty) ? context.trim() : null,
+          source: (source != null && source.trim().isNotEmpty)
+              ? source.trim()
+              : null,
+          context: (context != null && context.trim().isNotEmpty)
+              ? context.trim()
+              : null,
           level: level,
           dueDate: dueDate,
           lastReviewedAt: lastReviewedAt,
@@ -327,13 +349,44 @@ class ExportImportService {
     return parsedEntries;
   }
 
+  /// Parses the optional Discover data from a valid or legacy backup.
+  static Map<String, dynamic>? parseDiscoveryImport(List<int> bytes) {
+    final decoded = jsonDecode(utf8.decode(bytes));
+    if (decoded is! Map<String, dynamic> || !decoded.containsKey('discovery')) {
+      return null;
+    }
+    final discovery = decoded['discovery'];
+    if (discovery is! Map<String, dynamic> ||
+        discovery['bandCenter'] is! int ||
+        discovery['known'] is! List ||
+        discovery['learned'] is! List) {
+      throw ExportImportException('Invalid discovery backup data.');
+    }
+    for (final status in ['known', 'learned']) {
+      for (final record in discovery[status] as List) {
+        if (record is! Map<String, dynamic> ||
+            record['key'] is! String ||
+            (record['key'] as String).isEmpty ||
+            record['updatedAt'] is! String ||
+            DateTime.tryParse(record['updatedAt'] as String) == null) {
+          throw ExportImportException('Invalid discovery $status record.');
+        }
+      }
+    }
+    return discovery;
+  }
+
   /// Triggers system share sheet to export all vocabulary entries.
   static Future<void> exportData(BuildContext context, WidgetRef ref) async {
     try {
       final repository = ref.read(wordsRepositoryProvider);
       final entries = await repository.getAllEntries();
+      final db = await ref.read(databaseProvider.future);
+      final discovery = await SuggestedWordsRepository(db).exportHistory();
 
-      if (entries.isEmpty) {
+      if (entries.isEmpty &&
+          discovery['known'].isEmpty &&
+          discovery['learned'].isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No vocabulary entries to export.')),
@@ -342,7 +395,7 @@ class ExportImportService {
         return;
       }
 
-      final jsonPayload = generateExportPayload(entries);
+      final jsonPayload = generateExportPayload(entries, discovery: discovery);
       final bytes = utf8.encode(jsonPayload);
 
       final timestamp = DateTime.now()
@@ -373,7 +426,9 @@ class ExportImportService {
 
       if (result.status == ShareResultStatus.success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vocabulary backup shared successfully.')),
+          const SnackBar(
+            content: Text('Vocabulary backup shared successfully.'),
+          ),
         );
       }
     } catch (e) {
@@ -404,16 +459,19 @@ class ExportImportService {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (ctx) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (ctx) => const Center(child: CircularProgressIndicator()),
         );
       }
 
       final parsedEntries = validateAndParseImport(bytes);
+      final discovery = parseDiscoveryImport(bytes);
 
       final repository = ref.read(wordsRepositoryProvider);
       final mergeResult = await repository.mergeEntries(parsedEntries);
+      if (discovery != null) {
+        final db = await ref.read(databaseProvider.future);
+        await SuggestedWordsRepository(db).mergeHistory(discovery);
+      }
 
       // Refresh providers
       ref.read(vocabularyListProvider.notifier).refreshList();
@@ -457,7 +515,9 @@ class ExportImportService {
           builder: (ctx) => AlertDialog(
             title: const Text('Import Failed'),
             content: Text(
-              e is ExportImportException ? e.message : 'Error importing backup: $e',
+              e is ExportImportException
+                  ? e.message
+                  : 'Error importing backup: $e',
             ),
             actions: [
               TextButton(
