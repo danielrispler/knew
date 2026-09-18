@@ -58,7 +58,7 @@ class MeaningFormData {
 class EntryFormScreen extends ConsumerStatefulWidget {
   final Entry? initialEntry;
   final String? initialTerm;
-  final Future<void> Function()? onSaved;
+  final Future<void> Function(Entry savedEntry)? onSaved;
   final TtsService? ttsService;
 
   const EntryFormScreen({
@@ -438,7 +438,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           context: _contextController.text.trim(),
         );
         await repository.insertEntry(newEntry);
-        await widget.onSaved?.call();
+        await widget.onSaved?.call(newEntry);
       }
 
       await ref.read(vocabularyListProvider.notifier).refreshList();

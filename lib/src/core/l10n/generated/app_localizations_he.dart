@@ -54,6 +54,30 @@ class AppLocalizationsHe extends AppLocalizations {
   String get editTermTitle => 'עריכת מונח';
 
   @override
+  String get discoverTitle => 'גילוי';
+
+  @override
+  String get discoverNewBatch => 'קבוצה חדשה';
+
+  @override
+  String get discoverAllCaughtUp => 'סיימת לעת עתה';
+
+  @override
+  String get discoverMoreWords => 'מונחים נוספים';
+
+  @override
+  String get discoverRevealMeaning => 'חשוף משמעות';
+
+  @override
+  String get discoverKnown => 'אני מכיר/ה את זה';
+
+  @override
+  String get discoverSkip => 'דלג/י';
+
+  @override
+  String get discoverLearn => 'למד/י';
+
+  @override
   String get searchPlaceholder => 'חיפוש מונחים או תרגומים...';
 
   @override

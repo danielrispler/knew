@@ -130,7 +130,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.auto_awesome_outlined),
-            tooltip: 'Discover',
+            tooltip: l10n.discoverTitle,
             onPressed: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const DiscoverScreen())),

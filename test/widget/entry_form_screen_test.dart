@@ -833,6 +833,7 @@ void main() {
       'Save to Library saves entry and navigates back with snackbar confirmation',
       (WidgetTester tester) async {
         final fakeRepo = FakeWordsRepository();
+        String? savedKey;
         final mockHttpClient = MockClient((request) async {
           final payload = {
             'candidates': [
@@ -887,7 +888,9 @@ void main() {
             ],
             child: MaterialApp(
               theme: AppTheme.lightTheme,
-              home: const EntryFormScreen(),
+              home: EntryFormScreen(
+                onSaved: (entry) async => savedKey = entry.englishKey,
+              ),
             ),
           ),
         );
@@ -909,6 +912,7 @@ void main() {
         expect(fakeRepo.entries.length, 1);
         final savedEntry = fakeRepo.entries.values.first;
         expect(savedEntry.english, 'tenacious');
+        expect(savedKey, 'tenacious');
         expect(savedEntry.meanings.first.partOfSpeech, 'adjective');
         // Primary translation 'עקשן' was pre-selected
         expect(savedEntry.meanings.first.hebrewTranslations, ['עקשן']);

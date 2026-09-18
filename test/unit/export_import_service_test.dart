@@ -68,7 +68,11 @@ void main() {
         discovery: {
           'bandCenter': 42,
           'known': [
-            {'key': 'known', 'updatedAt': '2026-09-15T08:00:00.000Z'},
+            {
+              'key': 'known',
+              'term': 'Known term',
+              'updatedAt': '2026-09-15T08:00:00.000Z',
+            },
           ],
           'learned': [
             {'key': 'learned', 'updatedAt': '2026-09-16T08:00:00.000Z'},
@@ -81,6 +85,26 @@ void main() {
       expect(
         ExportImportService.parseDiscoveryImport(utf8.encode(jsonStr)),
         equals(map['discovery']),
+      );
+      final known = ((map['discovery'] as Map)['known'] as List).single as Map;
+      expect(known['term'], 'Known term');
+    });
+
+    test('accepts legacy key-only discovery history', () {
+      final jsonStr = ExportImportService.generateExportPayload(
+        [validEntry],
+        discovery: {
+          'bandCenter': 42,
+          'known': [
+            {'key': 'known', 'updatedAt': '2026-09-15T08:00:00.000Z'},
+          ],
+          'learned': [],
+        },
+      );
+
+      expect(
+        ExportImportService.parseDiscoveryImport(utf8.encode(jsonStr)),
+        isNotNull,
       );
     });
 

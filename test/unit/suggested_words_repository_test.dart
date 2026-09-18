@@ -137,6 +137,147 @@ void main() {
   );
 
   test(
+    'builds role-distributed local batches without duplicate Candidates',
+    () async {
+      await db.insert('settings', {
+        'name': 'discovery_band_center',
+        'value': '4',
+      });
+
+      final batch = await repository.newBatch();
+
+      expect(batch.map((word) => word.rank), equals([3, 4, 5, 6, 2]));
+      expect(batch.map((word) => word.key).toSet(), hasLength(5));
+    },
+  );
+
+  test('uses a fifth local target when Gemini is unavailable', () async {
+    await db.insert('settings', {
+      'name': 'discovery_band_center',
+      'value': '1',
+    });
+
+    final batch = await repository.newBatch();
+
+    expect(batch, hasLength(5));
+    expect(batch.map((word) => word.key).toSet(), hasLength(5));
+    expect(batch.map((word) => word.rank), equals([1, 2, 3, 4, 5]));
+  });
+
+  test(
+    'falls back across excluded ranks without duplicate Candidates',
+    () async {
+      final now = DateTime.now().toUtc().toIso8601String();
+      await db.insert('settings', {
+        'name': 'discovery_band_center',
+        'value': '4',
+      });
+      await db.insert('suggested_words', {
+        'english_key': 'four',
+        'term': 'four',
+        'frequency_rank': 4,
+        'status': 'known',
+        'skip_count': 0,
+        'created_at': now,
+        'updated_at': now,
+      });
+
+      final batch = await repository.newBatch();
+
+      expect(batch.map((word) => word.key), isNot(contains('four')));
+      expect(batch.map((word) => word.key).toSet(), hasLength(5));
+    },
+  );
+
+  test('uses imported history terms outside the Candidate Pool', () async {
+    await repository.mergeHistory({
+      'bandCenter': 4,
+      'known': [
+        {
+          'key': 'personal term',
+          'term': 'Personal Term',
+          'updatedAt': '2026-09-15T08:00:00.000Z',
+        },
+      ],
+      'learned': [],
+    });
+
+    final row = (await db.query(
+      'suggested_words',
+      where: 'english_key = ?',
+      whereArgs: ['personal term'],
+    )).single;
+    expect(row['term'], 'Personal Term');
+    expect(row['frequency_rank'], isNull);
+    expect(row['status'], 'known');
+  });
+
+  test('imported history replaces a matching active batch record', () async {
+    final batch = await repository.newBatch();
+    final word = batch.first;
+
+    await repository.mergeHistory({
+      'bandCenter': 4,
+      'known': [
+        {
+          'key': word.key,
+          'term': word.term,
+          'updatedAt': '2026-09-15T08:00:00.000Z',
+        },
+      ],
+      'learned': [],
+    });
+
+    expect(await repository.batch(), isNot(contains(word)));
+    expect(
+      (await db.query(
+        'suggested_words',
+        where: 'english_key = ?',
+        whereArgs: [word.key],
+      )).single['status'],
+      'known',
+    );
+  });
+
+  test(
+    'only marks the Suggested Word Learned when its saved key matches',
+    () async {
+      final word = (await repository.newBatch()).first;
+
+      await repository.markLearnedIfSaved(word.key, 'edited term');
+      expect(
+        (await repository.batch()).map((item) => item.key),
+        contains(word.key),
+      );
+
+      await repository.markLearnedIfSaved(word.key, word.key);
+      expect(
+        (await repository.batch()).map((item) => item.key),
+        isNot(contains(word.key)),
+      );
+    },
+  );
+
+  test('uses the legacy key as an imported history term', () async {
+    await repository.mergeHistory({
+      'bandCenter': 4,
+      'known': [],
+      'learned': [
+        {'key': 'legacy Gemini term', 'updatedAt': '2026-09-15T08:00:00.000Z'},
+      ],
+    });
+
+    final history = await repository.exportHistory();
+    expect(history['learned'], [
+      {
+        'key': 'legacy Gemini term',
+        'term': 'legacy Gemini term',
+        'updatedAt': '2026-09-15T08:00:00.000Z',
+      },
+    ]);
+  });
+
+  test(
     'does not promote a queued word that was added to the library',
     () async {
       await repository.refillGeminiQueue((_) async => ['personal word']);

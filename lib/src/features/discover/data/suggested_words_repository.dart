@@ -159,13 +159,9 @@ class SuggestedWordsRepository {
     );
     final excluded = await _excluded(now);
     final center = await _band();
-    final candidates =
-        pool.where((candidate) => !excluded.contains(candidate.key)).toList()
-          ..sort(
-            (a, b) => (pool.indexOf(a) + 1 - center).abs().compareTo(
-              (pool.indexOf(b) + 1 - center).abs(),
-            ),
-          );
+    final candidates = pool
+        .where((candidate) => !excluded.contains(candidate.key))
+        .toList();
     final queuedRows = await db.query(
       'suggested_words',
       where: 'status = ?',
@@ -179,7 +175,33 @@ class SuggestedWordsRepository {
     final queued = queuedRows
         .where((row) => !libraryKeys.contains(row['english_key']))
         .toList();
-    final batchCandidates = candidates.take(queued.isEmpty ? 5 : 4).toList();
+    final used = <String>{};
+    Candidate? closest(int target) {
+      Candidate? result;
+      for (final candidate in candidates) {
+        if (used.contains(candidate.key)) continue;
+        if (result == null ||
+            (pool.indexOf(candidate) + 1 - target).abs() <
+                (pool.indexOf(result) + 1 - target).abs()) {
+          result = candidate;
+        }
+      }
+      if (result != null) used.add(result.key);
+      return result;
+    }
+
+    final probeDistance = (pool.length * .1).round().clamp(1, pool.length);
+    final targets = [
+      center - probeDistance,
+      center,
+      center,
+      center + probeDistance,
+      if (queued.isEmpty) center,
+    ];
+    final batchCandidates = targets
+        .map(closest)
+        .whereType<Candidate>()
+        .toList();
     for (var i = 0; i < batchCandidates.length; i++) {
       final c = batchCandidates[i];
       final row = await db.query(
@@ -342,10 +364,15 @@ class SuggestedWordsRepository {
     await _setStatus(key, 'learned');
   }
 
+  Future<void> markLearnedIfSaved(String suggestedWordKey, String savedKey) =>
+      suggestedWordKey == savedKey
+      ? markLearned(suggestedWordKey)
+      : Future.value();
+
   Future<Map<String, dynamic>> exportHistory() async {
     final history = await db.query(
       'suggested_words',
-      columns: ['english_key', 'status', 'updated_at'],
+      columns: ['english_key', 'term', 'status', 'updated_at'],
       where: "status IN ('known', 'learned')",
     );
     return {
@@ -356,6 +383,7 @@ class SuggestedWordsRepository {
             .map(
               (row) => {
                 'key': row['english_key'],
+                'term': row['term'],
                 'updatedAt': row['updated_at'],
               },
             )
@@ -367,36 +395,38 @@ class SuggestedWordsRepository {
     await db.transaction((txn) async {
       for (final status in ['known', 'learned']) {
         for (final record in history[status] as List) {
-          final key = (record as Map<String, dynamic>)['key'] as String;
+          final values = record as Map<String, dynamic>;
+          final key = values['key'] as String;
+          final term = (values['term'] as String?) ?? key;
           final existing = await txn.query(
             'suggested_words',
             where: 'english_key = ?',
             whereArgs: [key],
           );
-          if (existing.singleOrNull?['status'] == 'batch') continue;
           final candidate = pool
               .where((candidate) => candidate.key == key)
               .firstOrNull;
-          if (candidate == null) continue;
-          final values = {
+          final statusValues = {
+            'term': term,
+            'frequency_rank': candidate == null
+                ? null
+                : pool.indexOf(candidate) + 1,
             'status': status,
             'batch_order': null,
-            'updated_at': record['updatedAt'],
+            'updated_at': values['updatedAt'],
           };
           if (existing.isEmpty) {
             await txn.insert('suggested_words', {
               'english_key': key,
-              'term': candidate.term,
-              'frequency_rank': pool.indexOf(candidate) + 1,
-              ...values,
+              ...statusValues,
               'revealed_before_action': 0,
               'skip_count': 0,
-              'created_at': record['updatedAt'],
+              'created_at': values['updatedAt'],
             });
           } else {
             await txn.update(
               'suggested_words',
-              values,
+              statusValues,
               where: 'english_key = ?',
               whereArgs: [key],
             );

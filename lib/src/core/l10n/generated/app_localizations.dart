@@ -188,6 +188,54 @@ abstract class AppLocalizations {
   /// **'Edit Term'**
   String get editTermTitle;
 
+  /// No description provided for @discoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get discoverTitle;
+
+  /// No description provided for @discoverNewBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'New batch'**
+  String get discoverNewBatch;
+
+  /// No description provided for @discoverAllCaughtUp.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up'**
+  String get discoverAllCaughtUp;
+
+  /// No description provided for @discoverMoreWords.
+  ///
+  /// In en, this message translates to:
+  /// **'More terms'**
+  String get discoverMoreWords;
+
+  /// No description provided for @discoverRevealMeaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal meaning'**
+  String get discoverRevealMeaning;
+
+  /// No description provided for @discoverKnown.
+  ///
+  /// In en, this message translates to:
+  /// **'I know this'**
+  String get discoverKnown;
+
+  /// No description provided for @discoverSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get discoverSkip;
+
+  /// No description provided for @discoverLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get discoverLearn;
+
   /// No description provided for @searchPlaceholder.
   ///
   /// In en, this message translates to:

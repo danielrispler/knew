@@ -54,6 +54,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editTermTitle => 'Edit Term';
 
   @override
+  String get discoverTitle => 'Discover';
+
+  @override
+  String get discoverNewBatch => 'New batch';
+
+  @override
+  String get discoverAllCaughtUp => 'All caught up';
+
+  @override
+  String get discoverMoreWords => 'More terms';
+
+  @override
+  String get discoverRevealMeaning => 'Reveal meaning';
+
+  @override
+  String get discoverKnown => 'I know this';
+
+  @override
+  String get discoverSkip => 'Skip';
+
+  @override
+  String get discoverLearn => 'Learn';
+
+  @override
   String get searchPlaceholder => 'Search terms or meanings...';
 
   @override

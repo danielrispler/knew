@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 
 import '../../vocabulary/presentation/entry_form_screen.dart';
 import '../../vocabulary/presentation/vocabulary_providers.dart';
@@ -75,11 +76,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final words = _words;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Discover'),
+        title: Text(context.l10n.discoverTitle),
         actions: [
           TextButton(
             onPressed: _repository == null ? null : () => _load(fresh: true),
-            child: const Text('New batch'),
+            child: Text(context.l10n.discoverNewBatch),
           ),
         ],
       ),
@@ -92,11 +93,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 children: [
                   const Icon(Icons.done_all, size: 56),
                   const SizedBox(height: 12),
-                  const Text('All caught up'),
+                  Text(context.l10n.discoverAllCaughtUp),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: () => _load(fresh: true),
-                    child: const Text('More words'),
+                    child: Text(context.l10n.discoverMoreWords),
                   ),
                 ],
               ),
@@ -129,17 +130,17 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                               OutlinedButton(
                                 onPressed: () =>
                                     _act(() => _repository!.reveal(word.key)),
-                                child: const Text('Reveal meaning'),
+                                child: Text(context.l10n.discoverRevealMeaning),
                               ),
                             OutlinedButton(
                               onPressed: () =>
                                   _act(() => _repository!.known(word)),
-                              child: const Text('I know this'),
+                              child: Text(context.l10n.discoverKnown),
                             ),
                             OutlinedButton(
                               onPressed: () =>
                                   _act(() => _repository!.skip(word.key)),
-                              child: const Text('Skip'),
+                              child: Text(context.l10n.discoverSkip),
                             ),
                             FilledButton(
                               onPressed: () async {
@@ -147,14 +148,17 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                                   MaterialPageRoute(
                                     builder: (_) => EntryFormScreen(
                                       initialTerm: word.term,
-                                      onSaved: () =>
-                                          _repository!.markLearned(word.key),
+                                      onSaved: (savedEntry) =>
+                                          _repository!.markLearnedIfSaved(
+                                            word.key,
+                                            savedEntry.englishKey,
+                                          ),
                                     ),
                                   ),
                                 );
                                 await _load();
                               },
-                              child: const Text('Learn'),
+                              child: Text(context.l10n.discoverLearn),
                             ),
                           ],
                         ),

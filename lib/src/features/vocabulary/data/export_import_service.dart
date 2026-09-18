@@ -367,6 +367,9 @@ class ExportImportService {
         if (record is! Map<String, dynamic> ||
             record['key'] is! String ||
             (record['key'] as String).isEmpty ||
+            (record['term'] != null &&
+                (record['term'] is! String ||
+                    (record['term'] as String).trim().isEmpty)) ||
             record['updatedAt'] is! String ||
             DateTime.tryParse(record['updatedAt'] as String) == null) {
           throw ExportImportException('Invalid discovery $status record.');
