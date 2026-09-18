@@ -115,4 +115,49 @@ void main() {
       '4',
     );
   });
+
+  test(
+    'uses a validated queued Gemini suggestion as the fifth batch word',
+    () async {
+      await repository.refillGeminiQueue((_) async => ['personal word']);
+
+      final batch = await repository.newBatch();
+
+      expect(
+        await db.query(
+          'suggested_words',
+          where: 'status = ?',
+          whereArgs: ['batch'],
+        ),
+        hasLength(5),
+      );
+      expect(batch, hasLength(5));
+      expect(batch.map((word) => word.key), contains('personal word'));
+    },
+  );
+
+  test(
+    'does not promote a queued word that was added to the library',
+    () async {
+      await repository.refillGeminiQueue((_) async => ['personal word']);
+      final now = DateTime.now().toUtc().toIso8601String();
+      await db.insert('words', {
+        'id': 'personal-word',
+        'english': 'personal word',
+        'english_key': 'personal word',
+        'meanings': '[]',
+        'level': 0,
+        'due_date': '2026-09-18',
+        'times_correct': 0,
+        'times_wrong': 0,
+        'created_at': now,
+        'updated_at': now,
+      });
+
+      expect(
+        (await repository.newBatch()).map((word) => word.key),
+        isNot(contains('personal word')),
+      );
+    },
+  );
 }

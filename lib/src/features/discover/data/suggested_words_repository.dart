@@ -122,10 +122,13 @@ class SuggestedWordsRepository {
           (row) => SuggestedWord(
             key: row['english_key'] as String,
             term: row['term'] as String,
-            rank: row['frequency_rank'] as int,
-            meaning: pool
-                .firstWhere((c) => c.key == row['english_key'])
-                .meaning,
+            rank: row['frequency_rank'] as int?,
+            meaning:
+                pool
+                    .where((c) => c.key == row['english_key'])
+                    .map((c) => c.meaning)
+                    .firstOrNull ??
+                '',
             order: row['batch_order'] as int,
             revealed: row['revealed_before_action'] == 1,
           ),
@@ -163,7 +166,20 @@ class SuggestedWordsRepository {
               (pool.indexOf(b) + 1 - center).abs(),
             ),
           );
-    final batchCandidates = candidates.take(5).toList();
+    final queuedRows = await db.query(
+      'suggested_words',
+      where: 'status = ?',
+      whereArgs: ['queued'],
+      orderBy: 'created_at',
+    );
+    final libraryKeys = (await db.query(
+      'words',
+      columns: ['english_key'],
+    )).map((row) => row['english_key'] as String).toSet();
+    final queued = queuedRows
+        .where((row) => !libraryKeys.contains(row['english_key']))
+        .toList();
+    final batchCandidates = candidates.take(queued.isEmpty ? 5 : 4).toList();
     for (var i = 0; i < batchCandidates.length; i++) {
       final c = batchCandidates[i];
       final row = await db.query(
@@ -195,8 +211,59 @@ class SuggestedWordsRepository {
         );
       }
     }
+    if (queued.isNotEmpty) {
+      final suggestion = queued.first;
+      await db.update(
+        'suggested_words',
+        {
+          'status': 'batch',
+          'batch_order': 4,
+          'revealed_before_action': 0,
+          'updated_at': now.toIso8601String(),
+        },
+        where: 'english_key = ?',
+        whereArgs: [suggestion['english_key']],
+      );
+    }
     return batch();
   }
+
+  Future<void> refillGeminiQueue(
+    Future<List<String>> Function(Set<String> excluded) fetch,
+  ) async {
+    final queued = Sqflite.firstIntValue(
+      await db.rawQuery(
+        "SELECT COUNT(*) FROM suggested_words WHERE status = 'queued'",
+      ),
+    )!;
+    if (queued >= 3) {
+      return;
+    }
+    try {
+      final excluded = await _excluded(DateTime.now().toUtc());
+      for (final term in (await fetch(excluded)).take(3 - queued)) {
+        final trimmed = term.trim();
+        final key = trimmed.toLowerCase();
+        if (!RegExp(r"^[a-z]+(?:[ '-][a-z]+)*$").hasMatch(key) ||
+            excluded.contains(key)) {
+          continue;
+        }
+        await db.insert('suggested_words', {
+          'english_key': key,
+          'term': trimmed,
+          'status': 'queued',
+          'skip_count': 0,
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        excluded.add(key);
+      }
+    } catch (_) {
+      // Discover remains fully usable when Gemini is offline or unavailable.
+    }
+  }
+
+  Future<int> bandCenter() => _band();
 
   Future<Set<String>> _excluded(DateTime now) async {
     final words = await db.query('words', columns: ['english_key']);
@@ -224,7 +291,9 @@ class SuggestedWordsRepository {
   );
 
   Future<void> known(SuggestedWord word) async {
-    await _adjustBand(word.rank, word.revealed ? 20 : 50);
+    if (word.rank != null) {
+      await _adjustBand(word.rank!, word.revealed ? 20 : 50);
+    }
     await _setStatus(word.key, 'known');
   }
 
@@ -264,7 +333,11 @@ class SuggestedWordsRepository {
       whereArgs: [key],
     )).single;
     final center = await _band();
-    final rank = row['frequency_rank'] as int;
+    final rank = row['frequency_rank'] as int?;
+    if (rank == null) {
+      await _setStatus(key, 'learned');
+      return;
+    }
     await _setBand(_clamp(center + ((rank - center) * .2).round()));
     await _setStatus(key, 'learned');
   }

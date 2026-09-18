@@ -351,6 +351,83 @@ class GeminiClient {
         );
   }
 
+  Future<List<String>> suggestedWords({
+    required Set<String> excluded,
+    required int bandCenter,
+    required String apiKey,
+    required String model,
+  }) async {
+    if (apiKey.trim().isEmpty) return const [];
+    final response = await _httpClient
+        .post(
+          Uri.parse(
+            'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
+          ),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey.trim(),
+          },
+          body: jsonEncode({
+            'systemInstruction': {
+              'parts': [
+                {
+                  'text':
+                      'Return three useful English vocabulary words for a native Hebrew speaker, tailored to the supplied difficulty band. Return only JSON. Each item must be a common English word or short phrase, never a name or duplicate.',
+                },
+              ],
+            },
+            'contents': [
+              {
+                'role': 'user',
+                'parts': [
+                  {
+                    'text': jsonEncode({
+                      'exclude': excluded.take(100).toList(),
+                      'bandCenter': bandCenter,
+                    }),
+                  },
+                ],
+              },
+            ],
+            'generationConfig': {
+              'responseMimeType': 'application/json',
+              'responseJsonSchema': {
+                'type': 'object',
+                'required': ['words'],
+                'properties': {
+                  'words': {
+                    'type': 'array',
+                    'maxItems': 3,
+                    'items': {'type': 'string'},
+                  },
+                },
+              },
+            },
+          }),
+        )
+        .timeout(timeout);
+    if (response.statusCode != 200) {
+      throw const GeminiException(
+        GeminiErrorType.serviceUnavailable,
+        'Gemini suggestions are unavailable.',
+      );
+    }
+    try {
+      final envelope = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
+      final text =
+          envelope['candidates'][0]['content']['parts'][0]['text'] as String;
+      final payload = jsonDecode(text) as Map;
+      return (payload['words'] as List? ?? const [])
+          .whereType<String>()
+          .toList();
+    } catch (_) {
+      throw const GeminiException(
+        GeminiErrorType.unusableResponse,
+        'Gemini suggestions were unusable.',
+      );
+    }
+  }
+
   bool _shouldFallback(GeminiErrorType type) {
     switch (type) {
       case GeminiErrorType.quotaExhausted:

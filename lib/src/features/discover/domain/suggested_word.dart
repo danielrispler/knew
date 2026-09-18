@@ -1,7 +1,7 @@
 class SuggestedWord {
   final String key;
   final String term;
-  final int rank;
+  final int? rank;
   final String meaning;
   final int order;
   final bool revealed;
