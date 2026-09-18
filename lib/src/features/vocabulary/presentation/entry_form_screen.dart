@@ -57,9 +57,17 @@ class MeaningFormData {
 
 class EntryFormScreen extends ConsumerStatefulWidget {
   final Entry? initialEntry;
+  final String? initialTerm;
+  final Future<void> Function()? onSaved;
   final TtsService? ttsService;
 
-  const EntryFormScreen({super.key, this.initialEntry, this.ttsService});
+  const EntryFormScreen({
+    super.key,
+    this.initialEntry,
+    this.initialTerm,
+    this.onSaved,
+    this.ttsService,
+  });
 
   @override
   ConsumerState<EntryFormScreen> createState() => _EntryFormScreenState();
@@ -98,7 +106,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     _ttsService.init();
 
     final entry = widget.initialEntry;
-    _termController = TextEditingController(text: entry?.english ?? '');
+    _termController = TextEditingController(
+      text: entry?.english ?? widget.initialTerm ?? '',
+    );
     _sourceController = TextEditingController(text: entry?.source ?? '');
     _contextController = TextEditingController(text: entry?.context ?? '');
 
@@ -122,6 +132,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
         MeaningFormData(partOfSpeech: '', definition: '', translations: ['']),
       );
       _isDrawerExpanded = false;
+      if (widget.initialTerm != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _performLookup());
+      }
     }
   }
 
@@ -425,6 +438,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
           context: _contextController.text.trim(),
         );
         await repository.insertEntry(newEntry);
+        await widget.onSaved?.call();
       }
 
       await ref.read(vocabularyListProvider.notifier).refreshList();

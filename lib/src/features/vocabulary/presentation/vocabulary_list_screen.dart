@@ -9,12 +9,14 @@ import '../../practice/presentation/flashcard_practice_screen.dart';
 import 'entry_form_screen.dart';
 import 'word_detail_screen.dart';
 import 'vocabulary_providers.dart';
+import '../../discover/presentation/discover_screen.dart';
 
 class VocabularyListScreen extends ConsumerStatefulWidget {
   const VocabularyListScreen({super.key});
 
   @override
-  ConsumerState<VocabularyListScreen> createState() => _VocabularyListScreenState();
+  ConsumerState<VocabularyListScreen> createState() =>
+      _VocabularyListScreenState();
 }
 
 class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
@@ -61,12 +63,16 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
     if (normalizedQuery.isEmpty) return result;
 
     return result.where((entry) {
-      if (normalizeForSearch(entry.english).contains(normalizedQuery)) return true;
-      if (normalizeForSearch(entry.englishKey).contains(normalizedQuery)) return true;
+      if (normalizeForSearch(entry.english).contains(normalizedQuery))
+        return true;
+      if (normalizeForSearch(entry.englishKey).contains(normalizedQuery))
+        return true;
 
       for (var meaning in entry.meanings) {
-        if (normalizeForSearch(meaning.partOfSpeech).contains(normalizedQuery)) return true;
-        if (normalizeForSearch(meaning.definition).contains(normalizedQuery)) return true;
+        if (normalizeForSearch(meaning.partOfSpeech).contains(normalizedQuery))
+          return true;
+        if (normalizeForSearch(meaning.definition).contains(normalizedQuery))
+          return true;
 
         for (var trans in meaning.hebrewTranslations) {
           if (normalizeForSearch(trans).contains(normalizedQuery)) return true;
@@ -97,9 +103,14 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
             const SizedBox(width: 10),
             vocabularyAsync.when(
               data: (entries) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -118,6 +129,13 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            tooltip: 'Discover',
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const DiscoverScreen())),
+          ),
+          IconButton(
             icon: const Icon(Icons.school_outlined),
             tooltip: l10n.practiceTitle,
             onPressed: entries == null
@@ -129,7 +147,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                           initialLibrary: entries,
                           onExit: () {
                             Navigator.of(context).pop();
-                            ref.read(vocabularyListProvider.notifier).refreshList();
+                            ref
+                                .read(vocabularyListProvider.notifier)
+                                .refreshList();
                           },
                         ),
                       ),
@@ -155,7 +175,10 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
         },
         tooltip: l10n.addTermTitle,
         icon: const Icon(Icons.add),
-        label: Text(l10n.addTermTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+        label: Text(
+          l10n.addTermTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -171,8 +194,10 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                     children: [
                       // Search Bar
                       Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
@@ -201,7 +226,10 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                       // Stage Filter Chips
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 4.0,
+                        ),
                         child: Row(
                           children: [
                             FilterChip(
@@ -230,7 +258,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                               selected: _selectedStageFilter == Stage.newStage,
                               onSelected: (selected) {
                                 setState(() {
-                                  _selectedStageFilter = selected ? Stage.newStage : null;
+                                  _selectedStageFilter = selected
+                                      ? Stage.newStage
+                                      : null;
                                 });
                               },
                             ),
@@ -253,7 +283,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                               selected: _selectedStageFilter == Stage.familiar,
                               onSelected: (selected) {
                                 setState(() {
-                                  _selectedStageFilter = selected ? Stage.familiar : null;
+                                  _selectedStageFilter = selected
+                                      ? Stage.familiar
+                                      : null;
                                 });
                               },
                             ),
@@ -276,7 +308,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                               selected: _selectedStageFilter == Stage.learned,
                               onSelected: (selected) {
                                 setState(() {
-                                  _selectedStageFilter = selected ? Stage.learned : null;
+                                  _selectedStageFilter = selected
+                                      ? Stage.learned
+                                      : null;
                                 });
                               },
                             ),
@@ -293,15 +327,19 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      _searchQuery.isNotEmpty || _selectedStageFilter != null
+                                      _searchQuery.isNotEmpty ||
+                                              _selectedStageFilter != null
                                           ? Icons.search_off
                                           : Icons.book_outlined,
                                       size: 64,
-                                      color: Theme.of(context).colorScheme.outline,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      _searchQuery.isNotEmpty || _selectedStageFilter != null
+                                      _searchQuery.isNotEmpty ||
+                                              _selectedStageFilter != null
                                           ? l10n.noTermsFound
                                           : l10n.noTermsYet,
                                       textAlign: TextAlign.center,
@@ -309,7 +347,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                           .textTheme
                                           .bodyLarge
                                           ?.copyWith(
-                                            color: Theme.of(context).colorScheme.outline,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
                                           ),
                                     ),
                                   ],
@@ -320,25 +360,38 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                 padding: const EdgeInsets.only(bottom: 80),
                                 itemBuilder: (context, index) {
                                   final entry = filtered[index];
-                                  final primaryMeaning = entry.meanings.isNotEmpty
+                                  final primaryMeaning =
+                                      entry.meanings.isNotEmpty
                                       ? entry.meanings.first
                                       : null;
                                   final hebrewSummary = primaryMeaning != null
-                                      ? primaryMeaning.hebrewTranslations.join(', ')
+                                      ? primaryMeaning.hebrewTranslations.join(
+                                          ', ',
+                                        )
                                       : '';
 
                                   return Dismissible(
                                     key: Key(entry.id),
                                     direction: DismissDirection.endToStart,
                                     background: Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Colors.redAccent.withOpacity(0.9),
+                                        color: Colors.redAccent.withOpacity(
+                                          0.9,
+                                        ),
                                         borderRadius: BorderRadius.circular(18),
                                       ),
                                       alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                                      child: const Icon(Icons.delete, color: Colors.white),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                      ),
+                                      child: const Icon(
+                                        Icons.delete,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     confirmDismiss: (direction) async {
                                       return await showDialog<bool>(
@@ -347,15 +400,18 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                           title: Text(l10n.deleteTermConfirm),
                                           actions: [
                                             TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(false),
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(false),
                                               child: Text(l10n.cancel),
                                             ),
                                             TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(true),
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(true),
                                               style: TextButton.styleFrom(
-                                                  foregroundColor: Colors.red),
+                                                foregroundColor: Colors.red,
+                                              ),
                                               child: Text(l10n.delete),
                                             ),
                                           ],
@@ -371,45 +427,67 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                       child: InkWell(
                                         borderRadius: BorderRadius.circular(18),
                                         onTap: () {
-                                          showWordDetailBottomSheet(context, entry);
+                                          showWordDetailBottomSheet(
+                                            context,
+                                            entry,
+                                          );
                                         },
                                         child: Padding(
                                           padding: const EdgeInsets.all(16.0),
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Row(
-                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
                                                 children: [
                                                   Expanded(
                                                     child: Text(
                                                       entry.english,
                                                       style: const TextStyle(
-                                                        fontFamily: 'FrankRuhlLibre',
-                                                        fontWeight: FontWeight.bold,
+                                                        fontFamily:
+                                                            'FrankRuhlLibre',
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                         fontSize: 20,
                                                         letterSpacing: -0.2,
                                                       ),
                                                     ),
                                                   ),
                                                   Container(
-                                                    padding: const EdgeInsets.symmetric(
-                                                        horizontal: 10, vertical: 4),
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 10,
+                                                          vertical: 4,
+                                                        ),
                                                     decoration: BoxDecoration(
-                                                      color: _stageColor(entry.stage)
-                                                          .withOpacity(0.15),
-                                                      borderRadius: BorderRadius.circular(12),
+                                                      color: _stageColor(
+                                                        entry.stage,
+                                                      ).withOpacity(0.15),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
                                                       border: Border.all(
-                                                        color: _stageColor(entry.stage),
+                                                        color: _stageColor(
+                                                          entry.stage,
+                                                        ),
                                                         width: 1,
                                                       ),
                                                     ),
                                                     child: Text(
-                                                      _stageLabel(entry.stage, l10n),
+                                                      _stageLabel(
+                                                        entry.stage,
+                                                        l10n,
+                                                      ),
                                                       style: TextStyle(
-                                                        color: _stageColor(entry.stage),
+                                                        color: _stageColor(
+                                                          entry.stage,
+                                                        ),
                                                         fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                       ),
                                                     ),
                                                   ),
@@ -431,24 +509,29 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                                 const SizedBox(height: 6),
                                               ],
                                               Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
                                                 children: [
                                                   Directionality(
-                                                    textDirection: TextDirection.rtl,
+                                                    textDirection:
+                                                        TextDirection.rtl,
                                                     child: Text(
                                                       hebrewSummary,
-                                                      textDirection: TextDirection.rtl,
+                                                      textDirection:
+                                                          TextDirection.rtl,
                                                       style: const TextStyle(
-                                                        fontWeight: FontWeight.w600,
+                                                        fontWeight:
+                                                            FontWeight.w600,
                                                         fontSize: 16,
                                                       ),
                                                     ),
                                                   ),
                                                   Icon(
                                                     Icons.chevron_right,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .outline,
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.outline,
                                                     size: 20,
                                                   ),
                                                 ],
@@ -466,7 +549,8 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(child: Text('Error loading library: $err')),
+                error: (err, stack) =>
+                    Center(child: Text('Error loading library: $err')),
               ),
             ),
           );

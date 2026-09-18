@@ -538,38 +538,41 @@ void main() {
       },
     );
 
-    test(
-      'handleUpgrade executes non-destructively within transaction',
-      () async {
-        final oldDb = await openDatabase(
-          inMemoryDatabasePath,
-          version: 1,
-          onCreate: (db, version) async {
-            await SQLiteDatabaseHelper.createTables(db);
-          },
-        );
+    test('handleUpgrade executes non-destructively within transaction', () async {
+      final oldDb = await openDatabase(
+        inMemoryDatabasePath,
+        version: 1,
+        onCreate: (db, version) async {
+          await SQLiteDatabaseHelper.createTables(db);
+          await db.execute('DROP TABLE suggested_words');
+        },
+      );
 
-        final entry = Entry.create(
-          english: 'migration_test',
-          meanings: [
-            Meaning(
-              partOfSpeech: 'v',
-              definition: 'm',
-              hebrewTranslations: ['בדיקת מיגרציה'],
-            ),
-          ],
-        );
-        final repo = SQLiteWordsRepository(oldDb);
-        await repo.insertEntry(entry);
+      final entry = Entry.create(
+        english: 'migration_test',
+        meanings: [
+          Meaning(
+            partOfSpeech: 'v',
+            definition: 'm',
+            hebrewTranslations: ['בדיקת מיגרציה'],
+          ),
+        ],
+      );
+      final repo = SQLiteWordsRepository(oldDb);
+      await repo.insertEntry(entry);
 
-        // Trigger upgrade routine safely
-        await SQLiteDatabaseHelper.handleUpgrade(oldDb, 1, 2);
+      // Trigger upgrade routine safely
+      await SQLiteDatabaseHelper.handleUpgrade(oldDb, 1, 2);
 
-        final preserved = await repo.getEntryById(entry.id);
-        expect(preserved, isNotNull);
-        expect(preserved!.english, 'migration_test');
-        await oldDb.close();
-      },
-    );
+      final tables = await oldDb.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='suggested_words';",
+      );
+      expect(tables, isNotEmpty);
+
+      final preserved = await repo.getEntryById(entry.id);
+      expect(preserved, isNotNull);
+      expect(preserved!.english, 'migration_test');
+      await oldDb.close();
+    });
   });
 }

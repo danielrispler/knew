@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 class SQLiteDatabaseHelper {
   static Database? _db;
 
-  static const int currentSchemaVersion = 1;
+  static const int currentSchemaVersion = 2;
 
   static Future<Database> getDatabase() async {
     if (_db != null && _db!.isOpen) return _db!;
@@ -53,12 +53,33 @@ class SQLiteDatabaseHelper {
         value TEXT NOT NULL
       );
     ''');
+
+    await _createSuggestedWordsTable(db);
   }
 
-  static Future<void> handleUpgrade(Database db, int oldVersion, int newVersion) async {
+  static Future<void> _createSuggestedWordsTable(DatabaseExecutor db) =>
+      db.execute('''
+      CREATE TABLE IF NOT EXISTS suggested_words (
+        english_key TEXT NOT NULL PRIMARY KEY,
+        term TEXT NOT NULL,
+        frequency_rank INTEGER,
+        status TEXT NOT NULL,
+        batch_order INTEGER,
+        revealed_before_action INTEGER NOT NULL DEFAULT 0,
+        skip_count INTEGER NOT NULL DEFAULT 0,
+        next_eligible_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    ''');
+
+  static Future<void> handleUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     await db.transaction((txn) async {
-      // Step-by-step non-destructive transactional migration handler
-      // e.g. if (oldVersion < 2) { ... }
+      if (oldVersion < 2) await _createSuggestedWordsTable(txn);
     });
   }
 }
