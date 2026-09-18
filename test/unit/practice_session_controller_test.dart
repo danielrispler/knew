@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:knew/src/features/vocabulary/domain/entry.dart';
@@ -7,6 +9,12 @@ import 'package:knew/src/features/vocabulary/presentation/vocabulary_providers.d
 import 'package:knew/src/features/practice/presentation/practice_providers.dart';
 import 'package:knew/src/features/practice/presentation/practice_session_state.dart';
 import 'package:knew/src/features/practice/domain/answer_checker.dart';
+import 'package:knew/src/features/practice/domain/practice_question.dart';
+import 'package:knew/src/features/practice/domain/sentence_evaluation.dart';
+import 'package:knew/src/features/practice/presentation/practice_session_controller.dart';
+import 'package:knew/src/features/settings/presentation/settings_providers.dart';
+import 'package:knew/src/features/vocabulary/data/gemini_client.dart';
+import 'package:knew/src/features/vocabulary/domain/gemini_lookup_result.dart';
 
 class MockWordsRepository implements WordsRepository {
   final Map<String, Entry> store = {};
@@ -80,6 +88,50 @@ class MockWordsRepository implements WordsRepository {
   Future<void> resetProgress(String id) async {}
 }
 
+class TestSettingsNotifier extends SettingsNotifier {
+  @override
+  Future<SettingsState> build() async => const SettingsState(
+    sessionSize: 20,
+    theme: 'system',
+    model: 'gemini-3.8-flash',
+    apiKey: 'test-key',
+  );
+}
+
+class FailingGeminiClient extends GeminiClient {
+  @override
+  Future<SentenceEvaluation> evaluateSentenceWithFallback({
+    required String term,
+    required Meaning meaning,
+    required String sentence,
+    required String feedbackLanguage,
+    required String apiKey,
+    required String primaryModel,
+  }) => throw GeminiException(GeminiErrorType.serviceUnavailable, 'offline');
+}
+
+class SentenceSessionNotifier extends PracticeSessionNotifier {
+  SentenceSessionNotifier(this.question);
+  final PracticeQuestion question;
+
+  @override
+  PracticeSessionState build() => PracticeSessionState(
+    questions: [question],
+    initialQueue: [question.entry],
+    firstPassPreSnapshots: {question.entry.id: question.entry},
+    sessionStarted: true,
+  );
+
+  @override
+  void startSession({
+    required List<Entry> library,
+    required String todayDueDate,
+    int requestedSessionSize = 20,
+    bool isEarlyReview = false,
+    Random? random,
+  }) {}
+}
+
 void main() {
   final testMeaning = Meaning(
     partOfSpeech: 'verb',
@@ -108,7 +160,10 @@ void main() {
   setUp(() {
     repository = MockWordsRepository();
     container = ProviderContainer(
-      overrides: [wordsRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        wordsRepositoryProvider.overrideWithValue(repository),
+        settingsProvider.overrideWith(() => TestSettingsNotifier()),
+      ],
     );
   });
 
@@ -236,6 +291,55 @@ void main() {
     );
 
     test(
+      'AI failure writes no progress and replaces sentence production',
+      () async {
+        final entry = createTestEntry('sentence', level: 5);
+        await repository.insertEntry(entry);
+        final question = PracticeQuestion(
+          entry: entry,
+          direction: PromptDirection.englishToHebrew,
+          format: QuestionFormat.sentenceProduction,
+          meaningIndex: 0,
+        );
+        container.dispose();
+        container = ProviderContainer(
+          overrides: [
+            wordsRepositoryProvider.overrideWithValue(repository),
+            settingsProvider.overrideWith(() => TestSettingsNotifier()),
+            geminiClientProvider.overrideWithValue(FailingGeminiClient()),
+            practiceSessionProvider.overrideWith(
+              () => SentenceSessionNotifier(question),
+            ),
+          ],
+        );
+
+        await container
+            .read(practiceSessionProvider.notifier)
+            .submitSentence(
+              'I learn_sentence every day.',
+              feedbackLanguage: 'English',
+            );
+
+        final state = container.read(practiceSessionProvider);
+        expect(state.currentQuestion?.format, QuestionFormat.typing);
+        expect(
+          state.questions,
+          everyElement(
+            isNot(
+              isA<PracticeQuestion>().having(
+                (question) => question.format,
+                'format',
+                QuestionFormat.sentenceProduction,
+              ),
+            ),
+          ),
+        );
+        final saved = await repository.getEntryById(entry.id);
+        expect(saved, entry);
+      },
+    );
+
+    test(
       'Database write failure pauses on question and shows save error',
       () async {
         final e1 = createTestEntry('1', level: 0);
@@ -266,9 +370,18 @@ void main() {
       'Early Review session saves progress and advances level for non-due entry',
       () async {
         // Word is at Level 1, scheduled for tomorrow, reviewed today
-        final reviewedTodayIso = DateTime(2026, 9, 15, 10, 0).toUtc().toIso8601String();
-        final e1 = createTestEntry('1', level: 1, dueDate: '2026-09-16')
-            .copyWith(lastReviewedAt: reviewedTodayIso);
+        final reviewedTodayIso = DateTime(
+          2026,
+          9,
+          15,
+          10,
+          0,
+        ).toUtc().toIso8601String();
+        final e1 = createTestEntry(
+          '1',
+          level: 1,
+          dueDate: '2026-09-16',
+        ).copyWith(lastReviewedAt: reviewedTodayIso);
         await repository.insertEntry(e1);
 
         final notifier = container.read(practiceSessionProvider.notifier);
@@ -279,7 +392,10 @@ void main() {
         );
 
         expect(container.read(practiceSessionProvider).isEarlyReview, isTrue);
-        expect(container.read(practiceSessionProvider).isExtraPractice, isFalse);
+        expect(
+          container.read(practiceSessionProvider).isExtraPractice,
+          isFalse,
+        );
 
         notifier.reveal();
         await notifier.gradeCurrent(correct: true);

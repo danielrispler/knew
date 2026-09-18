@@ -122,6 +122,25 @@ class TypingSessionNotifier extends PracticeSessionNotifier {
   }) {}
 }
 
+class SentenceSessionNotifier extends PracticeSessionNotifier {
+  SentenceSessionNotifier(this.question);
+
+  final PracticeQuestion question;
+
+  @override
+  PracticeSessionState build() =>
+      PracticeSessionState(questions: [question], sessionStarted: true);
+
+  @override
+  void startSession({
+    required List<Entry> library,
+    required String todayDueDate,
+    int requestedSessionSize = 20,
+    bool isEarlyReview = false,
+    Random? random,
+  }) {}
+}
+
 void main() {
   late TestWordsRepository wordsRepository;
   late FakeTtsService fakeTtsService;
@@ -168,6 +187,48 @@ void main() {
   }
 
   group('FlashcardPracticeScreen - Formats & Interaction', () {
+    testWidgets('Sentence production shows the meaning and feedback action', (
+      tester,
+    ) async {
+      final entry = createTestEntry(
+        id: 'sentence',
+        english: 'run',
+        pos: 'verb',
+        hebrewTranslations: ['לרוץ'],
+        level: 5,
+        dueDate: '2026-09-15',
+      );
+      final question = PracticeQuestion(
+        entry: entry,
+        direction: PromptDirection.englishToHebrew,
+        format: QuestionFormat.sentenceProduction,
+        meaningIndex: 0,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            wordsRepositoryProvider.overrideWithValue(wordsRepository),
+            ttsServiceProvider.overrideWithValue(fakeTtsService),
+            settingsProvider.overrideWith(() => TestSettingsNotifier()),
+            practiceSessionProvider.overrideWith(
+              () => SentenceSessionNotifier(question),
+            ),
+          ],
+          child: MaterialApp(
+            home: FlashcardPracticeScreen(
+              initialLibrary: [entry],
+              onExit: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Write a sentence using “run”.'), findsOneWidget);
+      expect(find.text('Get feedback'), findsOneWidget);
+    });
+
     testWidgets('Check answer submits the typing field text', (tester) async {
       final entry = createTestEntry(
         id: 'typing',
