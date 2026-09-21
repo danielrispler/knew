@@ -11,6 +11,8 @@ import 'word_detail_screen.dart';
 import 'vocabulary_providers.dart';
 import '../../discover/presentation/discover_screen.dart';
 
+enum _StageFilterChoice { all, newStage, familiar, learned }
+
 class VocabularyListScreen extends ConsumerStatefulWidget {
   const VocabularyListScreen({super.key});
 
@@ -82,6 +84,67 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
     }).toList();
   }
 
+  void _selectStageFilter(_StageFilterChoice choice) {
+    setState(() {
+      _selectedStageFilter = switch (choice) {
+        _StageFilterChoice.all => null,
+        _StageFilterChoice.newStage => Stage.newStage,
+        _StageFilterChoice.familiar => Stage.familiar,
+        _StageFilterChoice.learned => Stage.learned,
+      };
+    });
+  }
+
+  List<Widget> _stageFilterChips(AppLocalizations l10n) => [
+    FilterChip(
+      label: Text(l10n.filterAll),
+      selected: _selectedStageFilter == null,
+      onSelected: (_) => _selectStageFilter(_StageFilterChoice.all),
+    ),
+    const SizedBox(width: 8),
+    for (final stage in Stage.values) ...[
+      FilterChip(
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: _stageColor(stage),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(_filterLabel(stage, l10n)),
+          ],
+        ),
+        selected: _selectedStageFilter == stage,
+        onSelected: (selected) => _selectStageFilter(
+          selected ? _choiceFor(stage) : _StageFilterChoice.all,
+        ),
+      ),
+      const SizedBox(width: 8),
+    ],
+  ];
+
+  _StageFilterChoice _choiceFor(Stage stage) => switch (stage) {
+    Stage.newStage => _StageFilterChoice.newStage,
+    Stage.familiar => _StageFilterChoice.familiar,
+    Stage.learned => _StageFilterChoice.learned,
+  };
+
+  String _filterLabel(Stage stage, AppLocalizations l10n) => switch (stage) {
+    Stage.newStage => l10n.filterNew,
+    Stage.familiar => l10n.filterFamiliar,
+    Stage.learned => l10n.filterLearned,
+  };
+
+  String _selectedFilterLabel(AppLocalizations l10n) =>
+      _selectedStageFilter == null
+      ? l10n.filterAll
+      : _filterLabel(_selectedStageFilter!, l10n);
+
   void _openScheduledPractice(List<Entry> entries) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -106,7 +169,6 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
   @override
   Widget build(BuildContext context) {
     final vocabularyAsync = ref.watch(vocabularyListProvider);
-    final entries = vocabularyAsync.asData?.value;
     final l10n = context.l10n;
 
     return Scaffold(
@@ -157,13 +219,6 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
             ).push(MaterialPageRoute(builder: (_) => const DiscoverScreen())),
           ),
           IconButton(
-            icon: const Icon(Icons.school_outlined),
-            tooltip: l10n.practiceTitle,
-            onPressed: entries == null || !_hasDueEntries(entries)
-                ? null
-                : () => _openScheduledPractice(entries),
-          ),
-          IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: l10n.settingsTitle,
             onPressed: () {
@@ -189,9 +244,10 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
+          final showInlineFilters = constraints.maxWidth >= 600;
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600.0),
+              constraints: const BoxConstraints(maxWidth: 800.0),
               child: vocabularyAsync.when(
                 data: (entries) {
                   final filtered = _filterEntries(entries);
@@ -206,131 +262,93 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                               ? () => _openScheduledPractice(entries)
                               : null,
                         ),
-                      // Search Bar
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
                           vertical: 8.0,
                         ),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: l10n.searchPlaceholder,
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: () {
-                                      setState(() {
-                                        _searchController.clear();
-                                        _searchQuery = '';
-                                      });
-                                    },
-                                  )
-                                : null,
-                          ),
-                          onChanged: (val) {
-                            setState(() {
-                              _searchQuery = val;
-                            });
-                          },
-                        ),
-                      ),
-
-                      // Stage Filter Chips
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                          vertical: 4.0,
-                        ),
                         child: Row(
                           children: [
-                            FilterChip(
-                              label: Text(l10n.filterAll),
-                              selected: _selectedStageFilter == null,
-                              onSelected: (_) {
-                                setState(() => _selectedStageFilter = null);
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            FilterChip(
-                              label: Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.stageNew,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(l10n.filterNew),
-                                ],
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText: l10n.searchPlaceholder,
+                                  prefixIcon: const Icon(Icons.search),
+                                  suffixIcon: _searchQuery.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () {
+                                            setState(() {
+                                              _searchController.clear();
+                                              _searchQuery = '';
+                                            });
+                                          },
+                                        )
+                                      : null,
+                                ),
+                                onChanged: (val) =>
+                                    setState(() => _searchQuery = val),
                               ),
-                              selected: _selectedStageFilter == Stage.newStage,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _selectedStageFilter = selected
-                                      ? Stage.newStage
-                                      : null;
-                                });
-                              },
                             ),
-                            const SizedBox(width: 8),
-                            FilterChip(
-                              label: Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.stageFamiliar,
-                                      shape: BoxShape.circle,
+                            if (!showInlineFilters) ...[
+                              const SizedBox(width: 8),
+                              PopupMenuButton<_StageFilterChoice>(
+                                tooltip: l10n.filter,
+                                onSelected: _selectStageFilter,
+                                itemBuilder: (context) => [
+                                  for (final choice
+                                      in _StageFilterChoice.values)
+                                    PopupMenuItem(
+                                      value: choice,
+                                      child: Text(switch (choice) {
+                                        _StageFilterChoice.all =>
+                                          l10n.filterAll,
+                                        _StageFilterChoice.newStage =>
+                                          l10n.filterNew,
+                                        _StageFilterChoice.familiar =>
+                                          l10n.filterFamiliar,
+                                        _StageFilterChoice.learned =>
+                                          l10n.filterLearned,
+                                      }),
                                     ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(l10n.filterFamiliar),
                                 ],
-                              ),
-                              selected: _selectedStageFilter == Stage.familiar,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _selectedStageFilter = selected
-                                      ? Stage.familiar
-                                      : null;
-                                });
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            FilterChip(
-                              label: Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.stageLearned,
-                                      shape: BoxShape.circle,
+                                child: Container(
+                                  height: 48,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     ),
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
-                                  const SizedBox(width: 6),
-                                  Text(l10n.filterLearned),
-                                ],
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.tune),
+                                      const SizedBox(width: 6),
+                                      Text(_selectedFilterLabel(l10n)),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              selected: _selectedStageFilter == Stage.learned,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _selectedStageFilter = selected
-                                      ? Stage.learned
-                                      : null;
-                                });
-                              },
-                            ),
+                            ],
                           ],
                         ),
                       ),
+
+                      if (showInlineFilters)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 4.0,
+                          ),
+                          child: Row(children: _stageFilterChips(l10n)),
+                        ),
                       const SizedBox(height: 8),
 
                       // Vocabulary Cards List
@@ -637,36 +655,48 @@ class _ReviewStatusCard extends StatelessWidget {
         .length;
 
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.reviewStatusTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(l10n.reviewDueCount(dueCount)),
-            Text(
-              upcoming == null
-                  ? l10n.reviewNoneUpcoming
-                  : l10n.reviewNext(upcoming),
-            ),
-            Text(l10n.reviewProgress(newCount, familiarCount, learnedCount)),
-            if (processingCount > 0)
-              Text(l10n.reviewProcessingCount(processingCount)),
-            if (failedCount > 0) Text(l10n.reviewFailedCount(failedCount)),
-            if (onStartPractice != null) ...[
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: onStartPractice,
-                icon: const Icon(Icons.school_outlined),
-                label: Text(l10n.scheduledPractice),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onStartPractice,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.school_outlined,
+                color: onStartPractice == null
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Theme.of(context).colorScheme.primary,
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${l10n.reviewDueCount(dueCount)} · ${upcoming == null ? l10n.reviewNoneUpcoming : l10n.reviewNext(upcoming)}',
+                    ),
+                    Text(
+                      l10n.reviewProgress(
+                        newCount,
+                        familiarCount,
+                        learnedCount,
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (processingCount > 0)
+                      Text(l10n.reviewProcessingCount(processingCount)),
+                    if (failedCount > 0)
+                      Text(l10n.reviewFailedCount(failedCount)),
+                  ],
+                ),
+              ),
+              if (onStartPractice != null) const Icon(Icons.chevron_right),
             ],
-          ],
+          ),
         ),
       ),
     );

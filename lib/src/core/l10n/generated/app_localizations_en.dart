@@ -122,6 +122,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scheduledPractice => 'Scheduled practice';
 
   @override
+  String get filter => 'Filter';
+
+  @override
   String get filterAll => 'All';
 
   @override

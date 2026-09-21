@@ -122,6 +122,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get scheduledPractice => 'תרגול מתוזמן';
 
   @override
+  String get filter => 'סינון';
+
+  @override
   String get filterAll => 'הכל';
 
   @override

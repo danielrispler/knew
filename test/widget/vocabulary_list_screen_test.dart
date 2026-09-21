@@ -50,17 +50,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(
-        tester
-            .widget<IconButton>(
-              find.ancestor(
-                of: find.byIcon(Icons.school_outlined),
-                matching: find.byType(IconButton),
-              ),
-            )
-            .onPressed,
-        isNull,
-      );
+      expect(find.byIcon(Icons.school_outlined), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
@@ -82,17 +72,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(
-        tester
-            .widget<IconButton>(
-              find.ancestor(
-                of: find.byIcon(Icons.school_outlined),
-                matching: find.byType(IconButton),
-              ),
-            )
-            .onPressed,
-        isNull,
-      );
+      expect(find.byIcon(Icons.school_outlined), findsNothing);
       expect(find.textContaining('Error loading library'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
@@ -121,17 +101,7 @@ void main() {
         find.textContaining('Your vocabulary library is empty'),
         findsOneWidget,
       );
-      expect(
-        tester
-            .widget<IconButton>(
-              find.ancestor(
-                of: find.byIcon(Icons.school_outlined),
-                matching: find.byType(IconButton),
-              ),
-            )
-            .onPressed,
-        isNull,
-      );
+      expect(find.byIcon(Icons.school_outlined), findsNothing);
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
@@ -169,19 +139,78 @@ void main() {
       expect(find.text('[adj] Able to withstand hardship'), findsOneWidget);
       expect(find.text('עמיד, בעל כושר התאוששות'), findsOneWidget);
       expect(find.text('New'), findsOneWidget);
-      expect(find.text('Review'), findsOneWidget);
-      expect(find.text('Scheduled practice'), findsOneWidget);
+      expect(find.textContaining('Due: 1'), findsOneWidget);
+      expect(find.text('Scheduled practice'), findsNothing);
       expect(
         tester
-            .widget<IconButton>(
+            .widget<InkWell>(
               find.ancestor(
-                of: find.byIcon(Icons.school_outlined),
-                matching: find.byType(IconButton),
+                of: find.textContaining('Due: 1'),
+                matching: find.byType(InkWell),
               ),
             )
-            .onPressed,
+            .onTap,
         isNotNull,
       );
+    });
+
+    testWidgets('uses a compact filter menu on narrow layouts', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final entries = [
+        Entry.create(
+          english: 'new term',
+          meanings: [
+            Meaning(
+              partOfSpeech: 'noun',
+              definition: 'A new entry',
+              hebrewTranslations: ['חדש'],
+            ),
+          ],
+        ),
+        Entry.create(
+          english: 'familiar term',
+          level: 3,
+          meanings: [
+            Meaning(
+              partOfSpeech: 'noun',
+              definition: 'A familiar entry',
+              hebrewTranslations: ['מוכר'],
+            ),
+          ],
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            vocabularyListProvider.overrideWith(
+              () => TestVocabularyListNotifier(entries),
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const VocabularyListScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.tune), findsOneWidget);
+      expect(find.byType(FilterChip), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Familiar (3-4)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('familiar term'), findsOneWidget);
+      expect(find.text('new term'), findsNothing);
     });
 
     testWidgets('shows Processing and Failed Entry status in Review', (

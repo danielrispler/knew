@@ -55,6 +55,7 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "scheduledPractice": "Scheduled practice",
+  "filter": "Filter",
   "filterAll": "All",
   "filterNew": "New (0-2)",
   "filterFamiliar": "Familiar (3-4)",

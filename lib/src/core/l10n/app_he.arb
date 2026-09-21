@@ -36,6 +36,7 @@
   "reviewProcessingCount": "בעיבוד: {count}",
   "reviewFailedCount": "נכשלו: {count}",
   "scheduledPractice": "תרגול מתוזמן",
+  "filter": "סינון",
   "filterAll": "הכל",
   "filterNew": "חדשים (0-2)",
   "filterFamiliar": "מוכרים (3-4)",
