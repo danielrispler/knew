@@ -11,7 +11,8 @@ abstract class PracticeScheduler {
   }
 
   static String addDaysToLocalDate(DateTime now, int days) {
-    final target = DateTime(now.year, now.month, now.day + days);
+    final localNow = now.toLocal();
+    final target = DateTime(localNow.year, localNow.month, localNow.day + days);
     return formatLocalDate(target);
   }
 

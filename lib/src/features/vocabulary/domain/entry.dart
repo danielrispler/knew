@@ -47,11 +47,11 @@ class Entry {
     return normalizeTerm(englishTerm).toLowerCase();
   }
 
-  static String todayDueDate() {
-    final now = DateTime.now().toUtc();
-    final year = now.year.toString().padLeft(4, '0');
-    final month = now.month.toString().padLeft(2, '0');
-    final day = now.day.toString().padLeft(2, '0');
+  static String todayDueDate([DateTime? now]) {
+    final localNow = (now ?? DateTime.now()).toLocal();
+    final year = localNow.year.toString().padLeft(4, '0');
+    final month = localNow.month.toString().padLeft(2, '0');
+    final day = localNow.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
   }
 
@@ -70,7 +70,8 @@ class Entry {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    final nowIso = (createdAt ?? DateTime.now().toUtc()).toIso8601String();
+    final createdAtValue = createdAt ?? DateTime.now();
+    final nowIso = createdAtValue.toUtc().toIso8601String();
     final normalizedEnglish = normalizeTerm(english);
     final key = generateKey(normalizedEnglish);
 
@@ -87,12 +88,12 @@ class Entry {
           ? context.trim()
           : null,
       level: level,
-      dueDate: dueDate ?? todayDueDate(),
+      dueDate: dueDate ?? todayDueDate(createdAtValue),
       lastReviewedAt: lastReviewedAt,
       timesCorrect: timesCorrect,
       timesWrong: timesWrong,
       createdAt: nowIso,
-      updatedAt: updatedAt?.toIso8601String() ?? nowIso,
+      updatedAt: updatedAt?.toUtc().toIso8601String() ?? nowIso,
     );
   }
 

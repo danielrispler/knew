@@ -82,6 +82,27 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
     }).toList();
   }
 
+  void _openScheduledPractice(List<Entry> entries) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FlashcardPracticeScreen(
+          initialLibrary: entries,
+          onExit: () {
+            Navigator.of(context).pop();
+            ref.read(vocabularyListProvider.notifier).refreshList();
+          },
+        ),
+      ),
+    );
+  }
+
+  bool _hasDueEntries(List<Entry> entries) {
+    final today = Entry.todayDueDate();
+    return entries.any(
+      (entry) => entry.isPracticeReady && entry.dueDate.compareTo(today) <= 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final vocabularyAsync = ref.watch(vocabularyListProvider);
@@ -138,23 +159,9 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
           IconButton(
             icon: const Icon(Icons.school_outlined),
             tooltip: l10n.practiceTitle,
-            onPressed: entries == null
+            onPressed: entries == null || !_hasDueEntries(entries)
                 ? null
-                : () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => FlashcardPracticeScreen(
-                          initialLibrary: entries,
-                          onExit: () {
-                            Navigator.of(context).pop();
-                            ref
-                                .read(vocabularyListProvider.notifier)
-                                .refreshList();
-                          },
-                        ),
-                      ),
-                    );
-                  },
+                : () => _openScheduledPractice(entries),
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -192,6 +199,13 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (entries.isNotEmpty)
+                        _ReviewStatusCard(
+                          entries: entries,
+                          onStartPractice: _hasDueEntries(entries)
+                              ? () => _openScheduledPractice(entries)
+                              : null,
+                        ),
                       // Search Bar
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -579,6 +593,81 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _ReviewStatusCard extends StatelessWidget {
+  const _ReviewStatusCard({required this.entries, this.onStartPractice});
+
+  final List<Entry> entries;
+  final VoidCallback? onStartPractice;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final today = Entry.todayDueDate();
+    final ready = entries.where((entry) => entry.isPracticeReady).toList();
+    final dueCount = ready
+        .where((entry) => entry.dueDate.compareTo(today) <= 0)
+        .length;
+    final upcoming = ready
+        .where((entry) => entry.dueDate.compareTo(today) > 0)
+        .map((entry) => entry.dueDate)
+        .fold<String?>(
+          null,
+          (next, date) =>
+              next == null || date.compareTo(next) < 0 ? date : next,
+        );
+    final newCount = ready
+        .where((entry) => entry.stage == Stage.newStage)
+        .length;
+    final familiarCount = ready
+        .where((entry) => entry.stage == Stage.familiar)
+        .length;
+    final learnedCount = ready
+        .where((entry) => entry.stage == Stage.learned)
+        .length;
+    final processingCount = entries
+        .where((entry) => entry.status == EntryStatus.pending)
+        .length;
+    final failedCount = entries
+        .where((entry) => entry.status == EntryStatus.failed)
+        .length;
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.reviewStatusTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(l10n.reviewDueCount(dueCount)),
+            Text(
+              upcoming == null
+                  ? l10n.reviewNoneUpcoming
+                  : l10n.reviewNext(upcoming),
+            ),
+            Text(l10n.reviewProgress(newCount, familiarCount, learnedCount)),
+            if (processingCount > 0)
+              Text(l10n.reviewProcessingCount(processingCount)),
+            if (failedCount > 0) Text(l10n.reviewFailedCount(failedCount)),
+            if (onStartPractice != null) ...[
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: onStartPractice,
+                icon: const Icon(Icons.school_outlined),
+                label: Text(l10n.scheduledPractice),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

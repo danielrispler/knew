@@ -28,6 +28,33 @@
   "searchPlaceholder": "Search terms or meanings...",
   "noTermsFound": "No terms found",
   "noTermsYet": "Your vocabulary library is empty.\nTap '+' to add your first term.",
+  "reviewStatusTitle": "Review",
+  "reviewDueCount": "Due: {count}",
+  "@reviewDueCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "reviewNext": "Next review: {date}",
+  "@reviewNext": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "reviewNoneUpcoming": "No upcoming review",
+  "reviewProgress": "New {newCount} · Familiar {familiarCount} · Learned {learnedCount}",
+  "@reviewProgress": {
+    "placeholders": {
+      "newCount": { "type": "int" },
+      "familiarCount": { "type": "int" },
+      "learnedCount": { "type": "int" }
+    }
+  },
+  "reviewProcessingCount": "Processing: {count}",
+  "@reviewProcessingCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "reviewFailedCount": "Failed: {count}",
+  "@reviewFailedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "scheduledPractice": "Scheduled practice",
   "filterAll": "All",
   "filterNew": "New (0-2)",
   "filterFamiliar": "Familiar (3-4)",

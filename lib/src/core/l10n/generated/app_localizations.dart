@@ -254,6 +254,54 @@ abstract class AppLocalizations {
   /// **'Your vocabulary library is empty.\nTap \'+\' to add your first term.'**
   String get noTermsYet;
 
+  /// No description provided for @reviewStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewStatusTitle;
+
+  /// No description provided for @reviewDueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Due: {count}'**
+  String reviewDueCount(int count);
+
+  /// No description provided for @reviewNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next review: {date}'**
+  String reviewNext(String date);
+
+  /// No description provided for @reviewNoneUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming review'**
+  String get reviewNoneUpcoming;
+
+  /// No description provided for @reviewProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'New {newCount} · Familiar {familiarCount} · Learned {learnedCount}'**
+  String reviewProgress(int newCount, int familiarCount, int learnedCount);
+
+  /// No description provided for @reviewProcessingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing: {count}'**
+  String reviewProcessingCount(int count);
+
+  /// No description provided for @reviewFailedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {count}'**
+  String reviewFailedCount(int count);
+
+  /// No description provided for @scheduledPractice.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled practice'**
+  String get scheduledPractice;
+
   /// No description provided for @filterAll.
   ///
   /// In en, this message translates to:

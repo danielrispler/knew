@@ -49,6 +49,33 @@ void main() {
   });
 
   group('Entry', () {
+    test(
+      'uses local day at a UTC-midnight boundary and stores UTC timestamps',
+      () {
+        final instant = DateTime.utc(2026, 9, 15, 23, 30);
+        final local = instant.toLocal();
+
+        expect(
+          Entry.todayDueDate(instant),
+          '${local.year.toString().padLeft(4, '0')}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}',
+        );
+        final entry = Entry.create(
+          english: 'local',
+          meanings: [
+            Meaning(
+              partOfSpeech: 'n',
+              definition: 'd',
+              hebrewTranslations: ['מ'],
+            ),
+          ],
+          createdAt: instant,
+        );
+        expect(entry.dueDate, Entry.todayDueDate(instant));
+        expect(entry.createdAt, instant.toIso8601String());
+        expect(entry.updatedAt, instant.toIso8601String());
+      },
+    );
+
     test('normalizes english term and generates english_key', () {
       final entry = Entry.create(
         english: '  put   up  with  ',

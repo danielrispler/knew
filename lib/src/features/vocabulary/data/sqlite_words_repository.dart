@@ -165,7 +165,7 @@ class SQLiteWordsRepository implements WordsRepository {
       throw Exception('Entry with ID $id not found.');
     }
 
-    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    final todayStr = Entry.todayDueDate();
     final nowUtc = DateTime.now().toUtc().toIso8601String();
 
     final resetEntry = entry.copyWith(

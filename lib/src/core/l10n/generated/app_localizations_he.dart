@@ -88,6 +88,40 @@ class AppLocalizationsHe extends AppLocalizations {
       'אוסף המילים שלך ריק.\nלחץ על \'+\' כדי להוסיף את המונח הראשון שלך.';
 
   @override
+  String get reviewStatusTitle => 'תרגול';
+
+  @override
+  String reviewDueCount(int count) {
+    return 'ממתינים לתרגול: $count';
+  }
+
+  @override
+  String reviewNext(String date) {
+    return 'התרגול הבא: $date';
+  }
+
+  @override
+  String get reviewNoneUpcoming => 'אין תרגול מתוכנן';
+
+  @override
+  String reviewProgress(int newCount, int familiarCount, int learnedCount) {
+    return 'חדשים $newCount · מוכרים $familiarCount · נלמדו $learnedCount';
+  }
+
+  @override
+  String reviewProcessingCount(int count) {
+    return 'בעיבוד: $count';
+  }
+
+  @override
+  String reviewFailedCount(int count) {
+    return 'נכשלו: $count';
+  }
+
+  @override
+  String get scheduledPractice => 'תרגול מתוזמן';
+
+  @override
   String get filterAll => 'הכל';
 
   @override

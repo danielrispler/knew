@@ -130,7 +130,7 @@ void main() {
               ),
             )
             .onPressed,
-        isNotNull,
+        isNull,
       );
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
@@ -169,6 +169,8 @@ void main() {
       expect(find.text('[adj] Able to withstand hardship'), findsOneWidget);
       expect(find.text('עמיד, בעל כושר התאוששות'), findsOneWidget);
       expect(find.text('New'), findsOneWidget);
+      expect(find.text('Review'), findsOneWidget);
+      expect(find.text('Scheduled practice'), findsOneWidget);
       expect(
         tester
             .widget<IconButton>(
@@ -180,6 +182,42 @@ void main() {
             .onPressed,
         isNotNull,
       );
+    });
+
+    testWidgets('shows Processing and Failed Entry status in Review', (
+      tester,
+    ) async {
+      final entries = [
+        Entry.create(
+          english: 'waiting',
+          meanings: [],
+          status: EntryStatus.pending,
+        ),
+        Entry.create(
+          english: 'retry',
+          meanings: [],
+          status: EntryStatus.failed,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            vocabularyListProvider.overrideWith(
+              () => TestVocabularyListNotifier(entries),
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const VocabularyListScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Processing: 1'), findsOneWidget);
+      expect(find.text('Failed: 1'), findsOneWidget);
+      expect(find.text('Scheduled practice'), findsNothing);
     });
   });
 }

@@ -88,6 +88,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your vocabulary library is empty.\nTap \'+\' to add your first term.';
 
   @override
+  String get reviewStatusTitle => 'Review';
+
+  @override
+  String reviewDueCount(int count) {
+    return 'Due: $count';
+  }
+
+  @override
+  String reviewNext(String date) {
+    return 'Next review: $date';
+  }
+
+  @override
+  String get reviewNoneUpcoming => 'No upcoming review';
+
+  @override
+  String reviewProgress(int newCount, int familiarCount, int learnedCount) {
+    return 'New $newCount · Familiar $familiarCount · Learned $learnedCount';
+  }
+
+  @override
+  String reviewProcessingCount(int count) {
+    return 'Processing: $count';
+  }
+
+  @override
+  String reviewFailedCount(int count) {
+    return 'Failed: $count';
+  }
+
+  @override
+  String get scheduledPractice => 'Scheduled practice';
+
+  @override
   String get filterAll => 'All';
 
   @override
