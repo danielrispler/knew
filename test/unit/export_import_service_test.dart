@@ -32,11 +32,11 @@ void main() {
       );
     });
 
-    test('generateExportPayload formats valid JSON v1 payload', () {
+    test('generateExportPayload formats valid JSON v2 payload', () {
       final jsonStr = ExportImportService.generateExportPayload([validEntry]);
       final map = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-      expect(map['version'], equals(1));
+      expect(map['version'], equals(2));
       expect(map['exportedAt'], isNotNull);
       final words = map['words'] as List;
       expect(words.length, equals(1));
@@ -60,6 +60,23 @@ void main() {
       expect(entries.length, equals(1));
       expect(entries.first.id, equals(validEntry.id));
       expect(entries.first.english, equals(validEntry.english));
+    });
+
+    test('round-trips a pending entry without meanings', () {
+      final pending = Entry.create(
+        id: '46e2cf36-d1b9-49b0-b481-8d85f8b6d0a2',
+        english: 'ephemeral',
+        meanings: const [],
+        status: EntryStatus.pending,
+        createdAt: DateTime.utc(2026, 9, 16),
+      );
+
+      final entries = ExportImportService.validateAndParseImport(
+        utf8.encode(ExportImportService.generateExportPayload([pending])),
+      );
+
+      expect(entries.single.status, EntryStatus.pending);
+      expect(entries.single.meanings, isEmpty);
     });
 
     test('exports and parses optional discovery history', () {
@@ -133,7 +150,7 @@ void main() {
 
     test('rejects unsupported backup version', () {
       final payload = {
-        'version': 2,
+        'version': 3,
         'exportedAt': '2026-09-15T09:00:00.000Z',
         'words': [],
       };

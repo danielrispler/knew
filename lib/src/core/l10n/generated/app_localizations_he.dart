@@ -213,6 +213,27 @@ class AppLocalizationsHe extends AppLocalizations {
   String get quickCaptureProcessing => 'Gemini מעבד מונחים…';
 
   @override
+  String get quickCaptureTermLabel => 'מונח באנגלית';
+
+  @override
+  String get quickCaptureTermHint => 'לדוגמה, persistent';
+
+  @override
+  String get quickCaptureEnglishRequired => 'יש להזין מונח באנגלית.';
+
+  @override
+  String get quickCaptureDuplicate => 'המונח כבר נמצא בספרייה שלך.';
+
+  @override
+  String get quickCaptureWaiting => 'מונחים מעובדים כשהאפליקציה פתוחה.';
+
+  @override
+  String get pendingEntryProcessing => 'בעיבוד';
+
+  @override
+  String get pendingEntryRetry => 'נסה שוב';
+
+  @override
   String get meaningSection => 'משמעויות';
 
   @override

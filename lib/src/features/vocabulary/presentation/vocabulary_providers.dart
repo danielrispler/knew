@@ -31,8 +31,15 @@ final pendingEntryProvider = Provider<PendingEntryController>((ref) {
       );
     },
   );
+  controller.addListener(() => ref.invalidate(vocabularyListProvider));
+  ref.onDispose(controller.dispose);
   unawaited(controller.start());
   return controller;
+});
+
+final pendingEntryStarterProvider = FutureProvider<void>((ref) async {
+  await ref.watch(databaseProvider.future);
+  ref.read(pendingEntryProvider);
 });
 
 final wordsRepositoryProvider = Provider<WordsRepository>((ref) {

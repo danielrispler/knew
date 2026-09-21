@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:knew/src/core/l10n/l10n.dart';
@@ -83,7 +82,6 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   late final TtsService _ttsService;
   bool _isPlayingAudio = false;
 
-  Timer? _debounceTimer;
   int _lookupRequestId = 0;
   bool _isLookingUp = false;
   GeminiSuccessResult? _lookupResult;
@@ -137,7 +135,6 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
     _termController.dispose();
     _sourceController.dispose();
     _contextController.dispose();
@@ -152,7 +149,6 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   }
 
   void _onTermChanged(String text) {
-    _debounceTimer?.cancel();
     if (_duplicateError != null) {
       _checkDuplicate();
     }
@@ -167,15 +163,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
       });
       return;
     }
-    if (trimmed.length >= 2) {
-      _debounceTimer = Timer(const Duration(milliseconds: 600), () {
-        _performLookup(termOverride: trimmed);
-      });
-    }
   }
 
   void _clearTerm() {
-    _debounceTimer?.cancel();
     _termController.clear();
     setState(() {
       _lookupResult = null;
@@ -199,7 +189,6 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   }
 
   Future<void> _performLookup({String? termOverride}) async {
-    _debounceTimer?.cancel();
     final input = (termOverride ?? _termController.text).trim();
     if (input.isEmpty) return;
 
@@ -621,9 +610,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                   ),
                                 ),
                                 onChanged: _onTermChanged,
-                                onSubmitted: (val) {
-                                  _performLookup(termOverride: val);
-                                },
+                                onSubmitted: (_) {},
                               ),
                             ),
 
@@ -1401,16 +1388,17 @@ class _QuickCaptureScreenState extends ConsumerState<_QuickCaptureScreen> {
 
   Future<void> _add() async {
     final term = _controller.text.trim();
-    if (term.isEmpty || RegExp(r'[\u05D0-\u05EA]').hasMatch(term)) {
-      setState(() => _error = 'Enter an English term.');
+    if (!RegExp(r"^[A-Za-z]+(?:[ '-][A-Za-z]+)*$").hasMatch(term)) {
+      setState(() => _error = context.l10n.quickCaptureEnglishRequired);
       return;
     }
     final repository = ref.read(wordsRepositoryProvider);
     if (await repository.existsEnglishKey(Entry.generateKey(term))) {
-      setState(() => _error = 'This term is already in your library.');
+      setState(() => _error = context.l10n.quickCaptureDuplicate);
       return;
     }
-    await ref.read(pendingEntryProvider).capture(term);
+    final entry = await ref.read(pendingEntryProvider).capture(term);
+    await widget.onSaved?.call(entry);
     await ref.read(vocabularyListProvider.notifier).refreshList();
     _controller.clear();
     _focusNode.requestFocus();
@@ -1421,7 +1409,7 @@ class _QuickCaptureScreenState extends ConsumerState<_QuickCaptureScreen> {
   Widget build(BuildContext context) {
     final queue = ref.watch(pendingEntryProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Add terms')),
+      appBar: AppBar(title: Text(context.l10n.quickCaptureTitle)),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -1432,9 +1420,9 @@ class _QuickCaptureScreenState extends ConsumerState<_QuickCaptureScreen> {
               controller: _controller,
               focusNode: _focusNode,
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: 'English term',
-                hintText: 'e.g., persistent',
+              decoration: InputDecoration(
+                labelText: context.l10n.quickCaptureTermLabel,
+                hintText: context.l10n.quickCaptureTermHint,
               ),
               onSubmitted: (_) => _add(),
             ),
@@ -1446,13 +1434,13 @@ class _QuickCaptureScreenState extends ConsumerState<_QuickCaptureScreen> {
             const SizedBox(height: 12),
             FilledButton(
               onPressed: _add,
-              child: const Text('Add and continue'),
+              child: Text(context.l10n.quickCaptureAdd),
             ),
             const SizedBox(height: 12),
             Text(
               queue.isRunning
-                  ? 'Gemini is processing terms…'
-                  : 'Terms are processed when the app is open.',
+                  ? context.l10n.quickCaptureProcessing
+                  : context.l10n.quickCaptureWaiting,
             ),
           ],
         ),

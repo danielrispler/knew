@@ -82,9 +82,12 @@ class SQLiteDatabaseHelper {
     await db.transaction((txn) async {
       if (oldVersion < 2) await _createSuggestedWordsTable(txn);
       if (oldVersion < 3) {
-        await txn.execute(
-          "ALTER TABLE words ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'",
-        );
+        final columns = await txn.rawQuery('PRAGMA table_info(words)');
+        if (!columns.any((column) => column['name'] == 'status')) {
+          await txn.execute(
+            "ALTER TABLE words ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'",
+          );
+        }
       }
     });
   }

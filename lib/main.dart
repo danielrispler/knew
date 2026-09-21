@@ -23,7 +23,7 @@ class KnewApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsProvider);
-    ref.watch(pendingEntryProvider);
+    ref.watch(pendingEntryStarterProvider);
     final themeMode = settingsAsync.when(
       data: (s) => s.themeMode,
       loading: () => ThemeMode.system,

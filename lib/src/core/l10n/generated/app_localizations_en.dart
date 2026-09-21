@@ -214,6 +214,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickCaptureProcessing => 'Gemini is processing terms…';
 
   @override
+  String get quickCaptureTermLabel => 'English term';
+
+  @override
+  String get quickCaptureTermHint => 'e.g., persistent';
+
+  @override
+  String get quickCaptureEnglishRequired => 'Enter an English term.';
+
+  @override
+  String get quickCaptureDuplicate => 'This term is already in your library.';
+
+  @override
+  String get quickCaptureWaiting =>
+      'Terms are processed while the app is open.';
+
+  @override
+  String get pendingEntryProcessing => 'Processing';
+
+  @override
+  String get pendingEntryRetry => 'Retry';
+
+  @override
   String get meaningSection => 'Meanings';
 
   @override

@@ -470,6 +470,48 @@ abstract class AppLocalizations {
   /// **'Gemini is processing terms…'**
   String get quickCaptureProcessing;
 
+  /// No description provided for @quickCaptureTermLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'English term'**
+  String get quickCaptureTermLabel;
+
+  /// No description provided for @quickCaptureTermHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., persistent'**
+  String get quickCaptureTermHint;
+
+  /// No description provided for @quickCaptureEnglishRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an English term.'**
+  String get quickCaptureEnglishRequired;
+
+  /// No description provided for @quickCaptureDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'This term is already in your library.'**
+  String get quickCaptureDuplicate;
+
+  /// No description provided for @quickCaptureWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms are processed while the app is open.'**
+  String get quickCaptureWaiting;
+
+  /// No description provided for @pendingEntryProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get pendingEntryProcessing;
+
+  /// No description provided for @pendingEntryRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get pendingEntryRetry;
+
   /// No description provided for @meaningSection.
   ///
   /// In en, this message translates to:

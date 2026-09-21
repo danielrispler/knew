@@ -240,8 +240,8 @@ class SQLiteWordsRepository implements WordsRepository {
   Future<List<Entry>> getDueEntries(String dateYYYYMMDD) async {
     final maps = await db.query(
       'words',
-      where: 'due_date <= ?',
-      whereArgs: [dateYYYYMMDD],
+      where: 'due_date <= ? AND status = ?',
+      whereArgs: [dateYYYYMMDD, EntryStatus.ready.name],
       orderBy: 'due_date ASC, created_at ASC',
     );
     return maps.map((map) => Entry.fromDatabaseMap(map)).toList();

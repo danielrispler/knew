@@ -496,11 +496,11 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                                       entry.status ==
                                                               EntryStatus
                                                                   .pending
-                                                          ? 'Processing'
+                                                          ? l10n.pendingEntryProcessing
                                                           : entry.status ==
                                                                 EntryStatus
                                                                     .failed
-                                                          ? 'Retry'
+                                                          ? l10n.pendingEntryRetry
                                                           : _stageLabel(
                                                               entry.stage,
                                                               l10n,

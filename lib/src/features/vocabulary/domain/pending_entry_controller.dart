@@ -17,8 +17,9 @@ class PendingEntryController extends ChangeNotifier {
   final WordsRepository _repository;
   final LookupTerm _lookup;
   bool isRunning = false;
+  bool _restartRequested = false;
 
-  Future<void> capture(String term) async {
+  Future<Entry> capture(String term) async {
     final entry = Entry.create(
       english: term,
       meanings: const [],
@@ -26,6 +27,7 @@ class PendingEntryController extends ChangeNotifier {
     );
     await _repository.insertEntry(entry);
     unawaited(start());
+    return entry;
   }
 
   Future<void> retry(Entry entry) async {
@@ -34,37 +36,48 @@ class PendingEntryController extends ChangeNotifier {
   }
 
   Future<void> start() async {
-    if (isRunning) return;
+    if (isRunning) {
+      _restartRequested = true;
+      return;
+    }
     isRunning = true;
     notifyListeners();
     try {
-      final pending =
-          (await _repository.getAllEntries())
-              .where((entry) => entry.status == EntryStatus.pending)
-              .toList()
-            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      for (final entry in pending) {
-        try {
-          final result = await _lookup(entry.english);
-          if (result is GeminiSuccessResult) {
-            await _repository.updateEntry(
-              entry.copyWith(
-                meanings: result.meanings,
-                status: EntryStatus.ready,
-              ),
-            );
-          } else {
-            await _repository.updateEntry(
-              entry.copyWith(status: EntryStatus.failed),
-            );
+      do {
+        _restartRequested = false;
+        final pending =
+            (await _repository.getAllEntries())
+                .where((entry) => entry.status == EntryStatus.pending)
+                .toList()
+              ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        for (final entry in pending) {
+          try {
+            final result = await _lookup(entry.english);
+            final current = await _repository.getEntryById(entry.id);
+            if (current?.status != EntryStatus.pending) continue;
+            if (result is GeminiSuccessResult) {
+              await _repository.updateEntry(
+                current!.copyWith(
+                  meanings: result.meanings,
+                  status: EntryStatus.ready,
+                ),
+              );
+            } else {
+              await _repository.updateEntry(
+                current!.copyWith(status: EntryStatus.failed),
+              );
+            }
+          } catch (_) {
+            final current = await _repository.getEntryById(entry.id);
+            if (current?.status == EntryStatus.pending) {
+              await _repository.updateEntry(
+                current!.copyWith(status: EntryStatus.failed),
+              );
+            }
           }
-        } catch (_) {
-          await _repository.updateEntry(
-            entry.copyWith(status: EntryStatus.failed),
-          );
+          notifyListeners();
         }
-        notifyListeners();
-      }
+      } while (_restartRequested);
     } finally {
       isRunning = false;
       notifyListeners();

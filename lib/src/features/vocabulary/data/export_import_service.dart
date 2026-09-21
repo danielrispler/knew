@@ -28,7 +28,7 @@ class ExportImportService {
 
   static final RegExp _dateRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
-  /// Generates a pretty-printed JSON v1 payload representing the provided entries.
+  /// Generates a pretty-printed JSON payload representing the provided entries.
   static String generateExportPayload(
     List<Entry> entries, {
     Map<String, dynamic>? discovery,
@@ -44,6 +44,7 @@ class ExportImportService {
       return {
         'id': e.id,
         'english': e.english,
+        'status': e.status.name,
         'meanings': e.meanings.map((m) {
           return {
             'partOfSpeech': m.partOfSpeech,
@@ -64,7 +65,7 @@ class ExportImportService {
     }).toList();
 
     final payloadMap = {
-      'version': 1,
+      'version': 2,
       'exportedAt': nowUtc,
       'words': wordsJson,
       'discovery': ?discovery,
@@ -104,7 +105,7 @@ class ExportImportService {
     if (version == null || version is! int) {
       throw ExportImportException('Missing or invalid backup version number.');
     }
-    if (version != 1) {
+    if (version != 1 && version != 2) {
       throw ExportImportException(
         'This backup needs a newer version of knew. Update the app and try again.',
       );
@@ -163,11 +164,22 @@ class ExportImportService {
       }
       seenEnglishKeys.add(englishKey);
 
+      final statusName = version == 1 ? 'ready' : item['status'];
+      EntryStatus status;
+      try {
+        status = EntryStatus.values.byName(statusName as String);
+      } catch (_) {
+        throw ExportImportException(
+          'Entry "$english" (index $i) has invalid status.',
+        );
+      }
+
       // Meanings
       final meaningsRaw = item['meanings'];
       if (meaningsRaw is! List ||
-          meaningsRaw.isEmpty ||
-          meaningsRaw.length > 3) {
+          meaningsRaw.length > 3 ||
+          (status == EntryStatus.ready && meaningsRaw.isEmpty) ||
+          (status != EntryStatus.ready && meaningsRaw.isNotEmpty)) {
         throw ExportImportException(
           'Entry "$english" (index $i) must have between 1 and 3 meanings.',
         );
@@ -329,6 +341,7 @@ class ExportImportService {
           english: english.trim(),
           englishKey: englishKey,
           meanings: parsedMeanings,
+          status: status,
           source: (source != null && source.trim().isNotEmpty)
               ? source.trim()
               : null,
