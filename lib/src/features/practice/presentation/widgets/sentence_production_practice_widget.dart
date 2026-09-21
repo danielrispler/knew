@@ -3,7 +3,7 @@ import 'package:knew/src/core/l10n/l10n.dart';
 import '../../domain/practice_question.dart';
 import '../practice_session_state.dart';
 
-class SentenceProductionPracticeWidget extends StatelessWidget {
+class SentenceProductionPracticeWidget extends StatefulWidget {
   final PracticeQuestion question;
   final PracticeSessionState state;
   final TextEditingController controller;
@@ -13,29 +13,51 @@ class SentenceProductionPracticeWidget extends StatelessWidget {
     required this.state,
     required this.controller,
   });
+
+  @override
+  State<SentenceProductionPracticeWidget> createState() =>
+      _SentenceProductionPracticeWidgetState();
+}
+
+class _SentenceProductionPracticeWidgetState
+    extends State<SentenceProductionPracticeWidget> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.text = widget.state.typedText ?? '';
+  }
+
+  @override
+  void didUpdateWidget(covariant SentenceProductionPracticeWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.question != oldWidget.question) {
+      widget.controller.text = widget.state.typedText ?? '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final meaning = question.entry.meanings[question.meaningIndex!];
-    final feedback = state.sentenceEvaluation;
+    final meaning = widget.question.entry.meanings[widget.question.meaningIndex!];
+    final feedback = widget.state.sentenceEvaluation;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            context.l10n.sentenceProductionPrompt(question.entry.english),
+            context.l10n.sentenceProductionPrompt(widget.question.entry.english),
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 12),
           Text(
-            question.entry.level == 5
+            widget.question.entry.level == 5
                 ? '${meaning.partOfSpeech} · ${meaning.hebrewTranslations.join(', ')}'
                 : '${meaning.partOfSpeech} · ${meaning.definition}',
           ),
           const SizedBox(height: 24),
           TextField(
-            controller: controller,
-            enabled: !state.isRevealed && !state.isEvaluatingSentence,
+            controller: widget.controller,
+            enabled: !widget.state.isRevealed && !widget.state.isEvaluatingSentence,
             minLines: 3,
             maxLines: 6,
             textDirection: TextDirection.ltr,
@@ -45,7 +67,7 @@ class SentenceProductionPracticeWidget extends StatelessWidget {
               hintText: context.l10n.sentenceProductionHint,
             ),
           ),
-          if (state.isEvaluatingSentence)
+          if (widget.state.isEvaluatingSentence)
             const Padding(
               padding: EdgeInsets.only(top: 16),
               child: Center(child: CircularProgressIndicator()),

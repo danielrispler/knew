@@ -29,6 +29,7 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
   void initState() {
     super.initState();
     _focusNode = FocusNode();
+    widget.textController.text = widget.state.typedText ?? '';
   }
 
   @override

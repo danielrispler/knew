@@ -8,6 +8,7 @@ import 'package:knew/src/features/practice/presentation/flashcard_practice_scree
 import 'package:knew/src/features/practice/presentation/practice_providers.dart';
 import 'package:knew/src/features/practice/presentation/practice_session_controller.dart';
 import 'package:knew/src/features/practice/presentation/practice_session_state.dart';
+import 'package:knew/src/features/practice/presentation/widgets/sentence_production_practice_widget.dart';
 import 'package:knew/src/features/practice/domain/practice_question.dart';
 import 'package:knew/src/features/settings/presentation/settings_providers.dart';
 import 'package:knew/src/features/vocabulary/data/words_repository.dart';
@@ -187,6 +188,55 @@ void main() {
   }
 
   group('FlashcardPracticeScreen - Formats & Interaction', () {
+    testWidgets('sentence input clears for the next practice question', (
+      tester,
+    ) async {
+      final firstQuestion = PracticeQuestion(
+        entry: createTestEntry(
+          id: 'first',
+          english: 'run',
+          pos: 'verb',
+          hebrewTranslations: ['לרוץ'],
+          level: 5,
+          dueDate: '2026-09-15',
+        ),
+        direction: PromptDirection.englishToHebrew,
+        format: QuestionFormat.sentenceProduction,
+        meaningIndex: 0,
+      );
+      final nextQuestion = PracticeQuestion(
+        entry: createTestEntry(
+          id: 'next',
+          english: 'walk',
+          pos: 'verb',
+          hebrewTranslations: ['ללכת'],
+          level: 5,
+          dueDate: '2026-09-15',
+        ),
+        direction: PromptDirection.englishToHebrew,
+        format: QuestionFormat.sentenceProduction,
+        meaningIndex: 0,
+      );
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+
+      Widget buildQuestion(PracticeQuestion question) => MaterialApp(
+        home: Scaffold(
+          body: SentenceProductionPracticeWidget(
+            question: question,
+            state: const PracticeSessionState(),
+            controller: controller,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(buildQuestion(firstQuestion));
+      await tester.enterText(find.byType(TextField), 'I run every day.');
+      await tester.pumpWidget(buildQuestion(nextQuestion));
+
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
+    });
+
     testWidgets('Sentence production shows the meaning and feedback action', (
       tester,
     ) async {
