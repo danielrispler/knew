@@ -37,7 +37,8 @@ class _SentenceProductionPracticeWidgetState
 
   @override
   Widget build(BuildContext context) {
-    final meaning = widget.question.entry.meanings[widget.question.meaningIndex!];
+    final meaning =
+        widget.question.entry.meanings[widget.question.meaningIndex!];
     final feedback = widget.state.sentenceEvaluation;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -45,7 +46,9 @@ class _SentenceProductionPracticeWidgetState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            context.l10n.sentenceProductionPrompt(widget.question.entry.english),
+            context.l10n.sentenceProductionPrompt(
+              widget.question.entry.english,
+            ),
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 12),
@@ -57,7 +60,8 @@ class _SentenceProductionPracticeWidgetState
           const SizedBox(height: 24),
           TextField(
             controller: widget.controller,
-            enabled: !widget.state.isRevealed && !widget.state.isEvaluatingSentence,
+            enabled:
+                !widget.state.isRevealed && !widget.state.isEvaluatingSentence,
             minLines: 3,
             maxLines: 6,
             textDirection: TextDirection.ltr,
@@ -78,11 +82,25 @@ class _SentenceProductionPracticeWidgetState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Target term: ${feedback.usesTargetTerm ? '✓' : '✗'}'),
-                  Text('Meaning: ${feedback.meaningCorrect ? '✓' : '✗'}'),
-                  Text('Grammar: ${feedback.grammarCorrect ? '✓' : '✗'}'),
                   Text(
-                    'Naturalness (feedback only): ${feedback.naturalUsage ? '✓' : '✗'}',
+                    context.l10n.targetTermFeedback(
+                      feedback.usesTargetTerm ? '✓' : '✗',
+                    ),
+                  ),
+                  Text(
+                    context.l10n.meaningFeedback(
+                      feedback.meaningCorrect ? '✓' : '✗',
+                    ),
+                  ),
+                  Text(
+                    context.l10n.grammarFeedback(
+                      feedback.grammarCorrect ? '✓' : '✗',
+                    ),
+                  ),
+                  Text(
+                    context.l10n.naturalnessFeedback(
+                      feedback.naturalUsage ? '✓' : '✗',
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(feedback.feedback),

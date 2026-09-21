@@ -167,20 +167,21 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Entry?'),
-        content: Text('Are you sure you want to delete "${_entry.english}"?'),
+        title: Text(l10n.deleteEntryTitle),
+        content: Text(l10n.deleteEntryConfirm(_entry.english)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -255,7 +256,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                                         context,
                                       ).colorScheme.primary,
                                     ),
-                                    tooltip: 'Listen to pronunciation',
+                                    tooltip: l10n.listenToPronunciation,
                                     onPressed: _speakTerm,
                                   ),
                                 ],
@@ -293,7 +294,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                               const Icon(Icons.bookmark_outline, size: 16),
                               const SizedBox(width: 6),
                               Text(
-                                'Source: ${_entry.source}',
+                                l10n.sourceValue(_entry.source!),
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],
@@ -325,7 +326,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Meanings',
+                          l10n.meanings,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -404,7 +405,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Learning Progress',
+                          l10n.learningProgress,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -427,7 +428,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Level:'),
+                            Text(l10n.levelLabel),
                             Text(
                               '${_entry.level} / 6',
                               style: const TextStyle(
@@ -440,7 +441,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Next Due Date:'),
+                            Text(l10n.nextDueDate),
                             Text(
                               _entry.dueDate,
                               style: const TextStyle(
@@ -453,11 +454,11 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Last Reviewed:'),
+                            Text(l10n.lastReviewedLabel),
                             Text(
                               _entry.lastReviewedAt != null
                                   ? _entry.lastReviewedAt!.substring(0, 10)
-                                  : 'Never',
+                                  : l10n.never,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -468,7 +469,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Times Correct:'),
+                            Text(l10n.timesCorrect),
                             Text(
                               '${_entry.timesCorrect}',
                               style: const TextStyle(
@@ -482,7 +483,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Times Incorrect:'),
+                            Text(l10n.timesIncorrect),
                             Text(
                               '${_entry.timesWrong}',
                               style: const TextStyle(
@@ -505,7 +506,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                       child: OutlinedButton.icon(
                         onPressed: _confirmResetProgress,
                         icon: const Icon(Icons.refresh, color: Colors.orange),
-                        label: const Text('Reset Progress'),
+                        label: Text(l10n.resetProgress),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                           foregroundColor: Colors.orange,
@@ -528,7 +529,7 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                               .refreshList();
                         },
                         icon: const Icon(Icons.edit),
-                        label: const Text('Edit Entry'),
+                        label: Text(l10n.editEntry),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                         ),
@@ -544,8 +545,8 @@ class _WordDetailContentState extends ConsumerState<WordDetailContent> {
                       Icons.delete_outline,
                       color: Colors.redAccent,
                     ),
-                    label: const Text(
-                      'Delete Entry',
+                    label: Text(
+                      l10n.deleteEntry,
                       style: TextStyle(color: Colors.redAccent),
                     ),
                   ),

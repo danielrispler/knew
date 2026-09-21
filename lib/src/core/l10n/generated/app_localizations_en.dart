@@ -457,4 +457,284 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pronunciationUnavailable => 'English pronunciation unavailable.';
+
+  @override
+  String get listen => 'Listen';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get checkAnswer => 'Check answer';
+
+  @override
+  String get showAnswer => 'Show answer';
+
+  @override
+  String get didntKnow => 'Didn\'t know';
+
+  @override
+  String get knewIt => 'Knew it';
+
+  @override
+  String get addEntry => 'Add entry';
+
+  @override
+  String get noEntriesForPractice => 'No entries available for practice.';
+
+  @override
+  String questionProgress(int current, int total) {
+    return 'Question $current of $total';
+  }
+
+  @override
+  String repeatProgress(int current, int total) {
+    return 'Repeat $current of $total';
+  }
+
+  @override
+  String get selectOptionAbove => 'Select an option above';
+
+  @override
+  String get multipleChoiceUnavailable => 'Multiple choice unavailable';
+
+  @override
+  String get selectHebrewTranslation =>
+      'Select the correct Hebrew translation:';
+
+  @override
+  String get selectEnglishTerm => 'Select the correct English term:';
+
+  @override
+  String get fillBlank => 'Fill in the blank';
+
+  @override
+  String get showFirstLetter => 'Show first letter';
+
+  @override
+  String answer(String answer) {
+    return 'Answer: $answer';
+  }
+
+  @override
+  String get countTypoCorrect => 'Count as correct (typo)';
+
+  @override
+  String get exactMatch => 'Exact match!';
+
+  @override
+  String typoExpected(String answer) {
+    return 'Correct (typo: expected \"$answer\")';
+  }
+
+  @override
+  String incorrectExpected(String answer) {
+    return 'Incorrect. Expected: \"$answer\"';
+  }
+
+  @override
+  String get tapToShowAnswer => 'Tap to show answer';
+
+  @override
+  String get stageProgress => 'Stage Progress';
+
+  @override
+  String get deleteEntryTitle => 'Delete Entry?';
+
+  @override
+  String deleteEntryConfirm(String term) {
+    return 'Are you sure you want to delete \"$term\"?';
+  }
+
+  @override
+  String get listenToPronunciation => 'Listen to pronunciation';
+
+  @override
+  String sourceValue(String source) {
+    return 'Source: $source';
+  }
+
+  @override
+  String get learningProgress => 'Learning Progress';
+
+  @override
+  String get levelLabel => 'Level:';
+
+  @override
+  String get nextDueDate => 'Next Due Date:';
+
+  @override
+  String get lastReviewedLabel => 'Last Reviewed:';
+
+  @override
+  String get never => 'Never';
+
+  @override
+  String get timesCorrect => 'Times Correct:';
+
+  @override
+  String get timesIncorrect => 'Times Incorrect:';
+
+  @override
+  String get editEntry => 'Edit Entry';
+
+  @override
+  String get deleteEntry => 'Delete Entry';
+
+  @override
+  String get libraryEnrichment => 'Library Enrichment';
+
+  @override
+  String enrichmentProgress(
+    int completed,
+    int total,
+    int remaining,
+    String term,
+  ) {
+    return '$completed/$total complete · $remaining remaining$term';
+  }
+
+  @override
+  String entriesNeedEnrichment(int count) {
+    return '$count entries need enrichment';
+  }
+
+  @override
+  String get startEnrichment => 'Start enrichment';
+
+  @override
+  String get stopEnrichment => 'Stop enrichment';
+
+  @override
+  String customModelSet(String model) {
+    return 'Custom model set to: $model';
+  }
+
+  @override
+  String get apiKeyRequired =>
+      'Add your Gemini API key in Settings, or enter the term manually.';
+
+  @override
+  String connectionError(String error) {
+    return 'Connection error: $error';
+  }
+
+  @override
+  String settingsLoadError(String error) {
+    return 'Error loading settings: $error';
+  }
+
+  @override
+  String get modelPickerTitle => 'Select Gemini Model';
+
+  @override
+  String get modelPickerDescription =>
+      'Primary choice for automated lookups. Automatically falls back if rate-limited.';
+
+  @override
+  String get modelDefault => 'Default - Strongest model';
+
+  @override
+  String get modelHighPerformance => 'High performance model';
+
+  @override
+  String get modelFastCapable => 'Fast & capable model';
+
+  @override
+  String get modelBalanced => 'Balanced standard model';
+
+  @override
+  String get modelFallback => 'Lightweight fast fallback';
+
+  @override
+  String get modelCustomDescription => 'Specify custom model identifier';
+
+  @override
+  String get exportEmpty => 'No vocabulary entries to export.';
+
+  @override
+  String get backupShared => 'Vocabulary backup shared successfully.';
+
+  @override
+  String exportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get importComplete => 'Import Complete';
+
+  @override
+  String importTotal(int count) {
+    return 'Total entries processed: $count';
+  }
+
+  @override
+  String importAdded(int count) {
+    return '• Added: $count';
+  }
+
+  @override
+  String importUpdated(int count) {
+    return '• Updated: $count';
+  }
+
+  @override
+  String importKept(int count) {
+    return '• Kept existing (skipped): $count';
+  }
+
+  @override
+  String get importFailed => 'Import Failed';
+
+  @override
+  String importError(String error) {
+    return 'Error importing backup: $error';
+  }
+
+  @override
+  String get clearInput => 'Clear input';
+
+  @override
+  String get viewEntry => 'View Entry';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String entrySaved(String term) {
+    return 'Saved \"$term\" to library';
+  }
+
+  @override
+  String entrySaveError(String error) {
+    return 'Error saving entry: $error';
+  }
+
+  @override
+  String libraryLoadError(String error) {
+    return 'Error loading library: $error';
+  }
+
+  @override
+  String targetTermFeedback(String result) {
+    return 'Target term: $result';
+  }
+
+  @override
+  String meaningFeedback(String result) {
+    return 'Meaning: $result';
+  }
+
+  @override
+  String grammarFeedback(String result) {
+    return 'Grammar: $result';
+  }
+
+  @override
+  String naturalnessFeedback(String result) {
+    return 'Naturalness (feedback only): $result';
+  }
 }

@@ -361,7 +361,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     final term = _termController.text.trim();
     if (term.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an English term')),
+        SnackBar(content: Text(context.l10n.quickCaptureEnglishRequired)),
       );
       return;
     }
@@ -431,7 +431,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Saved "$term" to library')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.entrySaved(term))));
         Navigator.of(context).pop();
       }
     } on DuplicateEntryException catch (e) {
@@ -443,9 +443,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     } catch (e) {
       setState(() => _isSaving = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving entry: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.entrySaveError('$e'))),
+        );
       }
     }
   }
@@ -603,7 +603,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                             Icons.clear,
                                             size: 20,
                                           ),
-                                          tooltip: 'Clear input',
+                                          tooltip: context.l10n.clearInput,
                                           onPressed: _clearTerm,
                                         ),
                                     ],
@@ -653,7 +653,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                     if (_duplicateEntryId != null)
                                       TextButton(
                                         onPressed: _openExistingEntry,
-                                        child: const Text('View Entry'),
+                                        child: Text(context.l10n.viewEntry),
                                       ),
                                   ],
                                 ),
@@ -755,7 +755,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                           Icons.settings,
                                           size: 16,
                                         ),
-                                        label: const Text('Open Settings'),
+                                        label: Text(context.l10n.openSettings),
                                       ),
                                     ],
                                   ],
@@ -1133,7 +1133,9 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                                               Icons.add,
                                               size: 18,
                                             ),
-                                            label: const Text('Add Meaning'),
+                                            label: Text(
+                                              context.l10n.addMeaning,
+                                            ),
                                           ),
                                       ],
                                     ),

@@ -149,13 +149,13 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.green),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Icon(Icons.check_circle, color: Colors.green),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Exact match!',
+                            context.l10n.exactMatch,
                             style: TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.w600,
@@ -179,7 +179,9 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Correct (typo: expected "${checkResult.matchedTarget ?? expectedTargetString}")',
+                            context.l10n.typoExpected(
+                              checkResult.matchedTarget ?? expectedTargetString,
+                            ),
                             style: TextStyle(
                               color: Colors.amber.shade900,
                               fontWeight: FontWeight.w600,
@@ -203,7 +205,9 @@ class _TypingPracticeWidgetState extends State<TypingPracticeWidget> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Incorrect. Expected: "$expectedTargetString"',
+                            context.l10n.incorrectExpected(
+                              expectedTargetString,
+                            ),
                             style: const TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.w600,

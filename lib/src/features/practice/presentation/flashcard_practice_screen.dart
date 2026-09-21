@@ -102,10 +102,8 @@ class _FlashcardPracticeScreenState
     if (!success && mounted) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'English pronunciation unavailable. Install an English (US) voice in your device\'s speech settings.',
-          ),
+        SnackBar(
+          content: Text(context.l10n.pronunciationUnavailable),
           duration: Duration(seconds: 4),
         ),
       );
@@ -125,8 +123,8 @@ class _FlashcardPracticeScreenState
         leadingWidth: 80,
         leading: TextButton(
           onPressed: widget.onExit,
-          child: const Text(
-            'Done',
+          child: Text(
+            context.l10n.done,
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
         ),
@@ -247,8 +245,8 @@ class _FlashcardPracticeScreenState
           leadingWidth: 80,
           leading: TextButton(
             onPressed: widget.onExit,
-            child: const Text(
-              'Done',
+            child: Text(
+              context.l10n.done,
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ),
@@ -267,8 +265,8 @@ class _FlashcardPracticeScreenState
           leadingWidth: 80,
           leading: TextButton(
             onPressed: widget.onExit,
-            child: const Text(
-              'Done',
+            child: Text(
+              context.l10n.done,
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ),
@@ -278,13 +276,13 @@ class _FlashcardPracticeScreenState
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'No entries available for practice.',
+                context.l10n.noEntriesForPractice,
                 style: theme.textTheme.bodyLarge,
               ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: widget.onExit,
-                child: const Text('Add entry'),
+                child: Text(context.l10n.addEntry),
               ),
             ],
           ),
@@ -308,8 +306,8 @@ class _FlashcardPracticeScreenState
         leadingWidth: 80,
         leading: TextButton(
           onPressed: widget.onExit,
-          child: const Text(
-            'Done',
+          child: Text(
+            context.l10n.done,
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
         ),
@@ -318,8 +316,11 @@ class _FlashcardPracticeScreenState
           children: [
             Text(
               currentQuestion.isRepeat
-                  ? 'Repeat $currentNumber of $totalQuestions'
-                  : 'Question $currentNumber of $totalQuestions',
+                  ? context.l10n.repeatProgress(currentNumber, totalQuestions)
+                  : context.l10n.questionProgress(
+                      currentNumber,
+                      totalQuestions,
+                    ),
               style: theme.textTheme.bodyMedium,
             ),
             if (state.isExtraPractice)
@@ -346,7 +347,7 @@ class _FlashcardPracticeScreenState
         actions: [
           IconButton(
             icon: const Icon(Icons.volume_up),
-            tooltip: 'Listen',
+            tooltip: context.l10n.listen,
             onPressed: _handleAudioTap,
           ),
         ],
@@ -377,7 +378,7 @@ class _FlashcardPracticeScreenState
                   ),
                   TextButton(
                     onPressed: () => controller.retrySave(),
-                    child: const Text('Retry'),
+                    child: Text(context.l10n.retry),
                   ),
                 ],
               ),
@@ -393,7 +394,7 @@ class _FlashcardPracticeScreenState
               child: TextButton.icon(
                 onPressed: () => controller.countAsCorrect(),
                 icon: const Icon(Icons.check_circle_outline, size: 18),
-                label: const Text('Count as correct'),
+                label: Text(context.l10n.countAsCorrect),
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.primary,
                 ),
@@ -497,8 +498,8 @@ class _FlashcardPracticeScreenState
                           foregroundColor: theme.colorScheme.onSurface,
                           minimumSize: const Size.fromHeight(52),
                         ),
-                        child: const Text(
-                          "Didn't know",
+                        child: Text(
+                          context.l10n.didntKnow,
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -516,8 +517,8 @@ class _FlashcardPracticeScreenState
                           foregroundColor: theme.colorScheme.onPrimary,
                           minimumSize: const Size.fromHeight(52),
                         ),
-                        child: const Text(
-                          'Knew it',
+                        child: Text(
+                          context.l10n.knewIt,
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -540,8 +541,8 @@ class _FlashcardPracticeScreenState
                           foregroundColor: theme.colorScheme.onSurface,
                           minimumSize: const Size.fromHeight(52),
                         ),
-                        child: const Text(
-                          "Didn't know",
+                        child: Text(
+                          context.l10n.didntKnow,
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -560,8 +561,8 @@ class _FlashcardPracticeScreenState
                           foregroundColor: theme.colorScheme.onPrimary,
                           minimumSize: const Size.fromHeight(52),
                         ),
-                        child: const Text(
-                          'Knew it',
+                        child: Text(
+                          context.l10n.knewIt,
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -582,7 +583,10 @@ class _FlashcardPracticeScreenState
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text('Show answer', style: TextStyle(fontSize: 16)),
+              child: Text(
+                context.l10n.showAnswer,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
           );
         }
@@ -603,7 +607,10 @@ class _FlashcardPracticeScreenState
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text('Next', style: TextStyle(fontSize: 16)),
+              child: Text(
+                context.l10n.next,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
           );
         } else {
@@ -615,8 +622,8 @@ class _FlashcardPracticeScreenState
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text(
-                'Select an option above',
+              child: Text(
+                context.l10n.selectOptionAbove,
                 style: TextStyle(fontSize: 16),
               ),
             ),
@@ -639,7 +646,10 @@ class _FlashcardPracticeScreenState
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text('Next', style: TextStyle(fontSize: 16)),
+              child: Text(
+                context.l10n.next,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
           );
         } else {
@@ -655,7 +665,10 @@ class _FlashcardPracticeScreenState
                 foregroundColor: theme.colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
               ),
-              child: const Text('Check answer', style: TextStyle(fontSize: 16)),
+              child: Text(
+                context.l10n.checkAnswer,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
           );
         }
@@ -670,7 +683,7 @@ class _FlashcardPracticeScreenState
                 : () => controller.gradeCurrent(
                     correct: state.lastAttemptedGrade ?? false,
                   ),
-            child: const Text('Next'),
+            child: Text(context.l10n.next),
           ),
         );
       case QuestionFormat.sentenceProduction:
@@ -684,7 +697,7 @@ class _FlashcardPracticeScreenState
                   : () => controller.gradeCurrent(
                       correct: state.lastAttemptedGrade ?? false,
                     ),
-              child: const Text('Next'),
+              child: Text(context.l10n.next),
             ),
           );
         }

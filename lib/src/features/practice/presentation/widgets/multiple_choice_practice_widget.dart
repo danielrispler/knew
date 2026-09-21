@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../domain/practice_question.dart';
 import '../practice_session_state.dart';
 
@@ -21,7 +22,7 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
     final distractorResult = question.distractorResult;
 
     if (distractorResult == null || !distractorResult.isAvailable) {
-      return const Center(child: Text('Multiple Choice unavailable'));
+      return Center(child: Text(context.l10n.multipleChoiceUnavailable));
     }
 
     final isEngToHeb = question.direction == PromptDirection.englishToHebrew;
@@ -64,8 +65,8 @@ class MultipleChoicePracticeWidget extends StatelessWidget {
 
               Text(
                 isEngToHeb
-                    ? 'Select the correct Hebrew translation:'
-                    : 'Select the correct English term:',
+                    ? context.l10n.selectHebrewTranslation
+                    : context.l10n.selectEnglishTerm,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,

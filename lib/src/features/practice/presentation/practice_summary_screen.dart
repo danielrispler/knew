@@ -112,7 +112,7 @@ class PracticeSummaryScreen extends StatelessWidget {
               if (!state.isExtraPractice &&
                   state.stageMovements.isNotEmpty) ...[
                 Text(
-                  'Stage Progress',
+                  l10n.stageProgress,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

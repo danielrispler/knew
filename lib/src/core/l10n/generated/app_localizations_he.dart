@@ -453,4 +453,283 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get pronunciationUnavailable => 'הגייה באנגלית אינה זמינה.';
+
+  @override
+  String get listen => 'האזנה';
+
+  @override
+  String get retry => 'נסה שוב';
+
+  @override
+  String get next => 'הבא';
+
+  @override
+  String get checkAnswer => 'בדוק תשובה';
+
+  @override
+  String get showAnswer => 'הצג תשובה';
+
+  @override
+  String get didntKnow => 'לא ידעתי';
+
+  @override
+  String get knewIt => 'ידעתי';
+
+  @override
+  String get addEntry => 'הוסף מונח';
+
+  @override
+  String get noEntriesForPractice => 'אין מונחים זמינים לתרגול.';
+
+  @override
+  String questionProgress(int current, int total) {
+    return 'שאלה $current מתוך $total';
+  }
+
+  @override
+  String repeatProgress(int current, int total) {
+    return 'חזרה $current מתוך $total';
+  }
+
+  @override
+  String get selectOptionAbove => 'בחר אפשרות למעלה';
+
+  @override
+  String get multipleChoiceUnavailable => 'שאלה אמריקאית אינה זמינה';
+
+  @override
+  String get selectHebrewTranslation => 'בחר את התרגום הנכון לעברית:';
+
+  @override
+  String get selectEnglishTerm => 'בחר את המונח הנכון באנגלית:';
+
+  @override
+  String get fillBlank => 'השלם את החסר';
+
+  @override
+  String get showFirstLetter => 'הצג אות ראשונה';
+
+  @override
+  String answer(String answer) {
+    return 'תשובה: $answer';
+  }
+
+  @override
+  String get countTypoCorrect => 'חשב כנכון (טעות הקלדה)';
+
+  @override
+  String get exactMatch => 'התאמה מדויקת!';
+
+  @override
+  String typoExpected(String answer) {
+    return 'נכון (טעות הקלדה: צפוי \"$answer\")';
+  }
+
+  @override
+  String incorrectExpected(String answer) {
+    return 'לא נכון. התשובה הצפויה: \"$answer\"';
+  }
+
+  @override
+  String get tapToShowAnswer => 'לחץ להצגת התשובה';
+
+  @override
+  String get stageProgress => 'התקדמות בשלבים';
+
+  @override
+  String get deleteEntryTitle => 'למחוק מונח?';
+
+  @override
+  String deleteEntryConfirm(String term) {
+    return 'האם למחוק את \"$term\"?';
+  }
+
+  @override
+  String get listenToPronunciation => 'האזן להגייה';
+
+  @override
+  String sourceValue(String source) {
+    return 'מקור: $source';
+  }
+
+  @override
+  String get learningProgress => 'התקדמות למידה';
+
+  @override
+  String get levelLabel => 'רמה:';
+
+  @override
+  String get nextDueDate => 'מועד תרגול הבא:';
+
+  @override
+  String get lastReviewedLabel => 'תרגול אחרון:';
+
+  @override
+  String get never => 'אף פעם';
+
+  @override
+  String get timesCorrect => 'מספר תשובות נכונות:';
+
+  @override
+  String get timesIncorrect => 'מספר תשובות שגויות:';
+
+  @override
+  String get editEntry => 'ערוך מונח';
+
+  @override
+  String get deleteEntry => 'מחק מונח';
+
+  @override
+  String get libraryEnrichment => 'העשרת הספרייה';
+
+  @override
+  String enrichmentProgress(
+    int completed,
+    int total,
+    int remaining,
+    String term,
+  ) {
+    return '$completed/$total הושלמו · נותרו $remaining$term';
+  }
+
+  @override
+  String entriesNeedEnrichment(int count) {
+    return '$count מונחים זקוקים להעשרה';
+  }
+
+  @override
+  String get startEnrichment => 'התחל העשרה';
+
+  @override
+  String get stopEnrichment => 'הפסק העשרה';
+
+  @override
+  String customModelSet(String model) {
+    return 'נבחר מודל מותאם אישית: $model';
+  }
+
+  @override
+  String get apiKeyRequired =>
+      'הוסף את מפתח ה-API של Gemini בהגדרות, או הזן את המונח ידנית.';
+
+  @override
+  String connectionError(String error) {
+    return 'שגיאת חיבור: $error';
+  }
+
+  @override
+  String settingsLoadError(String error) {
+    return 'שגיאה בטעינת ההגדרות: $error';
+  }
+
+  @override
+  String get modelPickerTitle => 'בחירת מודל Gemini';
+
+  @override
+  String get modelPickerDescription =>
+      'בחירה ראשית לחיפושים אוטומטיים. המערכת עוברת למודל חלופי במקרה של עומס.';
+
+  @override
+  String get modelDefault => 'ברירת מחדל – המודל החזק ביותר';
+
+  @override
+  String get modelHighPerformance => 'מודל בביצועים גבוהים';
+
+  @override
+  String get modelFastCapable => 'מודל מהיר ויעיל';
+
+  @override
+  String get modelBalanced => 'מודל מאוזן';
+
+  @override
+  String get modelFallback => 'חלופה מהירה וקלה';
+
+  @override
+  String get modelCustomDescription => 'הזן מזהה מודל מותאם אישית';
+
+  @override
+  String get exportEmpty => 'אין מונחים לייצוא.';
+
+  @override
+  String get backupShared => 'גיבוי אוסף המילים שותף בהצלחה.';
+
+  @override
+  String exportFailed(String error) {
+    return 'הייצוא נכשל: $error';
+  }
+
+  @override
+  String get importComplete => 'הייבוא הושלם';
+
+  @override
+  String importTotal(int count) {
+    return 'סך הכול מונחים שעובדו: $count';
+  }
+
+  @override
+  String importAdded(int count) {
+    return '• נוספו: $count';
+  }
+
+  @override
+  String importUpdated(int count) {
+    return '• עודכנו: $count';
+  }
+
+  @override
+  String importKept(int count) {
+    return '• נשמרו כפי שהם: $count';
+  }
+
+  @override
+  String get importFailed => 'הייבוא נכשל';
+
+  @override
+  String importError(String error) {
+    return 'שגיאה בייבוא הגיבוי: $error';
+  }
+
+  @override
+  String get clearInput => 'נקה קלט';
+
+  @override
+  String get viewEntry => 'הצג מונח';
+
+  @override
+  String get openSettings => 'פתח הגדרות';
+
+  @override
+  String entrySaved(String term) {
+    return '\"$term\" נשמר בספרייה';
+  }
+
+  @override
+  String entrySaveError(String error) {
+    return 'שגיאה בשמירת המונח: $error';
+  }
+
+  @override
+  String libraryLoadError(String error) {
+    return 'שגיאה בטעינת הספרייה: $error';
+  }
+
+  @override
+  String targetTermFeedback(String result) {
+    return 'מונח היעד: $result';
+  }
+
+  @override
+  String meaningFeedback(String result) {
+    return 'משמעות: $result';
+  }
+
+  @override
+  String grammarFeedback(String result) {
+    return 'דקדוק: $result';
+  }
+
+  @override
+  String naturalnessFeedback(String result) {
+    return 'טבעיות (למשוב בלבד): $result';
+  }
 }

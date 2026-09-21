@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:knew/src/core/l10n/generated/app_localizations.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import 'package:knew/src/core/theme/app_theme.dart';
 import 'package:knew/src/features/settings/presentation/settings_providers.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_list_screen.dart';
@@ -36,7 +36,7 @@ class KnewApp extends ConsumerWidget {
     );
 
     return MaterialApp(
-      title: 'knew',
+      onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

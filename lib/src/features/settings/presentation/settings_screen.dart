@@ -107,15 +107,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       const Divider(height: 32),
                       Text(
-                        'Library Enrichment',
+                        l10n.libraryEnrichment,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         enrichment.isRunning
-                            ? '${enrichment.completed}/${enrichment.total} complete · ${enrichment.remaining} remaining${enrichment.currentTerm == null ? '' : ' · ${enrichment.currentTerm}'}'
-                            : '${enrichment.remaining} entries need enrichment',
+                            ? l10n.enrichmentProgress(
+                                enrichment.completed,
+                                enrichment.total,
+                                enrichment.remaining,
+                                '',
+                              )
+                            : l10n.entriesNeedEnrichment(enrichment.remaining),
                       ),
                       if (enrichment.error != null) ...[
                         const SizedBox(height: 4),
@@ -136,8 +141,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         label: Text(
                           enrichment.isRunning
-                              ? 'Stop enrichment'
-                              : 'Start enrichment',
+                              ? l10n.stopEnrichment
+                              : l10n.startEnrichment,
                         ),
                       ),
                       const Divider(height: 32),
@@ -252,7 +257,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Custom model set to: $customVal',
+                                        l10n.customModelSet(customVal),
                                       ),
                                     ),
                                   );
@@ -302,10 +307,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 final key = _apiKeyController.text.trim();
                                 if (key.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Add your Gemini API key in Settings, or enter the word manually.',
-                                      ),
+                                    SnackBar(
+                                      content: Text(l10n.apiKeyRequired),
                                     ),
                                   );
                                   return;
@@ -340,7 +343,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   if (mounted) {
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text('Connection error: $e'),
+                                        content: Text(
+                                          l10n.connectionError('$e'),
+                                        ),
                                       ),
                                     );
                                   }
@@ -463,7 +468,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) =>
-                    Center(child: Text('Error loading settings: $err')),
+                    Center(child: Text(l10n.settingsLoadError('$err'))),
               ),
             ),
           );
@@ -559,14 +564,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 Text(
-                  'Select Gemini Model',
+                  sheetContext.l10n.modelPickerTitle,
                   style: Theme.of(
                     sheetContext,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Primary choice for automated lookups. Automatically falls back if rate-limited.',
+                  sheetContext.l10n.modelPickerDescription,
                   style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
                     color: Theme.of(sheetContext).colorScheme.outline,
                   ),

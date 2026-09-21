@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import '../../domain/practice_question.dart';
 
 class PracticeNotebookCard extends StatefulWidget {
@@ -139,7 +140,7 @@ class _PracticeNotebookCardState extends State<PracticeNotebookCard>
               const SizedBox(height: 24),
               if (!widget.isRevealed) ...[
                 Text(
-                  isEnglishPrompt ? 'Tap to show answer' : 'לחץ להצגת התשובה',
+                  context.l10n.tapToShowAnswer,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

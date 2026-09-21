@@ -588,7 +588,7 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) =>
-                    Center(child: Text('Error loading library: $err')),
+                    Center(child: Text(context.l10n.libraryLoadError('$err'))),
               ),
             ),
           );

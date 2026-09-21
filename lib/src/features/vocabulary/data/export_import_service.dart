@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:knew/src/core/l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
@@ -404,9 +405,9 @@ class ExportImportService {
           discovery['known'].isEmpty &&
           discovery['learned'].isEmpty) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No vocabulary entries to export.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.l10n.exportEmpty)));
         }
         return;
       }
@@ -441,16 +442,14 @@ class ExportImportService {
       );
 
       if (result.status == ShareResultStatus.success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vocabulary backup shared successfully.'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.backupShared)));
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: ${e.toString()}')),
+          SnackBar(content: Text(context.l10n.exportFailed(e.toString()))),
         );
       }
     }
@@ -498,22 +497,22 @@ class ExportImportService {
         await showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Import Complete'),
+            title: Text(context.l10n.importComplete),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Total entries processed: ${parsedEntries.length}'),
+                Text(context.l10n.importTotal(parsedEntries.length)),
                 const SizedBox(height: 8),
-                Text('• Added: ${mergeResult.added}'),
-                Text('• Updated: ${mergeResult.updated}'),
-                Text('• Kept existing (skipped): ${mergeResult.skipped}'),
+                Text(context.l10n.importAdded(mergeResult.added)),
+                Text(context.l10n.importUpdated(mergeResult.updated)),
+                Text(context.l10n.importKept(mergeResult.skipped)),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
+                child: Text(context.l10n.ok),
               ),
             ],
           ),
@@ -529,16 +528,16 @@ class ExportImportService {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Import Failed'),
+            title: Text(context.l10n.importFailed),
             content: Text(
               e is ExportImportException
                   ? e.message
-                  : 'Error importing backup: $e',
+                  : context.l10n.importError('$e'),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
+                child: Text(context.l10n.ok),
               ),
             ],
           ),

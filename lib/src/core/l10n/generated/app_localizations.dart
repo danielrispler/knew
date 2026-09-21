@@ -907,6 +907,455 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'English pronunciation unavailable.'**
   String get pronunciationUnavailable;
+
+  /// No description provided for @listen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get listen;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @checkAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Check answer'**
+  String get checkAnswer;
+
+  /// No description provided for @showAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show answer'**
+  String get showAnswer;
+
+  /// No description provided for @didntKnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t know'**
+  String get didntKnow;
+
+  /// No description provided for @knewIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Knew it'**
+  String get knewIt;
+
+  /// No description provided for @addEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry'**
+  String get addEntry;
+
+  /// No description provided for @noEntriesForPractice.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries available for practice.'**
+  String get noEntriesForPractice;
+
+  /// No description provided for @questionProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Question {current} of {total}'**
+  String questionProgress(int current, int total);
+
+  /// No description provided for @repeatProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat {current} of {total}'**
+  String repeatProgress(int current, int total);
+
+  /// No description provided for @selectOptionAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an option above'**
+  String get selectOptionAbove;
+
+  /// No description provided for @multipleChoiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiple choice unavailable'**
+  String get multipleChoiceUnavailable;
+
+  /// No description provided for @selectHebrewTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the correct Hebrew translation:'**
+  String get selectHebrewTranslation;
+
+  /// No description provided for @selectEnglishTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the correct English term:'**
+  String get selectEnglishTerm;
+
+  /// No description provided for @fillBlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the blank'**
+  String get fillBlank;
+
+  /// No description provided for @showFirstLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Show first letter'**
+  String get showFirstLetter;
+
+  /// No description provided for @answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer: {answer}'**
+  String answer(String answer);
+
+  /// No description provided for @countTypoCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Count as correct (typo)'**
+  String get countTypoCorrect;
+
+  /// No description provided for @exactMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact match!'**
+  String get exactMatch;
+
+  /// No description provided for @typoExpected.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct (typo: expected \"{answer}\")'**
+  String typoExpected(String answer);
+
+  /// No description provided for @incorrectExpected.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect. Expected: \"{answer}\"'**
+  String incorrectExpected(String answer);
+
+  /// No description provided for @tapToShowAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to show answer'**
+  String get tapToShowAnswer;
+
+  /// No description provided for @stageProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage Progress'**
+  String get stageProgress;
+
+  /// No description provided for @deleteEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Entry?'**
+  String get deleteEntryTitle;
+
+  /// No description provided for @deleteEntryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{term}\"?'**
+  String deleteEntryConfirm(String term);
+
+  /// No description provided for @listenToPronunciation.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen to pronunciation'**
+  String get listenToPronunciation;
+
+  /// No description provided for @sourceValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {source}'**
+  String sourceValue(String source);
+
+  /// No description provided for @learningProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning Progress'**
+  String get learningProgress;
+
+  /// No description provided for @levelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level:'**
+  String get levelLabel;
+
+  /// No description provided for @nextDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Due Date:'**
+  String get nextDueDate;
+
+  /// No description provided for @lastReviewedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Reviewed:'**
+  String get lastReviewedLabel;
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
+
+  /// No description provided for @timesCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Times Correct:'**
+  String get timesCorrect;
+
+  /// No description provided for @timesIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Times Incorrect:'**
+  String get timesIncorrect;
+
+  /// No description provided for @editEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Entry'**
+  String get editEntry;
+
+  /// No description provided for @deleteEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Entry'**
+  String get deleteEntry;
+
+  /// No description provided for @libraryEnrichment.
+  ///
+  /// In en, this message translates to:
+  /// **'Library Enrichment'**
+  String get libraryEnrichment;
+
+  /// No description provided for @enrichmentProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} complete · {remaining} remaining{term}'**
+  String enrichmentProgress(
+    int completed,
+    int total,
+    int remaining,
+    String term,
+  );
+
+  /// No description provided for @entriesNeedEnrichment.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries need enrichment'**
+  String entriesNeedEnrichment(int count);
+
+  /// No description provided for @startEnrichment.
+  ///
+  /// In en, this message translates to:
+  /// **'Start enrichment'**
+  String get startEnrichment;
+
+  /// No description provided for @stopEnrichment.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop enrichment'**
+  String get stopEnrichment;
+
+  /// No description provided for @customModelSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom model set to: {model}'**
+  String customModelSet(String model);
+
+  /// No description provided for @apiKeyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your Gemini API key in Settings, or enter the term manually.'**
+  String get apiKeyRequired;
+
+  /// No description provided for @connectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection error: {error}'**
+  String connectionError(String error);
+
+  /// No description provided for @settingsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading settings: {error}'**
+  String settingsLoadError(String error);
+
+  /// No description provided for @modelPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Gemini Model'**
+  String get modelPickerTitle;
+
+  /// No description provided for @modelPickerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary choice for automated lookups. Automatically falls back if rate-limited.'**
+  String get modelPickerDescription;
+
+  /// No description provided for @modelDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default - Strongest model'**
+  String get modelDefault;
+
+  /// No description provided for @modelHighPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'High performance model'**
+  String get modelHighPerformance;
+
+  /// No description provided for @modelFastCapable.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast & capable model'**
+  String get modelFastCapable;
+
+  /// No description provided for @modelBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced standard model'**
+  String get modelBalanced;
+
+  /// No description provided for @modelFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightweight fast fallback'**
+  String get modelFallback;
+
+  /// No description provided for @modelCustomDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Specify custom model identifier'**
+  String get modelCustomDescription;
+
+  /// No description provided for @exportEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No vocabulary entries to export.'**
+  String get exportEmpty;
+
+  /// No description provided for @backupShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Vocabulary backup shared successfully.'**
+  String get backupShared;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String exportFailed(String error);
+
+  /// No description provided for @importComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Complete'**
+  String get importComplete;
+
+  /// No description provided for @importTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total entries processed: {count}'**
+  String importTotal(int count);
+
+  /// No description provided for @importAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'• Added: {count}'**
+  String importAdded(int count);
+
+  /// No description provided for @importUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'• Updated: {count}'**
+  String importUpdated(int count);
+
+  /// No description provided for @importKept.
+  ///
+  /// In en, this message translates to:
+  /// **'• Kept existing (skipped): {count}'**
+  String importKept(int count);
+
+  /// No description provided for @importFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Failed'**
+  String get importFailed;
+
+  /// No description provided for @importError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error importing backup: {error}'**
+  String importError(String error);
+
+  /// No description provided for @clearInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear input'**
+  String get clearInput;
+
+  /// No description provided for @viewEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'View Entry'**
+  String get viewEntry;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @entrySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved \"{term}\" to library'**
+  String entrySaved(String term);
+
+  /// No description provided for @entrySaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving entry: {error}'**
+  String entrySaveError(String error);
+
+  /// No description provided for @libraryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading library: {error}'**
+  String libraryLoadError(String error);
+
+  /// No description provided for @targetTermFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Target term: {result}'**
+  String targetTermFeedback(String result);
+
+  /// No description provided for @meaningFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Meaning: {result}'**
+  String meaningFeedback(String result);
+
+  /// No description provided for @grammarFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Grammar: {result}'**
+  String grammarFeedback(String result);
+
+  /// No description provided for @naturalnessFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Naturalness (feedback only): {result}'**
+  String naturalnessFeedback(String result);
 }
 
 class _AppLocalizationsDelegate
