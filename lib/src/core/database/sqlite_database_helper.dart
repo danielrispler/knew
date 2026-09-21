@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 class SQLiteDatabaseHelper {
   static Database? _db;
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
 
   static Future<Database> getDatabase() async {
     if (_db != null && _db!.isOpen) return _db!;
@@ -31,6 +31,7 @@ class SQLiteDatabaseHelper {
         english TEXT NOT NULL CHECK (length(trim(english)) > 0),
         english_key TEXT NOT NULL UNIQUE CHECK (length(english_key) > 0),
         meanings TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ready',
         source TEXT,
         context TEXT,
         level INTEGER NOT NULL DEFAULT 0 CHECK (level BETWEEN 0 AND 6),
@@ -80,6 +81,11 @@ class SQLiteDatabaseHelper {
   ) async {
     await db.transaction((txn) async {
       if (oldVersion < 2) await _createSuggestedWordsTable(txn);
+      if (oldVersion < 3) {
+        await txn.execute(
+          "ALTER TABLE words ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'",
+        );
+      }
     });
   }
 }

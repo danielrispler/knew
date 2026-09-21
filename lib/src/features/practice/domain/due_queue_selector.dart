@@ -15,7 +15,9 @@ abstract class DueQueueSelector {
     required List<Entry> library,
     required String todayDueDate,
   }) {
-    return library.any((e) => e.dueDate.compareTo(todayDueDate) <= 0);
+    return library.any(
+      (e) => e.isPracticeReady && e.dueDate.compareTo(todayDueDate) <= 0,
+    );
   }
 
   static List<Entry> getReviewedToday({
@@ -49,7 +51,9 @@ abstract class DueQueueSelector {
     final sessionSize = requestedSessionSize.clamp(1, 100);
 
     final dueEntries = library
-        .where((e) => e.dueDate.compareTo(todayDueDate) <= 0)
+        .where(
+          (e) => e.isPracticeReady && e.dueDate.compareTo(todayDueDate) <= 0,
+        )
         .toList();
 
     bool isExtraPractice = false;
@@ -64,10 +68,15 @@ abstract class DueQueueSelector {
         candidates = reviewedToday;
       } else {
         final futureEntries = library
-            .where((e) => e.dueDate.compareTo(todayDueDate) > 0)
+            .where(
+              (e) => e.isPracticeReady && e.dueDate.compareTo(todayDueDate) > 0,
+            )
             .toList();
         if (futureEntries.isEmpty) {
-          return const QueueSelectionResult(entries: [], isExtraPractice: false);
+          return const QueueSelectionResult(
+            entries: [],
+            isExtraPractice: false,
+          );
         }
         candidates = futureEntries;
       }
@@ -76,7 +85,9 @@ abstract class DueQueueSelector {
       candidates = dueEntries;
     } else {
       final futureEntries = library
-          .where((e) => e.dueDate.compareTo(todayDueDate) > 0)
+          .where(
+            (e) => e.isPracticeReady && e.dueDate.compareTo(todayDueDate) > 0,
+          )
           .toList();
 
       if (futureEntries.isEmpty) {

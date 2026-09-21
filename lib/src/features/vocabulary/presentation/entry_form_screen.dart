@@ -132,9 +132,6 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
         MeaningFormData(partOfSpeech: '', definition: '', translations: ['']),
       );
       _isDrawerExpanded = false;
-      if (widget.initialTerm != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _performLookup());
-      }
     }
   }
 
@@ -485,6 +482,12 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialEntry != null;
+    if (!isEditing) {
+      return _QuickCaptureScreen(
+        initialTerm: widget.initialTerm,
+        onSaved: widget.onSaved,
+      );
+    }
     final l10n = context.l10n;
     final isTermRtl = _isHebrew(_termController.text);
 
@@ -1364,6 +1367,96 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                 );
               },
             ),
+    );
+  }
+}
+
+class _QuickCaptureScreen extends ConsumerStatefulWidget {
+  const _QuickCaptureScreen({this.initialTerm, this.onSaved});
+  final String? initialTerm;
+  final Future<void> Function(Entry savedEntry)? onSaved;
+
+  @override
+  ConsumerState<_QuickCaptureScreen> createState() =>
+      _QuickCaptureScreenState();
+}
+
+class _QuickCaptureScreenState extends ConsumerState<_QuickCaptureScreen> {
+  late final TextEditingController _controller;
+  final _focusNode = FocusNode();
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialTerm ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _add() async {
+    final term = _controller.text.trim();
+    if (term.isEmpty || RegExp(r'[\u05D0-\u05EA]').hasMatch(term)) {
+      setState(() => _error = 'Enter an English term.');
+      return;
+    }
+    final repository = ref.read(wordsRepositoryProvider);
+    if (await repository.existsEnglishKey(Entry.generateKey(term))) {
+      setState(() => _error = 'This term is already in your library.');
+      return;
+    }
+    await ref.read(pendingEntryProvider).capture(term);
+    await ref.read(vocabularyListProvider.notifier).refreshList();
+    _controller.clear();
+    _focusNode.requestFocus();
+    setState(() => _error = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final queue = ref.watch(pendingEntryProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Add terms')),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              key: const Key('quick_capture_field'),
+              controller: _controller,
+              focusNode: _focusNode,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'English term',
+                hintText: 'e.g., persistent',
+              ),
+              onSubmitted: (_) => _add(),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(_error!),
+              ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _add,
+              child: const Text('Add and continue'),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              queue.isRunning
+                  ? 'Gemini is processing terms…'
+                  : 'Terms are processed when the app is open.',
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

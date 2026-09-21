@@ -205,6 +205,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lookupWithGemini => 'Lookup with Gemini';
 
   @override
+  String get quickCaptureTitle => 'Add terms';
+
+  @override
+  String get quickCaptureAdd => 'Add and continue';
+
+  @override
+  String get quickCaptureProcessing => 'Gemini is processing terms…';
+
+  @override
   String get meaningSection => 'Meanings';
 
   @override

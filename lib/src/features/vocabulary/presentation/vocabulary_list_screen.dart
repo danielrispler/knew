@@ -427,6 +427,22 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                       child: InkWell(
                                         borderRadius: BorderRadius.circular(18),
                                         onTap: () {
+                                          if (entry.status ==
+                                              EntryStatus.failed) {
+                                            ref
+                                                .read(pendingEntryProvider)
+                                                .retry(entry);
+                                            ref
+                                                .read(
+                                                  vocabularyListProvider
+                                                      .notifier,
+                                                )
+                                                .refreshList();
+                                            return;
+                                          }
+                                          if (entry.status ==
+                                              EntryStatus.pending)
+                                            return;
                                           showWordDetailBottomSheet(
                                             context,
                                             entry,
@@ -477,10 +493,18 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
                                                       ),
                                                     ),
                                                     child: Text(
-                                                      _stageLabel(
-                                                        entry.stage,
-                                                        l10n,
-                                                      ),
+                                                      entry.status ==
+                                                              EntryStatus
+                                                                  .pending
+                                                          ? 'Processing'
+                                                          : entry.status ==
+                                                                EntryStatus
+                                                                    .failed
+                                                          ? 'Retry'
+                                                          : _stageLabel(
+                                                              entry.stage,
+                                                              l10n,
+                                                            ),
                                                       style: TextStyle(
                                                         color: _stageColor(
                                                           entry.stage,

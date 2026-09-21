@@ -204,6 +204,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get lookupWithGemini => 'חיפוש באמצעות Gemini';
 
   @override
+  String get quickCaptureTitle => 'הוספת מונחים';
+
+  @override
+  String get quickCaptureAdd => 'הוסף והמשך';
+
+  @override
+  String get quickCaptureProcessing => 'Gemini מעבד מונחים…';
+
+  @override
   String get meaningSection => 'משמעויות';
 
   @override

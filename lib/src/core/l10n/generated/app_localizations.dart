@@ -452,6 +452,24 @@ abstract class AppLocalizations {
   /// **'Lookup with Gemini'**
   String get lookupWithGemini;
 
+  /// No description provided for @quickCaptureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add terms'**
+  String get quickCaptureTitle;
+
+  /// No description provided for @quickCaptureAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add and continue'**
+  String get quickCaptureAdd;
+
+  /// No description provided for @quickCaptureProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini is processing terms…'**
+  String get quickCaptureProcessing;
+
   /// No description provided for @meaningSection.
   ///
   /// In en, this message translates to:

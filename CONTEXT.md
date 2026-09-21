@@ -10,6 +10,8 @@ _Avoid_: "Word" when excluding phrases would change the meaning.
 **Entry**: A saved term together with its meanings, source, context, and learning progress.
 _Avoid_: "Translation" when referring to the whole saved record.
 
+**Pending Entry**: A captured English Term waiting for Gemini to provide Meanings. It is visible in the library but cannot be practiced.
+
 **Meaning**: One sense of a term, with its part of speech, Hebrew translations, and a simple English definition.
 
 **Example Usage**: A Meaning-owned English sentence with one marked target form, used for Flashcard context and Cloze.

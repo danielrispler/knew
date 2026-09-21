@@ -6,6 +6,7 @@ import 'package:knew/src/core/l10n/generated/app_localizations.dart';
 import 'package:knew/src/core/theme/app_theme.dart';
 import 'package:knew/src/features/settings/presentation/settings_providers.dart';
 import 'package:knew/src/features/vocabulary/presentation/vocabulary_list_screen.dart';
+import 'package:knew/src/features/vocabulary/presentation/vocabulary_providers.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,7 @@ class KnewApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsProvider);
+    ref.watch(pendingEntryProvider);
     final themeMode = settingsAsync.when(
       data: (s) => s.themeMode,
       loading: () => ThemeMode.system,

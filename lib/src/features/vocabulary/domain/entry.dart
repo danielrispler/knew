@@ -2,17 +2,16 @@ import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'meaning.dart';
 
-enum Stage {
-  newStage,
-  familiar,
-  learned,
-}
+enum Stage { newStage, familiar, learned }
+
+enum EntryStatus { pending, ready, failed }
 
 class Entry {
   final String id;
   final String english;
   final String englishKey;
   final List<Meaning> meanings;
+  final EntryStatus status;
   final String? source;
   final String? context;
   final int level;
@@ -28,6 +27,7 @@ class Entry {
     required this.english,
     required this.englishKey,
     required this.meanings,
+    this.status = EntryStatus.ready,
     this.source,
     this.context,
     required this.level,
@@ -59,6 +59,7 @@ class Entry {
     String? id,
     required String english,
     required List<Meaning> meanings,
+    EntryStatus status = EntryStatus.ready,
     String? source,
     String? context,
     int level = 0,
@@ -78,8 +79,13 @@ class Entry {
       english: normalizedEnglish,
       englishKey: key,
       meanings: meanings,
-      source: (source != null && source.trim().isNotEmpty) ? source.trim() : null,
-      context: (context != null && context.trim().isNotEmpty) ? context.trim() : null,
+      status: status,
+      source: (source != null && source.trim().isNotEmpty)
+          ? source.trim()
+          : null,
+      context: (context != null && context.trim().isNotEmpty)
+          ? context.trim()
+          : null,
       level: level,
       dueDate: dueDate ?? todayDueDate(),
       lastReviewedAt: lastReviewedAt,
@@ -102,6 +108,7 @@ class Entry {
       'english': english,
       'english_key': englishKey,
       'meanings': jsonEncode(meanings.map((m) => m.toJson()).toList()),
+      'status': status.name,
       'source': source,
       'context': context,
       'level': level,
@@ -126,6 +133,7 @@ class Entry {
       english: map['english'] as String,
       englishKey: map['english_key'] as String,
       meanings: meaningsList,
+      status: EntryStatus.values.byName(map['status'] as String? ?? 'ready'),
       source: map['source'] as String?,
       context: map['context'] as String?,
       level: map['level'] as int,
@@ -142,6 +150,7 @@ class Entry {
     String? id,
     String? english,
     List<Meaning>? meanings,
+    EntryStatus? status,
     String? source,
     bool clearSource = false,
     String? context,
@@ -163,15 +172,21 @@ class Entry {
       english: newEnglish,
       englishKey: newKey,
       meanings: meanings ?? this.meanings,
+      status: status ?? this.status,
       source: clearSource ? null : (source ?? this.source),
       context: clearContext ? null : (context ?? this.context),
       level: level ?? this.level,
       dueDate: dueDate ?? this.dueDate,
-      lastReviewedAt: clearLastReviewedAt ? null : (lastReviewedAt ?? this.lastReviewedAt),
+      lastReviewedAt: clearLastReviewedAt
+          ? null
+          : (lastReviewedAt ?? this.lastReviewedAt),
       timesCorrect: timesCorrect ?? this.timesCorrect,
       timesWrong: timesWrong ?? this.timesWrong,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  bool get isPracticeReady =>
+      status == EntryStatus.ready && meanings.isNotEmpty;
 }
