@@ -34,7 +34,7 @@ _Avoid_: "Stage" for an individual numbered level.
 **Stage**: The grouping of levels into New (0–2), Familiar (3–4), or Learned (5–6).
 _Avoid_: "Level" for the named grouping.
 
-**Due**: Ready for scheduled review because the entry's review date is today or earlier.
+**Due**: Ready for scheduled review because the entry's local-calendar review date is today or earlier.
 
 **Scheduled**: Standard spaced-repetition practice of due entries that updates learning progress.
 
@@ -47,6 +47,10 @@ _Avoid_: "Level" for the named grouping.
 **Extra practice**: Practice offered when nothing is due, without changing review schedules.
 
 **Early review**: Opt-in practice of entries before their scheduled due date that updates learning progress and advances levels.
+
+**Processing**: A Pending Entry awaiting background enrichment while the app is active. It is not ready for practice and has no manual completion action.
+
+**Failed Entry**: A Pending Entry whose enrichment did not complete and can be retried by the learner.
 
 ## Discover
 
