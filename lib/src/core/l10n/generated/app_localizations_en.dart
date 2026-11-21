@@ -78,6 +78,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverLearn => 'Learn';
 
   @override
+  String get readingTitle => 'Reading';
+
+  @override
+  String readingChapterOf(int chapter, int total) {
+    return 'Chapter $chapter of $total';
+  }
+
+  @override
+  String get readingEpilogue => 'Epilogue';
+
+  @override
+  String get readingPreviousChapter => 'Previous chapter';
+
+  @override
+  String get readingNextChapter => 'Next chapter';
+
+  @override
+  String get readingGetWords => 'Get words for this chapter';
+
+  @override
+  String get readingMoreWords => 'More words';
+
+  @override
+  String get readingAddWord => 'Add a word from this chapter';
+
+  @override
+  String get readingNoKey =>
+      'Add your Claude API key in Settings to get words for a chapter.';
+
+  @override
+  String get readingNothingWaiting => 'No words are waiting for this chapter.';
+
+  @override
+  String get claudeApiKey => 'Claude API Key';
+
+  @override
+  String get claudeApiKeyHint =>
+      'Paste a key from the Claude Console (platform.claude.com). Used for Reading only.';
+
+  @override
+  String get claudeConnectionSuccessful =>
+      'Connection successful! Claude API key is active.';
+
+  @override
+  String get claudeErrorMissingKey => 'Add your Claude API key in Settings.';
+
+  @override
+  String get claudeErrorRejectedKey =>
+      'Claude rejected this API key. Replace it in Settings.';
+
+  @override
+  String get claudeErrorBilling =>
+      'Your Claude credit has run out. Check billing in the Claude Console.';
+
+  @override
+  String get claudeErrorRateLimited =>
+      'Claude\'s limit was reached. Try again in a moment.';
+
+  @override
+  String get claudeErrorRejectedRequest =>
+      'Claude rejected this request. Try again later.';
+
+  @override
+  String get claudeErrorUnavailable =>
+      'Claude is temporarily unavailable. Try again later.';
+
+  @override
+  String get claudeErrorNetwork =>
+      'Could not reach Claude. Check your connection.';
+
+  @override
+  String get claudeErrorTimeout => 'Claude took too long. Try again.';
+
+  @override
+  String get claudeErrorUnusable =>
+      'Claude returned an unusable answer. Try again.';
+
+  @override
   String get searchPlaceholder => 'Search terms or meanings...';
 
   @override

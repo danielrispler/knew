@@ -74,6 +74,10 @@ class FakeSecureStorageRepository implements SecureStorageRepository {
   Future<void> setApiKey(String key) async {}
   @override
   Future<void> deleteApiKey() async {}
+  @override
+  Future<String?> getClaudeApiKey() async => '';
+  @override
+  Future<void> setClaudeApiKey(String key) async {}
 }
 
 void main() {

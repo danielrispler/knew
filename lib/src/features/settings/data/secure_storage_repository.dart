@@ -5,14 +5,15 @@ class SecureStorageRepository {
   final Map<String, String>? _inMemoryStorage;
 
   static const String _keyApiKey = 'gemini_api_key';
+  static const String _keyClaudeApiKey = 'claude_api_key';
 
   SecureStorageRepository([FlutterSecureStorage? storage])
-      : _storage = storage ?? const FlutterSecureStorage(),
-        _inMemoryStorage = null;
+    : _storage = storage ?? const FlutterSecureStorage(),
+      _inMemoryStorage = null;
 
   SecureStorageRepository.inMemory([Map<String, String>? storage])
-      : _storage = null,
-        _inMemoryStorage = storage ?? {};
+    : _storage = null,
+      _inMemoryStorage = storage ?? {};
 
   Future<String?> getApiKey() async {
     if (_inMemoryStorage != null) {
@@ -60,5 +61,29 @@ class SecureStorageRepository {
     try {
       await _storage?.delete(key: _keyApiKey);
     } catch (_) {}
+  }
+
+  Future<String?> getClaudeApiKey() async {
+    if (_inMemoryStorage != null) return _inMemoryStorage[_keyClaudeApiKey];
+    try {
+      return await _storage?.read(key: _keyClaudeApiKey);
+    } on Exception catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> setClaudeApiKey(String apiKey) async {
+    final value = apiKey.trim();
+    if (_inMemoryStorage != null) {
+      value.isEmpty
+          ? _inMemoryStorage.remove(_keyClaudeApiKey)
+          : _inMemoryStorage[_keyClaudeApiKey] = value;
+      return;
+    }
+    try {
+      value.isEmpty
+          ? await _storage?.delete(key: _keyClaudeApiKey)
+          : await _storage?.write(key: _keyClaudeApiKey, value: value);
+    } on Exception catch (_) {}
   }
 }

@@ -19,11 +19,12 @@ class PendingEntryController extends ChangeNotifier {
   bool isRunning = false;
   bool _restartRequested = false;
 
-  Future<Entry> capture(String term) async {
+  Future<Entry> capture(String term, {String? source}) async {
     final entry = Entry.create(
       english: term,
       meanings: const [],
       status: EntryStatus.pending,
+      source: source,
     );
     await _repository.insertEntry(entry);
     unawaited(start());

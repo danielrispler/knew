@@ -10,6 +10,7 @@ import 'entry_form_screen.dart';
 import 'word_detail_screen.dart';
 import 'vocabulary_providers.dart';
 import '../../discover/presentation/discover_screen.dart';
+import '../../reading/presentation/reading_screen.dart';
 
 enum _StageFilterChoice { all, newStage, familiar, learned }
 
@@ -211,6 +212,13 @@ class _VocabularyListScreenState extends ConsumerState<VocabularyListScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_book_outlined),
+            tooltip: l10n.readingTitle,
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ReadingScreen())),
+          ),
           IconButton(
             icon: const Icon(Icons.auto_awesome_outlined),
             tooltip: l10n.discoverTitle,

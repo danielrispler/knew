@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 class SQLiteDatabaseHelper {
   static Database? _db;
 
-  static const int currentSchemaVersion = 3;
+  static const int currentSchemaVersion = 4;
 
   static Future<Database> getDatabase() async {
     if (_db != null && _db!.isOpen) return _db!;
@@ -56,7 +56,25 @@ class SQLiteDatabaseHelper {
     ''');
 
     await _createSuggestedWordsTable(db);
+    await _createChapterWordsTable(db);
   }
+
+  static Future<void> _createChapterWordsTable(DatabaseExecutor db) =>
+      db.execute('''
+      CREATE TABLE IF NOT EXISTS chapter_words (
+        book INTEGER NOT NULL,
+        chapter INTEGER NOT NULL,
+        english_key TEXT NOT NULL,
+        term TEXT NOT NULL,
+        hebrew TEXT NOT NULL,
+        definition TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'suggested',
+        revealed INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (book, chapter, english_key)
+      );
+    ''');
 
   static Future<void> _createSuggestedWordsTable(DatabaseExecutor db) =>
       db.execute('''
@@ -89,6 +107,7 @@ class SQLiteDatabaseHelper {
           );
         }
       }
+      if (oldVersion < 4) await _createChapterWordsTable(txn);
     });
   }
 }

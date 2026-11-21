@@ -319,6 +319,19 @@ class SuggestedWordsRepository {
     await _setStatus(word.key, 'known');
   }
 
+  /// Adds a term that never came from the Candidate Pool to the Known list.
+  Future<void> markKnownTerm(String key, String term) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.insert('suggested_words', {
+      'english_key': key,
+      'term': term,
+      'status': 'known',
+      'created_at': now,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await _setStatus(key, 'known');
+  }
+
   Future<void> skip(String key) async {
     final rows = await db.query(
       'suggested_words',

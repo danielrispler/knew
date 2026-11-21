@@ -236,6 +236,138 @@ abstract class AppLocalizations {
   /// **'Learn'**
   String get discoverLearn;
 
+  /// No description provided for @readingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get readingTitle;
+
+  /// No description provided for @readingChapterOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter {chapter} of {total}'**
+  String readingChapterOf(int chapter, int total);
+
+  /// No description provided for @readingEpilogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Epilogue'**
+  String get readingEpilogue;
+
+  /// No description provided for @readingPreviousChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous chapter'**
+  String get readingPreviousChapter;
+
+  /// No description provided for @readingNextChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Next chapter'**
+  String get readingNextChapter;
+
+  /// No description provided for @readingGetWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Get words for this chapter'**
+  String get readingGetWords;
+
+  /// No description provided for @readingMoreWords.
+  ///
+  /// In en, this message translates to:
+  /// **'More words'**
+  String get readingMoreWords;
+
+  /// No description provided for @readingAddWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a word from this chapter'**
+  String get readingAddWord;
+
+  /// No description provided for @readingNoKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your Claude API key in Settings to get words for a chapter.'**
+  String get readingNoKey;
+
+  /// No description provided for @readingNothingWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'No words are waiting for this chapter.'**
+  String get readingNothingWaiting;
+
+  /// No description provided for @claudeApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude API Key'**
+  String get claudeApiKey;
+
+  /// No description provided for @claudeApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a key from the Claude Console (platform.claude.com). Used for Reading only.'**
+  String get claudeApiKeyHint;
+
+  /// No description provided for @claudeConnectionSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful! Claude API key is active.'**
+  String get claudeConnectionSuccessful;
+
+  /// No description provided for @claudeErrorMissingKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your Claude API key in Settings.'**
+  String get claudeErrorMissingKey;
+
+  /// No description provided for @claudeErrorRejectedKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude rejected this API key. Replace it in Settings.'**
+  String get claudeErrorRejectedKey;
+
+  /// No description provided for @claudeErrorBilling.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Claude credit has run out. Check billing in the Claude Console.'**
+  String get claudeErrorBilling;
+
+  /// No description provided for @claudeErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude\'s limit was reached. Try again in a moment.'**
+  String get claudeErrorRateLimited;
+
+  /// No description provided for @claudeErrorRejectedRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude rejected this request. Try again later.'**
+  String get claudeErrorRejectedRequest;
+
+  /// No description provided for @claudeErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude is temporarily unavailable. Try again later.'**
+  String get claudeErrorUnavailable;
+
+  /// No description provided for @claudeErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach Claude. Check your connection.'**
+  String get claudeErrorNetwork;
+
+  /// No description provided for @claudeErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude took too long. Try again.'**
+  String get claudeErrorTimeout;
+
+  /// No description provided for @claudeErrorUnusable.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude returned an unusable answer. Try again.'**
+  String get claudeErrorUnusable;
+
   /// No description provided for @searchPlaceholder.
   ///
   /// In en, this message translates to:

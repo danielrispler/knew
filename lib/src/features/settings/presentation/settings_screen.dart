@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:knew/src/core/l10n/l10n.dart';
+import '../../reading/data/claude_client.dart';
+import '../../reading/presentation/reading_providers.dart';
 import '../../vocabulary/data/export_import_service.dart';
 import '../../vocabulary/data/gemini_models.dart';
 import '../../vocabulary/domain/gemini_lookup_result.dart';
@@ -17,7 +19,9 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _apiKeyController;
   late final TextEditingController _customModelController;
+  late final TextEditingController _claudeKeyController;
   bool _isTestingKey = false;
+  bool _isTestingClaudeKey = false;
   bool _isCustomModelSelected = false;
 
   @override
@@ -25,9 +29,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.initState();
     _apiKeyController = TextEditingController();
     _customModelController = TextEditingController();
+    _claudeKeyController = TextEditingController();
     final settingsState = ref.read(settingsProvider).value;
     if (settingsState != null) {
       _apiKeyController.text = settingsState.apiKey;
+      _claudeKeyController.text = settingsState.claudeApiKey;
       if (!GeminiModels.availableModels.contains(settingsState.model)) {
         _isCustomModelSelected = true;
         _customModelController.text = settingsState.model;
@@ -39,6 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void dispose() {
     _apiKeyController.dispose();
     _customModelController.dispose();
+    _claudeKeyController.dispose();
     super.dispose();
   }
 
@@ -59,6 +66,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 data: (settings) {
                   if (_apiKeyController.text != settings.apiKey) {
                     _apiKeyController.text = settings.apiKey;
+                  }
+                  if (_claudeKeyController.text.trim() !=
+                      settings.claudeApiKey) {
+                    _claudeKeyController.text = settings.claudeApiKey;
                   }
 
                   final isKnownPreset = GeminiModels.availableModels.contains(
@@ -358,6 +369,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 }
                               },
                         icon: _isTestingKey
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.bolt),
+                        label: Text(l10n.testKeyConnection),
+                      ),
+                      const SizedBox(height: 24),
+                      TextFormField(
+                        key: const Key('claude_api_key_field'),
+                        controller: _claudeKeyController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: l10n.claudeApiKey,
+                          hintText: l10n.claudeApiKeyHint,
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (val) => ref
+                            .read(settingsProvider.notifier)
+                            .setClaudeApiKey(val),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        key: const Key('claude_test_key_button'),
+                        onPressed: _isTestingClaudeKey
+                            ? null
+                            : () async {
+                                final messenger = ScaffoldMessenger.of(context);
+                                setState(() => _isTestingClaudeKey = true);
+                                String message;
+                                try {
+                                  await ref
+                                      .read(claudeClientProvider)
+                                      .testConnection(
+                                        apiKey: _claudeKeyController.text,
+                                      );
+                                  message = l10n.claudeConnectionSuccessful;
+                                } on ClaudeException catch (e) {
+                                  message = claudeErrorMessage(l10n, e.type);
+                                }
+                                if (!mounted) return;
+                                setState(() => _isTestingClaudeKey = false);
+                                messenger.showSnackBar(
+                                  SnackBar(content: Text(message)),
+                                );
+                              },
+                        icon: _isTestingClaudeKey
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,

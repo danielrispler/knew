@@ -70,3 +70,10 @@ _Avoid_: "Dismissed", "Ignored".
 
 **Skipped**: A Suggested Word the user has deferred without indicating familiarity; it may resurface in a future batch.
 _Avoid_: "Hidden", "Snoozed".
+
+## Reading
+
+**Reading**: The book and chapter the learner is currently on.
+
+**Chapter Word**: A word Claude suggests for a Reading; it is not an Entry until the learner chooses to learn it.
+_Avoid_: "Suggested Word", which belongs to Discover.

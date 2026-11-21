@@ -57,6 +57,20 @@ void main() {
     );
     expect(calls, 2);
   });
+
+  test('a captured source survives the lookup', () async {
+    final repository = _Repository();
+    final controller = PendingEntryController(
+      repository: repository,
+      lookup: (term) async => _success(term),
+    );
+
+    await controller.capture('vault', source: 'Harry Potter 1 · ch. 5');
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(repository.entries.single.status, EntryStatus.ready);
+    expect(repository.entries.single.source, 'Harry Potter 1 · ch. 5');
+  });
 }
 
 GeminiSuccessResult _success(String term) => GeminiSuccessResult(

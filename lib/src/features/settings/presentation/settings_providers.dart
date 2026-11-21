@@ -27,6 +27,7 @@ class SettingsState {
   final String theme;
   final String model;
   final String apiKey;
+  final String claudeApiKey;
   final String language;
   final bool isLoading;
 
@@ -35,6 +36,7 @@ class SettingsState {
     required this.theme,
     required this.model,
     required this.apiKey,
+    this.claudeApiKey = '',
     this.language = 'system',
     this.isLoading = false,
   });
@@ -68,6 +70,7 @@ class SettingsState {
     String? theme,
     String? model,
     String? apiKey,
+    String? claudeApiKey,
     String? language,
     bool? isLoading,
   }) {
@@ -76,6 +79,7 @@ class SettingsState {
       theme: theme ?? this.theme,
       model: model ?? this.model,
       apiKey: apiKey ?? this.apiKey,
+      claudeApiKey: claudeApiKey ?? this.claudeApiKey,
       language: language ?? this.language,
       isLoading: isLoading ?? this.isLoading,
     );
@@ -92,6 +96,7 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
     final theme = await settingsRepo.getTheme();
     final model = await settingsRepo.getModel();
     final apiKey = await secureStorageRepo.getApiKey() ?? '';
+    final claudeApiKey = await secureStorageRepo.getClaudeApiKey() ?? '';
     final language = await settingsRepo.getLanguage();
 
     return SettingsState(
@@ -99,6 +104,7 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
       theme: theme,
       model: model,
       apiKey: apiKey,
+      claudeApiKey: claudeApiKey,
       language: language,
     );
   }
@@ -181,6 +187,14 @@ class SettingsNotifier extends AsyncNotifier<SettingsState> {
               ))
           .copyWith(apiKey: apiKey),
     );
+  }
+
+  Future<void> setClaudeApiKey(String apiKey) async {
+    await ref.read(secureStorageRepositoryProvider).setClaudeApiKey(apiKey);
+    final current = state.value;
+    if (current != null) {
+      state = AsyncValue.data(current.copyWith(claudeApiKey: apiKey.trim()));
+    }
   }
 }
 

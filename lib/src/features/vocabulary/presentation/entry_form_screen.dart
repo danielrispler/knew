@@ -57,6 +57,9 @@ class MeaningFormData {
 class EntryFormScreen extends ConsumerStatefulWidget {
   final Entry? initialEntry;
   final String? initialTerm;
+
+  /// Source saved on Entries captured from this screen, e.g. a Reading.
+  final String? initialSource;
   final Future<void> Function(Entry savedEntry)? onSaved;
   final TtsService? ttsService;
 
@@ -64,6 +67,7 @@ class EntryFormScreen extends ConsumerStatefulWidget {
     super.key,
     this.initialEntry,
     this.initialTerm,
+    this.initialSource,
     this.onSaved,
     this.ttsService,
   });
@@ -474,6 +478,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     if (!isEditing) {
       return _QuickCaptureScreen(
         initialTerm: widget.initialTerm,
+        initialSource: widget.initialSource,
         onSaved: widget.onSaved,
       );
     }
@@ -1361,8 +1366,13 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 }
 
 class _QuickCaptureScreen extends ConsumerStatefulWidget {
-  const _QuickCaptureScreen({this.initialTerm, this.onSaved});
+  const _QuickCaptureScreen({
+    this.initialTerm,
+    this.initialSource,
+    this.onSaved,
+  });
   final String? initialTerm;
+  final String? initialSource;
   final Future<void> Function(Entry savedEntry)? onSaved;
 
   @override
@@ -1399,7 +1409,9 @@ class _QuickCaptureScreenState extends ConsumerState<_QuickCaptureScreen> {
       setState(() => _error = context.l10n.quickCaptureDuplicate);
       return;
     }
-    final entry = await ref.read(pendingEntryProvider).capture(term);
+    final entry = await ref
+        .read(pendingEntryProvider)
+        .capture(term, source: widget.initialSource);
     await widget.onSaved?.call(entry);
     await ref.read(vocabularyListProvider.notifier).refreshList();
     _controller.clear();
@@ -1428,6 +1440,14 @@ class _QuickCaptureScreenState extends ConsumerState<_QuickCaptureScreen> {
               ),
               onSubmitted: (_) => _add(),
             ),
+            if (widget.initialSource != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  widget.initialSource!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),

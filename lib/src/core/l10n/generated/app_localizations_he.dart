@@ -78,6 +78,83 @@ class AppLocalizationsHe extends AppLocalizations {
   String get discoverLearn => 'למד/י';
 
   @override
+  String get readingTitle => 'קריאה';
+
+  @override
+  String readingChapterOf(int chapter, int total) {
+    return 'פרק $chapter מתוך $total';
+  }
+
+  @override
+  String get readingEpilogue => 'אפילוג';
+
+  @override
+  String get readingPreviousChapter => 'הפרק הקודם';
+
+  @override
+  String get readingNextChapter => 'הפרק הבא';
+
+  @override
+  String get readingGetWords => 'קבל/י מילים לפרק הזה';
+
+  @override
+  String get readingMoreWords => 'מילים נוספות';
+
+  @override
+  String get readingAddWord => 'הוסף/י מילה מהפרק הזה';
+
+  @override
+  String get readingNoKey =>
+      'הוסף/י מפתח API של Claude בהגדרות כדי לקבל מילים לפרק.';
+
+  @override
+  String get readingNothingWaiting => 'אין מילים שממתינות לפרק הזה.';
+
+  @override
+  String get claudeApiKey => 'מפתח API של Claude';
+
+  @override
+  String get claudeApiKeyHint =>
+      'הדבק/י כאן מפתח מ-Claude Console (platform.claude.com). משמש לקריאה בלבד.';
+
+  @override
+  String get claudeConnectionSuccessful =>
+      'החיבור הצליח! מפתח Claude API פעיל.';
+
+  @override
+  String get claudeErrorMissingKey => 'הוסף/י מפתח API של Claude בהגדרות.';
+
+  @override
+  String get claudeErrorRejectedKey =>
+      'Claude דחה את מפתח ה-API הזה. החלף/י אותו בהגדרות.';
+
+  @override
+  String get claudeErrorBilling =>
+      'הקרדיט שלך ב-Claude נגמר. בדוק/י את החיוב ב-Claude Console.';
+
+  @override
+  String get claudeErrorRateLimited =>
+      'הגעת למגבלה של Claude. נסה/י שוב בעוד רגע.';
+
+  @override
+  String get claudeErrorRejectedRequest =>
+      'Claude דחה את הבקשה. נסה/י שוב מאוחר יותר.';
+
+  @override
+  String get claudeErrorUnavailable =>
+      'Claude אינו זמין כרגע. נסה/י שוב מאוחר יותר.';
+
+  @override
+  String get claudeErrorNetwork => 'לא ניתן להגיע ל-Claude. בדוק/י את החיבור.';
+
+  @override
+  String get claudeErrorTimeout => 'Claude לא הגיב בזמן. נסה/י שוב.';
+
+  @override
+  String get claudeErrorUnusable =>
+      'Claude החזיר תשובה שאי אפשר להשתמש בה. נסה/י שוב.';
+
+  @override
   String get searchPlaceholder => 'חיפוש מונחים או תרגומים...';
 
   @override
